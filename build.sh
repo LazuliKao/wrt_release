@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-sudo apt update
-sudo apt install jq
+sudo apt-get update
+sudo apt-get install jq -y
 
 set -e
 
