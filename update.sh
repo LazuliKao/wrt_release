@@ -68,6 +68,13 @@ update_feeds() {
         echo "src-git small8 https://github.com/kenzok8/small-package" >>"$BUILD_DIR/$FEEDS_CONF"
     fi
 
+    # 检查并添加 libremesh 源
+    if ! grep -q "lime-packages" "$BUILD_DIR/$FEEDS_CONF"; then
+        # 确保文件以换行符结尾
+        [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
+        echo "src-git libremesh https://github.com/libremesh/lime-packages.git" >>"$BUILD_DIR/$FEEDS_CONF"
+    fi
+
     # 添加bpf.mk解决更新报错
     if [ ! -f "$BUILD_DIR/include/bpf.mk" ]; then
         touch "$BUILD_DIR/include/bpf.mk"

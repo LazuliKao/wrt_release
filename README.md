@@ -1,4 +1,4 @@
-首先安装 Linux 系统，推荐 Ubuntu LTS  
+首先安装 Linux 系统，推荐 Ubuntu LTS
 
 安装编译依赖  
 sudo apt -y update  
@@ -38,5 +38,11 @@ cd wrt_relese
 编译X64:  
 ./build.sh x64_immwrt  
   
-三方插件源自：https://github.com/kenzok8/small-package.git  
-  
+三方插件源自：https://github.com/kenzok8/small-package.git
+LibreMesh: https://github.com/libremesh/lime-packages
+
+# For windows hyperv: 
+create vm use https://github.com/nbtca/hyperv-ubuntu-provisioning
+```ps1
+.\New-HyperVCloudImageVM.ps1 -VMProcessorCount 16 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "24.04-azure" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -ImageTypeAzure $true -VMMachine_StoragePath "F:\hyper-v" -ShowSerialConsoleWindow
+```
