@@ -1,0 +1,7 @@
+services:
+  build:
+    image: immortalwrt/sdk:qualcommax-ipq60xx
+    volumes:
+      - .:/build
+    command: bash build.sh jdcloud_ipq60xx_immwrt
+    working_dir: /build
