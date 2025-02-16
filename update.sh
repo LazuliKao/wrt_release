@@ -60,8 +60,6 @@ reset_feeds_conf() {
 update_feeds() {
     # 删除注释行
     sed -i '/^#/d' "$BUILD_DIR/$FEEDS_CONF"
-    # 替换 routing 为 https://github.com/immortalwrt/routing.git
-    sed -i 's#src-git routing .*#src-git routing https://github.com/immortalwrt/routing.git#' "$BUILD_DIR/$FEEDS_CONF"
 
     # 检查并添加 small-package 源
     if ! grep -q "small-package" "$BUILD_DIR/$FEEDS_CONF"; then
