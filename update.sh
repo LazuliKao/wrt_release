@@ -48,6 +48,17 @@ clean_up() {
     echo "1" >$BUILD_DIR/tmp/.build
 }
 
+# Git稀疏克隆，只克隆指定目录到本地
+function git_sparse_clone() {
+    branch="$1" repourl="$2" && shift 2
+    git clone --depth=1 -b $branch --single-branch --filter=blob:none --sparse $repourl
+    repodir=$(echo $repourl | awk -F '/' '{print $(NF)}')
+    cd $repodir && git sparse-checkout set $@
+    mv -f $@ ../package
+    cd .. && rm -rf $repodir
+}
+
+
 reset_feeds_conf() {
     git reset --hard origin/$REPO_BRANCH
     git clean -f -d
@@ -60,8 +71,8 @@ reset_feeds_conf() {
 update_feeds() {
     # 删除注释行
     sed -i '/^#/d' "$BUILD_DIR/$FEEDS_CONF"
-    # 替换 routing 为 https://github.com/immortalwrt/routing.git
-    sed -i 's#src-git routing .*#src-git routing https://github.com/immortalwrt/routing.git#' "$BUILD_DIR/$FEEDS_CONF"
+    # # 替换 routing 为 https://github.com/immortalwrt/routing.git
+    # sed -i 's#src-git routing .*#src-git routing https://github.com/immortalwrt/routing.git#' "$BUILD_DIR/$FEEDS_CONF"
 
     # 检查并添加 small-package 源
     if ! grep -q "small-package" "$BUILD_DIR/$FEEDS_CONF"; then
@@ -188,6 +199,10 @@ fix_miniupmpd() {
         # 使用 install 命令创建目录并复制补丁文件
         install -Dm644 "$BASE_PATH/patches/400-fix_nft_miniupnp.patch" "$BUILD_DIR/feeds/packages/net/miniupnpd/patches/400-fix_nft_miniupnp.patch"
     fi
+}
+
+fix_libremesh() {
+    git_sparse_clone master https://github.com/immortalwrt/routing bmx6 luci-app-bmx6 bird1
 }
 
 change_dnsmasq2full() {
@@ -591,6 +606,7 @@ main() {
     update_feeds
     remove_unwanted_packages
     update_homeproxy
+    fix_libremesh
     fix_default_set
     fix_miniupmpd
     update_golang
