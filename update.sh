@@ -22,7 +22,7 @@ COMMIT_HASH=$4
 
 FEEDS_CONF="feeds.conf.default"
 GOLANG_REPO="https://github.com/sbwml/packages_lang_golang"
-GOLANG_BRANCH="23.x"
+GOLANG_BRANCH="24.x"
 THEME_SET="argon"
 LAN_ADDR="192.168.6.1"
 
@@ -97,7 +97,7 @@ remove_unwanted_packages() {
         "smartdns" "mosdns" "adguardhome" "ddns-go" "naiveproxy" "shadowsocks-rust"
         "sing-box" "v2ray-core" "v2ray-geodata" "v2ray-plugin" "tuic-client"
         "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs"
-        "shadowsocksr-libev" "dae" "daed" "mihomo" "geoview"
+        "shadowsocksr-libev" "dae" "daed" "mihomo" "geoview" "tailscale"
     )
     local small8_packages=(
         "ppp" "firewall" "dae" "daed" "daed-next" "libnftnl" "nftables" "dnsmasq"
@@ -141,7 +141,7 @@ install_small8() {
         adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd \
         luci-app-store quickstart luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest \
         luci-theme-argon netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy \
-        luci-app-amlogic nikki luci-app-nikki
+        luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale
 }
 
 install_feeds() {
@@ -474,6 +474,11 @@ update_menu_location() {
     if [ -d "$(dirname "$samba4_path")" ] && [ -f "$samba4_path" ]; then
         sed -i 's/nas/services/g' "$samba4_path"
     fi
+
+    local tailscale_path="$BUILD_DIR/feeds/small8/luci-app-tailscale/root/usr/share/luci/menu.d/luci-app-tailscale.json"
+    if [ -d "$(dirname "$tailscale_path")" ] && [ -f "$tailscale_path" ]; then
+        sed -i 's/services/vpn/g' "$tailscale_path"
+    fi
 }
 
 fix_compile_coremark() {
@@ -586,6 +591,13 @@ EOF
     fi
 }
 
+update_mosdns_deconfig() {
+    local mosdns_conf="$BUILD_DIR/feeds/small8/luci-app-mosdns/root/etc/config/mosdns"
+    if [ -d "${mosdns_conf%/*}" ] && [ -f "$mosdns_conf" ]; then
+        sed -i 's/8000/300/g' "$mosdns_conf"
+    fi
+}
+
 main() {
     clone_repo
     clean_up
@@ -623,6 +635,7 @@ main() {
     # update_lucky
     add_backup_info_to_sysupgrade
     optimize_smartDNS
+    update_mosdns_deconfig
     install_feeds
     update_package "small8/sing-box"
     update_script_priority
