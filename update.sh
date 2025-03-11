@@ -633,6 +633,14 @@ update_oaf_deconfig() {
     fi
 }
 
+update_base_files() {
+    local base_files_path="$BUILD_DIR/package/base-files/files"
+    local uci_defaults_path="$base_files_path/etc/uci-defaults"
+    if [ -d "$uci_defaults_path" ]; then
+        cp -f "$BASE_PATH/uci-defaults/"* "$uci_defaults_path"
+    fi
+}
+
 main() {
     clone_repo
     clean_up
@@ -676,6 +684,7 @@ main() {
     install_feeds
     update_package "small8/sing-box"
     update_script_priority
+    update_base_files
 }
 
 main "$@"
