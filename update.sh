@@ -80,6 +80,12 @@ update_feeds() {
         touch "$BUILD_DIR/include/bpf.mk"
     fi
 
+    # 切换nss-packages源
+    #if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
+    #    sed -i '/nss_packages/d' "$BUILD_DIR/$FEEDS_CONF"
+    #    echo "src-git nss_packages https://github.com/ZqinKing/nss-packages.git" >>"$BUILD_DIR/$FEEDS_CONF"
+    #fi
+
     # 更新 feeds
     ./scripts/feeds clean
     ./scripts/feeds update -a
@@ -90,14 +96,14 @@ remove_unwanted_packages() {
         "luci-app-passwall" "luci-app-smartdns" "luci-app-ddns-go" "luci-app-rclone"
         "luci-app-ssr-plus" "luci-app-vssr" "luci-theme-argon" "luci-app-daed" "luci-app-dae"
         "luci-app-alist" "luci-app-argon-config" "luci-app-homeproxy" "luci-app-haproxy-tcp"
-        "luci-app-openclash" "luci-app-mihomo"
+        "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter"
     )
     local packages_net=(
         "haproxy" "xray-core" "xray-plugin" "dns2socks" "alist" "hysteria"
         "smartdns" "mosdns" "adguardhome" "ddns-go" "naiveproxy" "shadowsocks-rust"
         "sing-box" "v2ray-core" "v2ray-geodata" "v2ray-plugin" "tuic-client"
         "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs"
-        "shadowsocksr-libev" "dae" "daed" "mihomo" "geoview" "tailscale"
+        "shadowsocksr-libev" "dae" "daed" "mihomo" "geoview" "tailscale" "open-app-filter"
     )
     local small8_packages=(
         "ppp" "firewall" "dae" "daed" "daed-next" "libnftnl" "nftables" "dnsmasq"
@@ -141,7 +147,7 @@ install_small8() {
         adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd \
         luci-app-store quickstart luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest \
         luci-theme-argon netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy \
-        luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale
+        luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf
 }
 
 install_feeds() {
@@ -415,15 +421,17 @@ update_pw_ha_chk() {
 }
 
 install_opkg_distfeeds() {
-    # 只处理aarch64
-    if ! grep -q "nss-packages" "$BUILD_DIR/feeds.conf.default"; then
-        return
-    fi
     local emortal_def_dir="$BUILD_DIR/package/emortal/default-settings"
     local distfeeds_conf="$emortal_def_dir/files/99-distfeeds.conf"
 
     if [ -d "$emortal_def_dir" ] && [ ! -f "$distfeeds_conf" ]; then
-        install -Dm755 "$BASE_PATH/patches/99-distfeeds.conf" "$distfeeds_conf"
+        cat <<'EOF' >"$distfeeds_conf"
+src/gz openwrt_base https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/base/
+src/gz openwrt_luci https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/luci/
+src/gz openwrt_packages https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/packages/
+src/gz openwrt_routing https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/routing/
+src/gz openwrt_telephony https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/telephony/
+EOF
 
         sed -i "/define Package\/default-settings\/install/a\\
 \\t\$(INSTALL_DIR) \$(1)/etc\\n\
@@ -598,6 +606,33 @@ update_mosdns_deconfig() {
     fi
 }
 
+fix_quickstart() {
+    local qs_index_path="$BUILD_DIR/feeds/small8/luci-app-quickstart/htdocs/luci-static/quickstart/index.js"
+    local fix_path="$BASE_PATH/patches/quickstart_index.js"
+    if [ -f "$qs_index_path" ] && [ -f "$fix_path" ]; then
+        cat "$fix_path" >"$qs_index_path"
+    else
+        echo "Quickstart index.js 或补丁文件不存在，请检查路径是否正确。"
+    fi
+}
+
+update_oaf_deconfig() {
+    local conf_path="$BUILD_DIR/feeds/small8/open-app-filter/files/appfilter.config"
+    local uci_def="$BUILD_DIR/feeds/small8/luci-app-oaf/root/etc/uci-defaults/94_feature_3.0"
+
+    if [ -d "${conf_path%/*}" ] && [ -f "$conf_path" ]; then
+        sed -i \
+            -e "s/record_enable '1'/record_enable '0'/g" \
+            -e "s/disable_hnat '1'/disable_hnat '0'/g" \
+            -e "s/auto_load_engine '1'/auto_load_engine '0'/g" \
+            "$conf_path"
+    fi
+
+    if [ -d "${uci_def%/*}" ] && [ -f "$uci_def" ]; then
+        sed -i '/\(disable_hnat\|auto_load_engine\)/d' "$uci_def"
+    fi
+}
+
 main() {
     clone_repo
     clean_up
@@ -636,6 +671,8 @@ main() {
     add_backup_info_to_sysupgrade
     optimize_smartDNS
     update_mosdns_deconfig
+    fix_quickstart
+    update_oaf_deconfig
     install_feeds
     update_package "small8/sing-box"
     update_script_priority

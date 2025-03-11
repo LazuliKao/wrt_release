@@ -4,45 +4,50 @@
 sudo apt -y update  
 sudo apt -y full-upgrade  
 sudo apt install -y dos2unix libfuse-dev  
-sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'  
+sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
 
 使用步骤：  
-git clone https://github.com/ZqinKing/wrt_relese.git  
-cd wrt_relese  
-  
-编译京东云雅典娜(02)、亚瑟(01)、太乙(07)、AX5(JDC版):  
-./build.sh jdcloud_ipq60xx_immwrt  
-./build.sh jdcloud_ipq60xx_libwrt  
-  
-编译京东云百里:  
-./build.sh jdcloud_ax6000_immwrt  
-  
-编译阿里云AP8220:  
-./build.sh aliyun_ap8220_immwrt  
-  
-编译红米AX5:  
-./build.sh redmi_ax5_immwrt  
-  
-编译红米AX6:  
-./build.sh redmi_ax6_immwrt  
-  
-编译红米AX6000:  
-./build.sh redmi_ax6000_immwrt21  
-  
-编译CMCC RAX3000M:  
-./build.sh cmcc_rax3000m_immwrt  
-  
-编译N1:  
-./build.sh n1_immwrt  
-  
-编译X64:  
-./build.sh x64_immwrt  
-  
-三方插件源自：https://github.com/kenzok8/small-package.git
-LibreMesh: https://github.com/libremesh/lime-packages
+git clone https://github.com/ZqinKing/wrt_release.git  
+cd wrt_relese
 
-# For windows hyperv: 
+编译京东云雅典娜(02)、亚瑟(01)、太乙(07)、AX5(JDC 版):  
+./build.sh jdcloud_ipq60xx_immwrt  
+./build.sh jdcloud_ipq60xx_libwrt
+
+编译京东云百里:  
+./build.sh jdcloud_ax6000_immwrt
+
+编译阿里云 AP8220:  
+./build.sh aliyun_ap8220_immwrt
+
+编译红米 AX5:  
+./build.sh redmi_ax5_immwrt
+
+编译红米 AX6:  
+./build.sh redmi_ax6_immwrt
+
+编译红米 AX6000:  
+./build.sh redmi_ax6000_immwrt21
+
+编译 CMCC RAX3000M:  
+./build.sh cmcc_rax3000m_immwrt
+
+编译 N1:  
+./build.sh n1_immwrt
+
+编译 X64:  
+./build.sh x64_immwrt
+
+编译兆能 M2:  
+./build.sh zn_m2_immwrt  
+./build.sh zn_m2_libwrt
+
+三方插件源自：https://github.com/kenzok8/small-package.git
+
+# For windows hyperv:
+
 create vm use https://github.com/nbtca/hyperv-ubuntu-provisioning
+
 ```ps1
-.\New-HyperVCloudImageVM.ps1 -VMProcessorCount 16 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "24.04-azure" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -ImageTypeAzure $true -VMMachine_StoragePath "F:\hyper-v" -ShowSerialConsoleWindow
+.\New-HyperVCloudImageVM.ps1 -VMProcessorCount 16 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "24.04" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -ImageTypeAzure $true -VMMachine_StoragePath "F:\hyper-v" -ShowSerialConsoleWindow
 ```
