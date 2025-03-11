@@ -519,7 +519,7 @@ update_package() {
     local mk_path="$dir/Makefile"
     if [ -d "${mk_path%/*}" ] && [ -f "$mk_path" ]; then
         # 提取repo
-        local PKG_REPO=$(grep -oE "^PKG_SOURCE_URL.*tar\.gz" $mk_path | awk -F"/" '{print $(NF - 2) "/" $(NF -1 )}')
+        local PKG_REPO=$(grep -oE "^PKG_SOURCE_URL.*github.com(/[-a-zA-Z0-9]{1,20}){2}" $mk_path | awk -F"/" '{print $(NF - 1) "/" $NF}')
         if [ -z $PKG_REPO ]; then
             return 1
         fi
@@ -603,6 +603,7 @@ update_mosdns_deconfig() {
     local mosdns_conf="$BUILD_DIR/feeds/small8/luci-app-mosdns/root/etc/config/mosdns"
     if [ -d "${mosdns_conf%/*}" ] && [ -f "$mosdns_conf" ]; then
         sed -i 's/8000/300/g' "$mosdns_conf"
+        sed -i 's/5335/5336/g' "$mosdns_conf"
     fi
 }
 
