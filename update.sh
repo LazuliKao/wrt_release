@@ -654,7 +654,22 @@ update_base_files() {
         cp -f "$BASE_PATH/uci-defaults/"* "$uci_defaults_path"
     fi
 }
-
+add_ohmyzsh() {
+    local base_files_path="$BUILD_DIR/package/base-files/files"
+    echo "Adding oh-my-zsh"
+    mkdir -p "$base_files_path/root"
+    if [ -d "$base_files_path/root/.oh-my-zsh" ]; then
+        rm -rf "$base_files_path/root/.oh-my-zsh"
+    fi
+    git clone https://mirror.nju.edu.cn/git/ohmyzsh.git "$base_files_path/root/.oh-my-zsh"
+    if [ -f "$base_files_path/root/.zshrc" ]; then
+        rm "$base_files_path/root/.zshrc"
+    fi
+    cp "$base_files_path/root/.oh-my-zsh/templates/zshrc.zsh-template" "$base_files_path/root/.zshrc"
+    # echo "source /etc/profile" >>files/root/.zshrc
+    sed -i "1i source /etc/profile" "$base_files_path/root/.zshrc"
+    # sed -i "s:/bin/ash:/usr/bin/zsh:g" files/etc/passwd
+}
 main() {
     clone_repo
     clean_up
@@ -698,6 +713,7 @@ main() {
     install_feeds
     update_script_priority
     update_base_files
+    add_ohmyzsh
 }
 
 main "$@"
