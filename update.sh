@@ -698,6 +698,26 @@ add_ohmyzsh() {
     sed -i "1i source /etc/profile" "$base_files_path/root/.zshrc"
     # sed -i "s:/bin/ash:/usr/bin/zsh:g" "base_files_path/etc/passwd"
 }
+add_nbtverify() {
+    local base_files_path="$BUILD_DIR/package/base-files/files"
+    echo "Adding nbtverify"
+    mkdir -p "$base_files_path/root"
+    local ipk_path="$base_files_path/root/luci-app-nbtverify.ipk"
+    if [ -f "$ipk_path" ]; then
+        echo "luci-app-nbtverify already exists"
+        return
+    fi
+    local arch=$(_get_arch_from_config)
+    if [[ $arch == "x86_64" ]]; then
+        wget https://github.com/nbtca/luci-app-nbtverify/releases/download/v0.1.9/luci-app-nbtverify_amd64_x86_64.ipk -O "$ipk_path"
+    elif [[ $arch == "aarch64" ]]; then
+        wget https://github.com/nbtca/luci-app-nbtverify/releases/download/v0.1.9/luci-app-nbtverify_arm64_aarch64_cortex-a53.ipk -O "$ipk_path"
+    else
+        echo "[nbtverify] Unsupported architecture: $arch"
+        return
+    fi
+}
+
 main() {
     clone_repo
     clean_up
