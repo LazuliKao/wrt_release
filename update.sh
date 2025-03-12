@@ -19,12 +19,40 @@ REPO_URL=$1
 REPO_BRANCH=$2
 BUILD_DIR=$3
 COMMIT_HASH=$4
+CONFIG_FILE=$5
 
 FEEDS_CONF="feeds.conf.default"
 GOLANG_REPO="https://github.com/sbwml/packages_lang_golang"
 GOLANG_BRANCH="24.x"
 THEME_SET="argon"
 LAN_ADDR="192.168.6.1"
+
+_set_config() {
+    key=$1
+    value=$2
+    original=$(grep "^$key" "$CONFIG_FILE" | cut -d'=' -f2)
+    echo "Setting $key=$value (original: $original)"
+    sed -i "s/^\($key\s*=\s*\).*\$/\1$value/" .config
+}
+_set_config_quote() {
+    key=$1
+    value=$2
+    original=$(grep "^$key" "$CONFIG_FILE" | cut -d'=' -f2)
+    echo "Setting $key=\"$value\" (original: $original)"
+    sed -i "s/^\($key\s*=\s*\).*\$/\1\"$value\"/" .config
+}
+_get_config() {
+    key=$1
+    grep "^$key=" "$CONFIG_FILE" | cut -d'=' -f2
+}
+_get_arch_from_config() {
+    value_CONFIG_TARGET_x86_64=$(_get_config "CONFIG_TARGET_x86_64")
+    if [[ $value_CONFIG_TARGET_x86_64 == "y" ]]; then
+        echo "x86_64"
+    else
+        echo "aarch64"
+    fi
+}
 
 clone_repo() {
     if [[ ! -d $BUILD_DIR ]]; then
