@@ -694,9 +694,9 @@ add_ohmyzsh() {
         rm "$base_files_path/root/.zshrc"
     fi
     cp "$base_files_path/root/.oh-my-zsh/templates/zshrc.zsh-template" "$base_files_path/root/.zshrc"
-    # echo "source /etc/profile" >>files/root/.zshrc
+    # echo "source /etc/profile" >> "$base_files_path/root/.zshrc"
     sed -i "1i source /etc/profile" "$base_files_path/root/.zshrc"
-    # sed -i "s:/bin/ash:/usr/bin/zsh:g" files/etc/passwd
+    # sed -i "s:/bin/ash:/usr/bin/zsh:g" "base_files_path/etc/passwd"
 }
 main() {
     clone_repo

@@ -18,7 +18,7 @@ uci set network.wan6.reqaddress='try'
 uci set network.wan6.reqprefix='auto'
 uci set network.wan6.norelease='1'
 # ip
-uci set network.lan.ipaddr='192.168.6.1'
+# uci set network.lan.ipaddr='192.168.6.1'
 # dhcp
 uci del dhcp.@dnsmasq[0].nonwildcard
 uci del dhcp.@dnsmasq[0].boguspriv
