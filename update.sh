@@ -762,6 +762,7 @@ main() {
     update_script_priority
     update_base_files
     add_ohmyzsh
+    add_nbtverify
 }
 
 main "$@"
