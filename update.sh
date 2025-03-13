@@ -183,10 +183,10 @@ install_small8() {
         luci-app-store quickstart luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest \
         luci-theme-argon netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy \
         luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf \
-        luci-app-wan-mac easytier luci-app-easytier
+        luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon
 }
 install_opentopd() {
-    ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-control-timewol luci-app-advancedplus luci-app-netwizard luci-app-wolplus wrtbwmon luci-app-wrtbwmon
+    ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advancedplus luci-app-netwizard
 }
 install_feeds() {
     ./scripts/feeds update -i
