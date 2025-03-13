@@ -95,6 +95,13 @@ update_feeds() {
         [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
         echo "src-git small8 https://github.com/kenzok8/small-package" >>"$BUILD_DIR/$FEEDS_CONF"
     fi
+    # 检查并添加 opentopd 源
+    # src-git opentopd  https://github.com/sirpdboy/sirpdboy-package
+    if ! grep -q "opentopd" "$BUILD_DIR/$FEEDS_CONF"; then
+        # 确保文件以换行符结尾
+        [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
+        echo "src-git opentopd https://github.com/sirpdboy/sirpdboy-package" >>"$BUILD_DIR/$FEEDS_CONF"
+    fi
 
     # 检查并添加 libremesh 源
     # if ! grep -q "lime-packages" "$BUILD_DIR/$FEEDS_CONF"; then
@@ -171,14 +178,16 @@ install_small8() {
     ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
         naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin \
         tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
-        luci-app-passwall alist luci-app-alist smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns \
+        luci-app-passwall luci-app-passwall2 alist luci-app-alist smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns \
         adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd \
         luci-app-store quickstart luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest \
         luci-theme-argon netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy \
         luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf \
         luci-app-wan-mac
 }
-
+install_opentopd() {
+    ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-control-timewol luci-app-advancedplus luci-app-netwizard luci-app-wolplus wrtbwmon luci-app-wrtbwmon
+}
 install_feeds() {
     ./scripts/feeds update -i
     for dir in $BUILD_DIR/feeds/*; do
@@ -186,6 +195,8 @@ install_feeds() {
         if [ -d "$dir" ] && [[ ! "$dir" == *.tmp ]] && [ ! -L "$dir" ]; then
             if [[ $(basename "$dir") == "small8" ]]; then
                 install_small8
+            elif [[ $(basename "$dir") == "opentopd" ]]; then
+                install_opentopd
             else
                 ./scripts/feeds install -f -ap $(basename "$dir")
             fi
