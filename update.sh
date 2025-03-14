@@ -674,6 +674,7 @@ fix_quickstart() {
 update_oaf_deconfig() {
     local conf_path="$BUILD_DIR/feeds/small8/open-app-filter/files/appfilter.config"
     local uci_def="$BUILD_DIR/feeds/small8/luci-app-oaf/root/etc/uci-defaults/94_feature_3.0"
+    local disable_path="$BUILD_DIR/feeds/small8/luci-app-oaf/root/etc/uci-defaults/99_disable_oaf"
 
     if [ -d "${conf_path%/*}" ] && [ -f "$conf_path" ]; then
         sed -i \
@@ -685,6 +686,16 @@ update_oaf_deconfig() {
 
     if [ -d "${uci_def%/*}" ] && [ -f "$uci_def" ]; then
         sed -i '/\(disable_hnat\|auto_load_engine\)/d' "$uci_def"
+
+        # 禁用脚本
+        cat >"$disable_path" <<-EOF
+#!/bin/sh
+[ "\$(uci get appfilter.global.enable 2>/dev/null)" = "0" ] && {
+    /etc/init.d/appfilter disable
+    /etc/init.d/appfilter stop
+}
+EOF
+        chmod +x "$disable_path"
     fi
 }
 

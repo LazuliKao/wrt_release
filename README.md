@@ -43,11 +43,26 @@ cd wrt_relese
 ./build.sh zn_m2_libwrt
 
 三方插件源自：https://github.com/kenzok8/small-package.git
+以及：https://github.com/sirpdboy/sirpdboy-package
 
-# For windows hyperv:
+使用 OAF（应用过滤）功能前，需先完成以下操作：
+
+1. 打开系统设置 → 启动项 → 定位到「appfilter」
+2. 将「appfilter」当前状态**从已禁用更改为已启用**
+3. 完成配置后，点击**启动**按钮激活服务
+
+# Using Windows HyperV (ubuntu 22.04):
 
 create vm use https://github.com/nbtca/hyperv-ubuntu-provisioning
 
+创建参考：
+
 ```ps1
-.\New-HyperVCloudImageVM.ps1 -VMProcessorCount 16 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "24.04" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -ImageTypeAzure $true -VMMachine_StoragePath "F:\hyper-v" -ShowSerialConsoleWindow
+.\New-HyperVCloudImageVM.ps1 -VMProcessorCount 16 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "22.04" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -ImageTypeAzure $true -VMMachine_StoragePath "F:\hyper-v" -ShowSerialConsoleWindow
+```
+
+# Using Docker (docker compose)
+
+```bash
+docker compose up
 ```
