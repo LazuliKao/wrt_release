@@ -1,3 +1,35 @@
+# OpenWrt 编译脚本
+
+- ## 本分支的差异：
+  - 内置更多好用的软件包。
+  - 使用 nginx，默认端口 80，不生成证书。
+  - 终端使用 zsh，主题使用[`ohmyzsh`](https://ohmyz.sh/)。
+  - 预装[`nbtverify`](https://github.com/nbtca/luci-app-nbtverify)（某校园网认证）。
+  - 使用`docker(compose)`+[`immortalwrt sdk`](https://hub.docker.com/r/immortalwrt/sdk)一键编译，本地编译 99%无障碍。
+  - 固件内置 docker 和 docker compose。
+
+---
+
+# Compile Using Docker (docker compose)
+
+```bash
+docker compose up
+```
+
+# Compile Using Windows HyperV (ubuntu 22.04):
+
+create vm use https://github.com/nbtca/hyperv-ubuntu-provisioning
+
+创建参考：
+
+```ps1
+.\New-HyperVCloudImageVM.ps1 -VMProcessorCount 16 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "22.04" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -ImageTypeAzure $true -VMMachine_StoragePath "F:\hyper-v" -ShowSerialConsoleWindow
+```
+
+## 然后参考[这里](#原编译过程)进行编译。
+
+# 编译过程
+
 首先安装 Linux 系统，推荐 Ubuntu LTS
 
 安装编译依赖  
@@ -50,19 +82,3 @@ cd wrt_relese
 1. 打开系统设置 → 启动项 → 定位到「appfilter」
 2. 将「appfilter」当前状态**从已禁用更改为已启用**
 3. 完成配置后，点击**启动**按钮激活服务
-
-# Using Windows HyperV (ubuntu 22.04):
-
-create vm use https://github.com/nbtca/hyperv-ubuntu-provisioning
-
-创建参考：
-
-```ps1
-.\New-HyperVCloudImageVM.ps1 -VMProcessorCount 16 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "22.04" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -ImageTypeAzure $true -VMMachine_StoragePath "F:\hyper-v" -ShowSerialConsoleWindow
-```
-
-# Using Docker (docker compose)
-
-```bash
-docker compose up
-```
