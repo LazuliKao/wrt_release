@@ -1,0 +1,1 @@
+sed -i '1c#!/bin/bash' /usr/share/passwall2/app.sh
