@@ -411,15 +411,15 @@ boot() {
     sed -i '/drop_caches/d' /etc/crontabs/root
     echo "15 3 * * * sync && echo 3 > /proc/sys/vm/drop_caches" >>/etc/crontabs/root
 
-    # 删除现有的 wireguard_check 任务
-    sed -i '/wireguard_check/d' /etc/crontabs/root
+    # 删除现有的 wireguard_watchdog 任务
+    sed -i '/wireguard_watchdog/d' /etc/crontabs/root
 
     # 获取 WireGuard 接口名称
     local wg_ifname=$(wg show | awk '/interface/ {print $2}')
 
     if [ -n "$wg_ifname" ]; then
-        # 添加新的 wireguard_check 任务，每10分钟执行一次
-        echo "*/10 * * * * /sbin/wireguard_check.sh" >>/etc/crontabs/root
+        # 添加新的 wireguard_watchdog 任务，每10分钟执行一次
+        echo "*/15 * * * * /usr/bin/wireguard_watchdog" >>/etc/crontabs/root
         uci set system.@system[0].cronloglevel='9'
         uci commit system
         /etc/init.d/cron restart
@@ -430,13 +430,6 @@ boot() {
 }
 EOF
     chmod +x "$sh_dir/custom_task"
-}
-
-add_wg_chk() {
-    local sbin_path="$BUILD_DIR/package/base-files/files/sbin"
-    if [[ -d "$sbin_path" ]]; then
-        install -Dm755 "$BASE_PATH/patches/wireguard_check.sh" "$sbin_path/wireguard_check.sh"
-    fi
 }
 
 update_pw_ha_chk() {
@@ -699,6 +692,17 @@ EOF
     fi
 }
 
+support_fw4_adg() {
+    local src_path="$BASE_PATH/patches/AdGuardHome"
+    local dst_path="$BUILD_DIR/package/feeds/small8/luci-app-adguardhome/root/etc/init.d/AdGuardHome"
+    # 验证源路径是否文件存在且是文件，目标路径目录存在且脚本路径合法
+    if [ -f "$src_path" ] && [ -d "${dst_path%/*}" ] && [ -f "$dst_path" ]; then
+        # 使用 install 命令替代 cp 以确保权限和备份处理
+        install -Dm 755 "$src_path" "$dst_path"
+        echo "已更新AdGuardHome启动脚本"
+    fi
+}
+
 update_base_files() {
     local base_files_path="$BUILD_DIR/package/base-files/files"
     local uci_defaults_path="$base_files_path/etc/uci-defaults"
@@ -764,7 +768,6 @@ main() {
     # fix_mkpkg_format_invalid
     chanage_cpuusage
     update_tcping
-    add_wg_chk
     add_ax6600_led
     set_custom_task
     update_pw_ha_chk
@@ -783,6 +786,7 @@ main() {
     fix_quickstart
     update_oaf_deconfig
     install_feeds
+    support_fw4_adg
     update_script_priority
     update_base_files
     add_ohmyzsh
