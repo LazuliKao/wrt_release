@@ -88,39 +88,30 @@ reset_feeds_conf() {
 update_feeds() {
     # 删除注释行
     sed -i '/^#/d' "$BUILD_DIR/$FEEDS_CONF"
-
+    add_feeds() {
+        local feed=$1
+        local url=$2
+        if ! grep -q "$feed" "$BUILD_DIR/$FEEDS_CONF"; then
+            # 确保文件以换行符结尾
+            [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
+            echo "src-git $feed $url" >>"$BUILD_DIR/$FEEDS_CONF"
+        fi
+    }
     # 检查并添加 small-package 源
-    if ! grep -q "small-package" "$BUILD_DIR/$FEEDS_CONF"; then
-        # 确保文件以换行符结尾
-        [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
-        echo "src-git small8 https://github.com/kenzok8/small-package" >>"$BUILD_DIR/$FEEDS_CONF"
-    fi
+    add_feeds "small8" "https://github.com/kenzok8/small-package"
     # 检查并添加 opentopd 源
-    # src-git opentopd  https://github.com/sirpdboy/sirpdboy-package
-    if ! grep -q "opentopd" "$BUILD_DIR/$FEEDS_CONF"; then
-        # 确保文件以换行符结尾
-        [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
-        echo "src-git opentopd https://github.com/sirpdboy/sirpdboy-package" >>"$BUILD_DIR/$FEEDS_CONF"
-    fi
-
+    add_feeds "opentopd" "https://github.com/sirpdboy/sirpdboy-package"
     # 检查并添加 libremesh 源
-    # if ! grep -q "lime-packages" "$BUILD_DIR/$FEEDS_CONF"; then
-    #     # 确保文件以换行符结尾
-    #     [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
-    #     echo "src-git libremesh https://github.com/libremesh/lime-packages.git" >>"$BUILD_DIR/$FEEDS_CONF"
-    # fi
-
+    # add_feeds "libremesh" "https://github.com/libremesh/lime-packages"
     # 添加bpf.mk解决更新报错
     if [ ! -f "$BUILD_DIR/include/bpf.mk" ]; then
         touch "$BUILD_DIR/include/bpf.mk"
     fi
-
     # 切换nss-packages源
     #if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
     #    sed -i '/nss_packages/d' "$BUILD_DIR/$FEEDS_CONF"
     #    echo "src-git nss_packages https://github.com/ZqinKing/nss-packages.git" >>"$BUILD_DIR/$FEEDS_CONF"
     #fi
-
     # 更新 feeds
     ./scripts/feeds clean
     ./scripts/feeds update -a
@@ -141,7 +132,7 @@ remove_unwanted_packages() {
         "shadowsocksr-libev" "dae" "daed" "mihomo" "geoview" "tailscale" "open-app-filter"
     )
     local small8_packages=(
-        "ppp" "firewall" "dae" "daed" "daed-next" "libnftnl" "nftables" "dnsmasq"
+        "ppp" "firewall" "dae" "daed" "daed-next" "libnftnl" "nftables" "dnsmasq" "luci-theme-argon"
     )
 
     for pkg in "${luci_packages[@]}"; do
@@ -160,7 +151,7 @@ remove_unwanted_packages() {
     if [[ -d ./package/istore ]]; then
         \rm -rf ./package/istore
     fi
-
+    git clone https://github.com/lymwhen/luci-theme-argon -b master ./feeds/luci/themes/luci-theme-argon
     # 临时放一下，清理脚本
     if [ -d "$BUILD_DIR/target/linux/qualcommax/base-files/etc/uci-defaults" ]; then
         find "$BUILD_DIR/target/linux/qualcommax/base-files/etc/uci-defaults/" -type f -name "99*.sh" -exec rm -f {} +
@@ -186,7 +177,9 @@ install_small8() {
         luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon
 }
 install_opentopd() {
-    ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advancedplus luci-app-netwizard
+    \rm -rf ./feeds/opentopd/luci-app-advancedplus
+    git clone https://github.com/sirpdboy/luci-app-advancedplus.git ./feeds/opentopd/luci-app-advancedplus
+    ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advancedplus
 }
 install_feeds() {
     ./scripts/feeds update -i
