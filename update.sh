@@ -696,6 +696,11 @@ support_fw4_adg() {
     fi
 }
 
+add_timecontrol() {
+    local timecontrol_dir="$BUILD_DIR/package/luci-app-timecontrol"
+    git clone https://github.com/sirpdboy/luci-app-timecontrol.git "$timecontrol_dir"
+}
+
 update_base_files() {
     local base_files_path="$BUILD_DIR/package/base-files/files"
     local uci_defaults_path="$base_files_path/etc/uci-defaults"
@@ -703,6 +708,7 @@ update_base_files() {
         cp -f "$BASE_PATH/uci-defaults/"* "$uci_defaults_path"
     fi
 }
+
 add_ohmyzsh() {
     local base_files_path="$BUILD_DIR/package/base-files/files"
     echo "Adding oh-my-zsh"
@@ -719,6 +725,7 @@ add_ohmyzsh() {
     sed -i "1i source /etc/profile" "$base_files_path/root/.zshrc"
     # sed -i "s:/bin/ash:/usr/bin/zsh:g" "base_files_path/etc/passwd"
 }
+
 add_nbtverify() {
     local base_files_path="$BUILD_DIR/package/base-files/files"
     echo "Adding nbtverify"
@@ -778,6 +785,7 @@ main() {
     update_mosdns_deconfig
     fix_quickstart
     update_oaf_deconfig
+    add_timecontrol
     install_feeds
     support_fw4_adg
     update_script_priority
