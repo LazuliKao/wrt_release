@@ -86,7 +86,7 @@ set_affinity() {
     done
 }
 
-enable_affinity_ipq807x() {
+enable_affinity() {
     # assign 4 rx interrupts to each core
     set_affinity 'reo2host-destination-ring1' 0 1
     set_affinity 'reo2host-destination-ring2' 1 1
@@ -130,5 +130,5 @@ boot() {
     [ "$enable" -eq 1 ] && enable=true || enable=false
     [ "$enable_log" -eq 1 ] && enable_log=true || enable_log=false
 
-    $enable && enable_affinity_ipq807x
+    $enable && enable_affinity
 }
