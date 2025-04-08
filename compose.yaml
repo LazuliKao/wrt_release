@@ -17,3 +17,9 @@ services:
       - .:/build
     command: bash build.sh x64_immwrt
     working_dir: /build
+  mediatek-filogic-openwrt-24.10:
+    image: immortalwrt/sdk:mediatek-filogic-openwrt-24.10
+    volumes:
+      - .:/build
+    command: bash build.sh cudy_tr3000
+    working_dir: /build

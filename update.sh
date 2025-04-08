@@ -151,8 +151,9 @@ remove_unwanted_packages() {
     if [[ -d ./package/istore ]]; then
         \rm -rf ./package/istore
     fi
-    git clone https://github.com/lymwhen/luci-theme-argon -b master ./feeds/luci/themes/luci-theme-argon
-
+    git clone https://github.com/sbwml/luci-theme-argon -b openwrt-24.10 ./feeds/luci/themes/luci-theme-argon-new
+    mv ./feeds/luci/themes/luci-theme-argon-new/luci-theme-argon ./feeds/luci/themes/luci-theme-argon
+    \rm -rf ./feeds/luci/themes/luci-theme-argon-new
     if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
         local nss_packages_dirs=(
             "$BUILD_DIR/feeds/luci/protocols/luci-proto-quectel"
@@ -799,6 +800,42 @@ add_nbtverify() {
     fi
 }
 
+add_turboacc() {
+    cd "$BUILD_DIR"
+    curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh
+    bash add_turboacc.sh --no-sfe
+    cd -
+}
+
+fix_cudy_tr3000_114m() {
+
+    #mt7981b-cudy-tr3000-v1-ubootmod.dts
+    #  target/linux/mediatek/dts/mt7981b-cudy-tr3000-v1-ubootmod.dts
+    #  target/linux/mediatek/dts/mt7981b-cudy-tr3000-v1.dts
+    local size="0x7200000" #114MB
+    # local size="0x7000000" #112MB
+    local dts_file="$BUILD_DIR/target/linux/mediatek/dts/mt7981b-cudy-tr3000-v1-ubootmod.dts"
+    if [ -f "$dts_file" ]; then
+        sed -i "s/reg = <0x5c0000 0x[0-9a-fA-F]*>/reg = <0x5c0000 $size>/g" "$dts_file"
+        echo "Updated $dts_file"
+    fi
+    local dts_file2="$BUILD_DIR/target/linux/mediatek/dts/mt7981b-cudy-tr3000-v1.dts"
+    if [ -f "$dts_file2" ]; then
+        sed -i "s/reg = <0x5c0000 0x[0-9a-fA-F]*>/reg = <0x5c0000 $size>/g" "$dts_file2"
+        echo "Updated $dts_file2"
+    fi
+    local dts_uboot_file="$BUILD_DIR/package/boot/uboot-mediatek/patches/445-add-cudy_tr3000-v1.patch"
+    if [ -f "$dts_uboot_file" ]; then
+        sed -i "s/0x5c0000 0x[0-9a-fA-F]*/0x5c0000 $size/g" "$dts_uboot_file"
+        echo "Updated $dts_uboot_file"
+    fi
+    local dts_for_padavanonly="$BUILD_DIR/target/linux/mediatek/files-5.4/arch/arm64/boot/dts/mediatek/mt7981-cudy-tr3000-v1.dts"
+    if [ -f "$dts_for_padavanonly" ]; then
+        sed -i "s/reg = <0x5c0000 0x[0-9a-fA-F]*>/reg = <0x5c0000 $size>/g" "$dts_for_padavanonly"
+        echo "Updated $dts_for_padavanonly"
+    fi
+}
+
 main() {
     clone_repo
     clean_up
@@ -842,8 +879,10 @@ main() {
     support_fw4_adg
     update_script_priority
     update_base_files
-    add_ohmyzsh
-    add_nbtverify
+    # add_ohmyzsh
+    # add_nbtverify
+    # add_turboacc
+    fix_cudy_tr3000_114m
     # update_proxy_app_menu_location
     # update_dns_app_menu_location
 }

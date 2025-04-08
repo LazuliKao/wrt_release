@@ -10,12 +10,26 @@
 
 ---
 
-# Compile Using Docker (docker compose)
+# Compile Using Docker 
+- (docker compose)
 
 ```bash
 docker compose up
 ```
+- (docker command) 
 
+```bash
+docker run --rm -it \
+  -v "$(pwd)":/build \
+  -w /build \
+  immortalwrt/sdk:mediatek-filogic-openwrt-24.10 \
+  bash build.sh cudy_tr3000
+docker run --rm -it \
+  -v "$(pwd)":/build \
+  -w /build \
+  immortalwrt/sdk:mediatek-filogic-openwrt-24.10 \
+  bash build.sh cudy_tr3000-5.4
+```
 # Compile Using Windows HyperV (ubuntu 22.04):
 
 create vm use https://github.com/nbtca/hyperv-ubuntu-provisioning
