@@ -122,7 +122,7 @@ remove_unwanted_packages() {
         "luci-app-passwall" "luci-app-smartdns" "luci-app-ddns-go" "luci-app-rclone"
         "luci-app-ssr-plus" "luci-app-vssr" "luci-theme-argon" "luci-app-daed" "luci-app-dae"
         "luci-app-alist" "luci-app-argon-config" "luci-app-homeproxy" "luci-app-haproxy-tcp"
-        "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter"
+        "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter" "luci-app-msd_lite"
     )
     local packages_net=(
         "haproxy" "xray-core" "xray-plugin" "dns2socks" "alist" "hysteria"
@@ -130,6 +130,7 @@ remove_unwanted_packages() {
         "sing-box" "v2ray-core" "v2ray-geodata" "v2ray-plugin" "tuic-client"
         "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs"
         "shadowsocksr-libev" "dae" "daed" "mihomo" "geoview" "tailscale" "open-app-filter"
+        "msd_lite"
     )
     local small8_packages=(
         "ppp" "firewall" "dae" "daed" "daed-next" "libnftnl" "nftables" "dnsmasq" "luci-theme-argon"
@@ -195,6 +196,7 @@ install_opentopd() {
     \rm -rf ./feeds/opentopd/luci-app-advancedplus
     git clone https://github.com/sirpdboy/luci-app-advancedplus.git ./feeds/opentopd/luci-app-advancedplus
     ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advancedplus
+        easytier luci-app-easytier msd_lite luci-app-msd_lite
 }
 install_feeds() {
     ./scripts/feeds update -i
@@ -325,11 +327,13 @@ update_affinity_script() {
 }
 
 fix_build_for_openssl() {
-    local makefile="$BUILD_DIR/package/libs/openssl/Makefile"
-
-    if [[ -f "$makefile" ]]; then
-        if ! grep -qP "^CONFIG_OPENSSL_SSL3" "$makefile"; then
-            sed -i '/^ifndef CONFIG_OPENSSL_SSL3/i CONFIG_OPENSSL_SSL3 := y' "$makefile"
+    local openssl_dir="$BUILD_DIR/package/libs/openssl"
+    local makefile="$openssl_dir/Makefile"
+    if [ -d "$(dirname "$makefile")" ] && [ -f "$makefile" ]; then
+        if grep -q "3.0.16" "$makefile"; then
+            # 替换本地openssl版本
+            rm -rf "$openssl_dir"
+            cp -rf "$BASE_PATH/patches/openssl" "$openssl_dir"
         fi
     fi
 }
@@ -833,6 +837,31 @@ fix_cudy_tr3000_114m() {
     if [ -f "$dts_for_padavanonly" ]; then
         sed -i "s/reg = <0x5c0000 0x[0-9a-fA-F]*>/reg = <0x5c0000 $size>/g" "$dts_for_padavanonly"
         echo "Updated $dts_for_padavanonly"
+}
+remove_easytier_web() {
+    local easytier_path="$BUILD_DIR/package/feeds/small8/easytier/Makefile"
+    if [ -d "${easytier_path%/*}" ] && [ -f "$easytier_path" ]; then
+        sed -i '/easytier-web/d' "$easytier_path"
+    fi
+}
+
+update_geoip() {
+    local geodata_path="$BUILD_DIR/package/feeds/small8/v2ray-geodata/Makefile"
+    if [ -d "${geodata_path%/*}" ] && [ -f "$geodata_path" ]; then
+        local GEOIP_VER=$(awk -F"=" '/GEOIP_VER:=/ {print $NF}' $geodata_path | grep -oE "[0-9]{1,}")
+        if [ -n "$GEOIP_VER" ]; then
+            local base_url="https://github.com/v2fly/geoip/releases/download/${GEOIP_VER}"
+            # 下载旧的geoip.dat和新的geoip-only-cn-private.dat文件的校验和
+            local old_SHA256=$(wget -qO- "$base_url/geoip.dat.sha256sum" | awk '{print $1}')
+            local new_SHA256=$(wget -qO- "$base_url/geoip-only-cn-private.dat.sha256sum" | awk '{print $1}')
+            # 更新Makefile中的文件名和校验和
+            if [ -n "$old_SHA256" ] && [ -n "$new_SHA256" ]; then
+                if grep -q "$old_SHA256" "$geodata_path"; then
+                    sed -i "s|=geoip.dat|=geoip-only-cn-private.dat|g" "$geodata_path"
+                    sed -i "s/$old_SHA256/$new_SHA256/g" "$geodata_path"
+                fi
+            fi
+        fi
     fi
 }
 
@@ -879,10 +908,12 @@ main() {
     support_fw4_adg
     update_script_priority
     update_base_files
-    # add_ohmyzsh
-    # add_nbtverify
+    add_ohmyzsh
+    add_nbtverify
     # add_turboacc
     fix_cudy_tr3000_114m
+    remove_easytier_web
+    update_geoip
     # update_proxy_app_menu_location
     # update_dns_app_menu_location
 }
