@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+git config pull.rebase false
 
 sudo apt-get update
 sudo apt-get install jq -y
