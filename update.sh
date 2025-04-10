@@ -837,6 +837,7 @@ fix_cudy_tr3000_114m() {
     if [ -f "$dts_for_padavanonly" ]; then
         sed -i "s/reg = <0x5c0000 0x[0-9a-fA-F]*>/reg = <0x5c0000 $size>/g" "$dts_for_padavanonly"
         echo "Updated $dts_for_padavanonly"
+    fi
 }
 remove_easytier_web() {
     local easytier_path="$BUILD_DIR/package/feeds/small8/easytier/Makefile"
