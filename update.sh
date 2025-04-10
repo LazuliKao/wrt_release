@@ -20,6 +20,8 @@ REPO_BRANCH=$2
 BUILD_DIR=$3
 COMMIT_HASH=$4
 CONFIG_FILE=$5
+DISABLED_FUNCTIONS=$6
+ENABLED_FUNCTIONS=$7
 
 FEEDS_CONF="feeds.conf.default"
 GOLANG_REPO="https://github.com/sbwml/packages_lang_golang"
@@ -133,7 +135,7 @@ remove_unwanted_packages() {
         "msd_lite"
     )
     local small8_packages=(
-        "ppp" "firewall" "dae" "daed" "daed-next" "libnftnl" "nftables" "dnsmasq" "luci-theme-argon"
+        "ppp" "firewall" "dae" "daed" "daed-next" "libnftnl" "nftables" "dnsmasq" "luci-theme-argon" "luci-app-argon-config"
     )
 
     for pkg in "${luci_packages[@]}"; do
@@ -154,6 +156,7 @@ remove_unwanted_packages() {
     fi
     git clone https://github.com/sbwml/luci-theme-argon -b openwrt-24.10 ./feeds/luci/themes/luci-theme-argon-new
     mv ./feeds/luci/themes/luci-theme-argon-new/luci-theme-argon ./feeds/luci/themes/luci-theme-argon
+    mv ./feeds/luci/themes/luci-theme-argon-new/luci-app-argon-config ./feeds/luci/applications/luci-app-argon-config
     \rm -rf ./feeds/luci/themes/luci-theme-argon-new
     if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
         local nss_packages_dirs=(
@@ -865,8 +868,51 @@ update_geoip() {
         fi
     fi
 }
-
+_trim_space(){
+    local str=$1
+    echo "$str" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+}
+_call_function(){
+    local func_name=$1
+    shift
+    if type "$func_name" &>/dev/null; then
+        "$func_name" "$@"
+    else
+        echo "    Function '$func_name' not found."
+    fi
+}
+_run_function(){
+    local func_name=$1
+    shift
+    if [[ $func_name =~ ^# ]]; then
+        local original_name=${func_name:1}
+        local original_name=$(_trim_space "$original_name")
+        if [[ $ENABLED_FUNCTIONS =~ $original_name ]]; then
+            echo "+ '$original_name'"
+            echo "    Call Force-Enabled Function '$original_name'"
+            _call_function "$original_name" "$@"
+        else
+            echo "- '$original_name'"
+            echo "    Skip Comment Function '$original_name'"
+        fi
+    elif [[ $DISABLED_FUNCTIONS =~ $func_name ]]; then
+        echo "- '$func_name'"
+        echo "    Skip Disabled Function '$func_name'" 
+    else
+        echo "+ '$func_name'"
+        _call_function "$func_name" "$@"
+    fi
+}
+_foreach_function(){
+    while read -r func_name; do
+        if [ -n "$func_name" ]; then
+            _run_function "$func_name"
+        fi
+    done < <(cat)
+}
 main() {
+    cat << EOF  | _foreach_function
+
     clone_repo
     clean_up
     reset_feeds_conf
@@ -912,11 +958,13 @@ main() {
     add_ohmyzsh
     add_nbtverify
     # add_turboacc
-    fix_cudy_tr3000_114m
+    # fix_cudy_tr3000_114m
     remove_easytier_web
     update_geoip
-    # update_proxy_app_menu_location
-    # update_dns_app_menu_location
+    update_proxy_app_menu_location
+    update_dns_app_menu_location
+
+EOF
 }
 
 main "$@"

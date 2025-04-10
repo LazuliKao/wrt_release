@@ -34,13 +34,15 @@ REPO_BRANCH=$(read_ini_by_key "REPO_BRANCH")
 REPO_BRANCH=${REPO_BRANCH:-main}
 BUILD_DIR=$(read_ini_by_key "BUILD_DIR")
 COMMIT_HASH=$(read_ini_by_key "COMMIT_HASH")
+DISABLED_FUNCTIONS=$(read_ini_by_key "DISABLED_FUNCTIONS")
+ENABLED_FUNCTIONS=$(read_ini_by_key "ENABLED_FUNCTIONS")
 COMMIT_HASH=${COMMIT_HASH:-none}
 
 if [[ -d $BASE_PATH/action_build ]]; then
     BUILD_DIR="action_build"
 fi
 chmod +x "$BASE_PATH/update.sh"
-$BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT_HASH" "$CONFIG_FILE"
+$BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT_HASH" "$CONFIG_FILE" "$DISABLED_FUNCTIONS" "$ENABLED_FUNCTIONS"
 
 \cp -f "$CONFIG_FILE" "$BASE_PATH/$BUILD_DIR/.config"
 
