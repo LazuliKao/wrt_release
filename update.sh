@@ -228,7 +228,8 @@ fix_default_set() {
         find "$BUILD_DIR/feeds/small8/luci-theme-argon" -type f -name "cascade*" -exec sed -i 's/--bar-bg/--primary/g' {} \;
     fi
 
-    install -Dm755 "$BASE_PATH/patches/99_set_argon_primary" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/99_set_argon_primary"
+    install -Dm755 "$BASE_PATH/patches/990_set_argon_primary" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/990_set_argon_primary"
+    install -Dm755 "$BASE_PATH/patches/991_set_nf_conntrack_max" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/991_set_nf_conntrack_max"
 
     if [ -f "$BUILD_DIR/package/emortal/autocore/files/tempinfo" ]; then
         if [ -f "$BASE_PATH/patches/tempinfo" ]; then
