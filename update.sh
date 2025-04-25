@@ -725,6 +725,15 @@ update_proxy_app_menu_location() {
             sed -i 's/"services"/"proxy"/g' "$passwall_path"
         fi
     fi
+    # passwall2
+    local passwall2_path="$BUILD_DIR/package/feeds/small8/luci-app-passwall2/luasrc/controller/passwall2.lua"
+    if [ -d "${passwall2_path%/*}" ] && [ -f "$passwall2_path" ]; then
+        local pos=$(grep -n "entry" "$passwall2_path" | head -n 1 | awk -F ":" '{print $1}')
+        if [ -n $pos ]; then
+            sed -i ''${pos}'i\	entry({"admin", "proxy"}, firstchild(), "Proxy", 30).dependent = false' "$passwall2_path"
+            sed -i 's/"services"/"proxy"/g' "$passwall2_path"
+        fi
+    fi
 
     # homeproxy
     local homeproxy_path="$BUILD_DIR/package/feeds/small8/luci-app-homeproxy/root/usr/share/luci/menu.d/luci-app-homeproxy.json"
