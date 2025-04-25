@@ -197,9 +197,9 @@ install_small8() {
         easytier luci-app-easytier msd_lite luci-app-msd_lite
 }
 install_opentopd() {
-    \rm -rf ./feeds/opentopd/luci-app-advancedplus
-    git clone https://github.com/sirpdboy/luci-app-advancedplus.git ./feeds/opentopd/luci-app-advancedplus
-    ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advancedplus
+    # \rm -rf ./feeds/opentopd/luci-app-advancedplus
+    # git clone https://github.com/sirpdboy/luci-app-advancedplus.git ./feeds/opentopd/luci-app-advancedplus
+    ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advanced
 }
 install_feeds() {
     ./scripts/feeds update -i
