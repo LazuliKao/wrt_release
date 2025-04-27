@@ -971,8 +971,8 @@ main() {
     # fix_cudy_tr3000_114m
     remove_easytier_web
     update_geoip
-    update_proxy_app_menu_location
-    update_dns_app_menu_location
+    # update_proxy_app_menu_location
+    # update_dns_app_menu_location
 
 EOF
 }
