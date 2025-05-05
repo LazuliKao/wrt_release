@@ -154,7 +154,7 @@ remove_unwanted_packages() {
     if [[ -d ./package/istore ]]; then
         \rm -rf ./package/istore
     fi
-    
+
     git clone https://github.com/sbwml/luci-theme-argon -b openwrt-24.10 ./feeds/luci/themes/luci-theme-argon-new
     mv ./feeds/luci/themes/luci-theme-argon-new/luci-theme-argon ./feeds/luci/themes/luci-theme-argon
     mv ./feeds/luci/themes/luci-theme-argon-new/luci-app-argon-config ./feeds/luci/applications/luci-app-argon-config
@@ -873,13 +873,13 @@ fix_cudy_tr3000_114m() {
         sed -i "s/reg = <0x5c0000 0x[0-9a-fA-F]*>/reg = <0x5c0000 $size>/g" "$dts_for_padavanonly"
         echo "Updated $dts_for_padavanonly"
     fi
-} 
+}
 
-_trim_space(){
+_trim_space() {
     local str=$1
     echo "$str" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
 }
-_call_function(){
+_call_function() {
     local func_name=$1
     shift
     if type "$func_name" &>/dev/null; then
@@ -888,7 +888,7 @@ _call_function(){
         echo "    Function '$func_name' not found."
     fi
 }
-_run_function(){
+_run_function() {
     local func_name=$1
     shift
     if [[ $func_name =~ ^# ]]; then
@@ -904,13 +904,13 @@ _run_function(){
         fi
     elif [[ $DISABLED_FUNCTIONS =~ $func_name ]]; then
         echo "- '$func_name'"
-        echo "    Skip Disabled Function '$func_name'" 
+        echo "    Skip Disabled Function '$func_name'"
     else
         echo "+ '$func_name'"
         _call_function "$func_name" "$@"
     fi
 }
-_foreach_function(){
+_foreach_function() {
     while read -r func_name; do
         if [ -n "$func_name" ]; then
             _run_function "$func_name"
@@ -918,7 +918,7 @@ _foreach_function(){
     done < <(cat)
 }
 main() {
-    cat << EOF  | _foreach_function
+    cat <<EOF | _foreach_function
 
     clone_repo
     clean_up
@@ -970,7 +970,7 @@ main() {
     update_geoip
     update_package "xray-core"
     # update_proxy_app_menu_location
-    # update_dns_app_menu_location
+    update_dns_app_menu_location
 
 EOF
 }
