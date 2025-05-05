@@ -10,15 +10,32 @@
 
 ---
 
-# Compile Using Docker 
+# Compile Using Docker
+
 - (docker compose)
 
 ```bash
 docker compose up
 ```
-- (docker command) 
+
+- (docker command)
 
 ```bash
+docker run --rm -it \
+  -v "$(pwd)":/build \
+  -w /build \
+  immortalwrt/sdk:qualcommax-ipq60xx \
+  bash build.sh jdcloud_ipq60xx_immwrt
+docker run --rm -it \
+  -v "$(pwd)":/build \
+  -w /build \
+  immortalwrt/sdk:qualcommax-ipq60xx \
+  bash build.sh jdcloud_ipq60xx_libwrt
+docker run --rm -it \
+  -v "$(pwd)":/build \
+  -w /build \
+  immortalwrt/sdk:x86_64 \
+  bash build.sh x64_immwrt
 docker run --rm -it \
   -v "$(pwd)":/build \
   -w /build \
@@ -30,6 +47,7 @@ docker run --rm -it \
   immortalwrt/sdk:mediatek-filogic-openwrt-24.10 \
   bash build.sh cudy_tr3000-5.4
 ```
+
 # Compile Using Windows HyperV (ubuntu 22.04):
 
 create vm use https://github.com/nbtca/hyperv-ubuntu-provisioning
@@ -40,7 +58,7 @@ create vm use https://github.com/nbtca/hyperv-ubuntu-provisioning
 .\New-HyperVCloudImageVM.ps1 -VMProcessorCount 16 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "22.04" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -ImageTypeAzure $true -VMMachine_StoragePath "F:\hyper-v" -ShowSerialConsoleWindow
 ```
 
-## 然后参考[这里](#原编译过程)进行编译。
+## 然后参考[这里](#编译过程)进行编译。
 
 # 编译过程
 
