@@ -966,7 +966,6 @@ main() {
     add_nbtverify
     # add_turboacc
     # fix_cudy_tr3000_114m
-    remove_easytier_web
     fix_easytier
     update_geoip
     update_package "xray-core"
