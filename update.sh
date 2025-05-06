@@ -203,7 +203,7 @@ install_opentopd() {
     ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advanced
 }
 install_kiddin9() {
-    ./scripts/feeds install -p opentopd -f luci-app-advancedplus luci-app-chinadns-ng luci-app-change-mac
+    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-chinadns-ng luci-app-change-mac
 }
 install_feeds() {
     ./scripts/feeds update -i
