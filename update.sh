@@ -191,10 +191,11 @@ install_small8() {
         tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
         luci-app-passwall luci-app-passwall2 alist luci-app-alist smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns \
         adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd \
-        luci-app-store quickstart luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest \
+        luci-app-store quickstart luci-app-quickstart luci-app-istorex \
         luci-theme-argon netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy \
         luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf \
         luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon \
+        luci-app-supervisord luci-app-nginx-manager \
         easytier luci-app-easytier msd_lite luci-app-msd_lite
 }
 install_opentopd() {
@@ -203,7 +204,7 @@ install_opentopd() {
     ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advanced
 }
 install_kiddin9() {
-    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-chinadns-ng luci-app-change-mac
+    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-chinadns-ng luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest 
 }
 install_feeds() {
     ./scripts/feeds update -i
