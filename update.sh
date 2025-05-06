@@ -101,6 +101,8 @@ update_feeds() {
     }
     # 检查并添加 small-package 源
     add_feeds "small8" "https://github.com/kenzok8/small-package"
+    # 检查并添加 kwrt 源
+    add_feeds "kiddin9" "https://github.com/kiddin9/kwrt-packages.git"
     # 检查并添加 opentopd 源
     add_feeds "opentopd" "https://github.com/sirpdboy/sirpdboy-package"
     # 检查并添加 libremesh 源
@@ -195,6 +197,9 @@ install_opentopd() {
     # git clone https://github.com/sirpdboy/luci-app-advancedplus.git ./feeds/opentopd/luci-app-advancedplus
     ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advanced
 }
+install_kiddin9() {
+    ./scripts/feeds install -p opentopd -f luci-app-advancedplus luci-app-chinadns-ng luci-app-change-mac
+}
 install_feeds() {
     ./scripts/feeds update -i
     for dir in $BUILD_DIR/feeds/*; do
@@ -205,6 +210,8 @@ install_feeds() {
                 install_fullconenat
             elif [[ $(basename "$dir") == "opentopd" ]]; then
                 install_opentopd
+            elif [[ $(basename "$dir") == "kiddin9" ]]; then
+                install_kiddin9
             else
                 ./scripts/feeds install -f -ap $(basename "$dir")
             fi
