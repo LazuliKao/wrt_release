@@ -79,7 +79,12 @@ clean_up() {
 }
 
 reset_feeds_conf() {
-    git reset --hard origin/$REPO_BRANCH
+    if [ "$(git symbolic-ref -q HEAD)" == "" ]; then
+        echo "[git] Detached HEAD state Mode"
+        git reset --hard HEAD
+    else
+        git reset --hard origin/$REPO_BRANCH
+    fi
     git clean -f -d
     git pull
     if [[ $COMMIT_HASH != "none" ]]; then
