@@ -110,6 +110,8 @@ update_feeds() {
     add_feeds "kiddin9" "https://github.com/kiddin9/kwrt-packages.git"
     # 检查并添加 opentopd 源
     add_feeds "opentopd" "https://github.com/sirpdboy/sirpdboy-package"
+    # 检查并添加 node 源
+    add_feeds "node" "https://github.com/nxhack/openwrt-node-packages.git"
     # 检查并添加 libremesh 源
     # add_feeds "libremesh" "https://github.com/libremesh/lime-packages"
     # 添加bpf.mk解决更新报错
@@ -198,26 +200,39 @@ install_small8() {
         luci-app-supervisord luci-app-nginx-manager \
         easytier luci-app-easytier msd_lite luci-app-msd_lite
 }
+
 install_opentopd() {
     # \rm -rf ./feeds/opentopd/luci-app-advancedplus
     # git clone https://github.com/sirpdboy/luci-app-advancedplus.git ./feeds/opentopd/luci-app-advancedplus
     ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advanced
 }
+
 install_kiddin9() {
     ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-chinadns-ng luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest 
 }
+
+install_node() {
+    ./scripts/feeds update node
+    \rm -rf ./package/feeds/packages/node
+    \rm -rf ./package/feeds/packages/node-*
+    ./scripts/feeds install -a -p node
+}
+
 install_feeds() {
     ./scripts/feeds update -i
     for dir in $BUILD_DIR/feeds/*; do
         # 检查是否为目录并且不以 .tmp 结尾，并且不是软链接
         if [ -d "$dir" ] && [[ ! "$dir" == *.tmp ]] && [ ! -L "$dir" ]; then
-            if [[ $(basename "$dir") == "small8" ]]; then
+            dir_name=$(basename "$dir")
+            if [[ "$dir_name" == "small8" ]]; then
                 install_small8
                 install_fullconenat
-            elif [[ $(basename "$dir") == "opentopd" ]]; then
+            elif [[ "$dir_name" == "opentopd" ]]; then
                 install_opentopd
-            elif [[ $(basename "$dir") == "kiddin9" ]]; then
+            elif [[ "$dir_name" == "kiddin9" ]]; then
                 install_kiddin9
+            elif [[ "$dir_name" == "node" ]]; then
+                install_node
             else
                 ./scripts/feeds install -f -ap $(basename "$dir")
             fi
