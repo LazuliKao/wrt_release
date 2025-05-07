@@ -162,7 +162,7 @@ remove_unwanted_packages() {
         \rm -rf ./package/istore
     fi
 
-    git clone https://github.com/sbwml/luci-theme-argon -b openwrt-24.10 ./feeds/luci/themes/luci-theme-argon-new
+    git clone https://github.com/LazuliKao/luci-theme-argon -b openwrt-24.10 ./feeds/luci/themes/luci-theme-argon-new
     mv ./feeds/luci/themes/luci-theme-argon-new/luci-theme-argon ./feeds/luci/themes/luci-theme-argon
     mv ./feeds/luci/themes/luci-theme-argon-new/luci-app-argon-config ./feeds/luci/applications/luci-app-argon-config
     \rm -rf ./feeds/luci/themes/luci-theme-argon-new

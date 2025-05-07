@@ -58,6 +58,11 @@ create vm use https://github.com/nbtca/hyperv-ubuntu-provisioning
 .\New-HyperVCloudImageVM.ps1 -VMProcessorCount 16 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "22.04" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -ImageTypeAzure $true -VMMachine_StoragePath "F:\hyper-v" -ShowSerialConsoleWindow
 ```
 
+# HyperV or VMware
+
+qemu-img convert -f raw -O vhdx immortalwrt-x86-64-generic-squashfs-combined-efi.img immortalwrt-x86-64-generic-squashfs-combined-efi.vhdx
+qemu-img convert -f raw -O vmdk immortalwrt-x86-64-generic-squashfs-combined-efi.img immortalwrt-x86-64-generic-squashfs-combined-efi.vmdk
+
 ## 然后参考[这里](#编译过程)进行编译。
 
 # 编译过程
