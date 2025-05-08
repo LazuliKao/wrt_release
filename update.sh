@@ -475,9 +475,6 @@ update_pw() {
     local smartdns_lua_path="$pw_share_dir/helper_smartdns_add.lua"
     local rules_dir="$pw_share_dir/rules"
 
-    # 删除 helper_smartdns_add.lua 文件中的特定行
-    [ -f "$smartdns_lua_path" ] && sed -i '/force-qtype-SOA 65/d' "$smartdns_lua_path"
-
     # 清空chnlist
     [ -f "$rules_dir/chnlist" ] && echo "" >"$rules_dir/chnlist"
 }
