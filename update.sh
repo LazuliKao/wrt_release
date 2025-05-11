@@ -197,7 +197,7 @@ install_small8() {
         luci-theme-argon netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy \
         luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf \
         luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon \
-        luci-app-supervisord luci-app-nginx-manager \
+        luci-app-supervisord \
         easytier luci-app-easytier msd_lite luci-app-msd_lite
 }
 
