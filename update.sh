@@ -22,6 +22,8 @@ COMMIT_HASH=$4
 CONFIG_FILE=$5
 DISABLED_FUNCTIONS=$6
 ENABLED_FUNCTIONS=$7
+KERNEL_VERMAGIC=$8
+KERNEL_MODULES=$9
 
 FEEDS_CONF="feeds.conf.default"
 GOLANG_REPO="https://github.com/sbwml/packages_lang_golang"
@@ -208,7 +210,7 @@ install_opentopd() {
 }
 
 install_kiddin9() {
-    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-chinadns-ng luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest 
+    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-chinadns-ng luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest
 }
 
 install_node() {
@@ -900,6 +902,32 @@ fix_cudy_tr3000_114m() {
     fi
 }
 
+fix_kernel_magic() {
+    # Check if KERNEL_VERMAGIC is empty or not specified
+    if [ -z "$KERNEL_VERMAGIC" ]; then
+        echo "KERNEL_VERMAGIC is empty, skipping kernel magic fix"
+        return 0
+    fi
+
+    local kernel_defaults="$BUILD_DIR/include/kernel-defaults.mk"
+    sed -i "/\\\$(LINUX_DIR)\/.vermagic$/c\\\techo ${KERNEL_VERMAGIC} > \\\$(LINUX_DIR)/.vermagic" "$kernel_defaults"
+    echo "Kernel vermagic set to: $KERNEL_VERMAGIC"
+
+    local kernel_makefile="$BUILD_DIR/package/kernel/linux/Makefile"
+    sed -i "/STAMP_BUILT:=/c\\  STAMP_BUILT:=\\\$(STAMP_BUILT)_$KERNEL_VERMAGIC" "$kernel_makefile"
+
+    # If KERNEL_MODULES is specified, add the distfeeds.conf
+    if [ -n "$KERNEL_MODULES" ]; then
+        local base_files_path="$BUILD_DIR/package/base-files/files"
+        local uci_defaults_path="$base_files_path/etc/uci-defaults"
+        if [ -d "$uci_defaults_path" ]; then
+            cat <<EOF >"$uci_defaults_path/99-kmod-distfeeds.sh"
+echo "src/gz kmod $KERNEL_MODULES" >> /etc/opkg/distfeeds.conf
+EOF
+        fi
+    fi
+}
+
 _trim_space() {
     local str=$1
     echo "$str" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
@@ -996,6 +1024,7 @@ main() {
     update_package "xray-core"
     # update_proxy_app_menu_location
     update_dns_app_menu_location
+    # fix_kernel_magic
 
 EOF
 }
