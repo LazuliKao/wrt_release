@@ -210,7 +210,7 @@ install_opentopd() {
 }
 
 install_kiddin9() {
-    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-chinadns-ng luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest
+    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-chinadns-ng luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest qosmate luci-app-qosmate
 }
 
 install_node() {
