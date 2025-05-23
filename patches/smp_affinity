@@ -36,7 +36,7 @@ cpus_to_bitmask() {
         if [ -z "$end" ]; then
             bitmask="$((bitmask | 1 << start))"
         else
-            bitmask="$((bitmask | (2 ** (end - start + 1) - 1) << start))"
+            bitmask="$((bitmask | ((1 << (end - start + 1)) - 1) << start))"
         fi
     done
     printf '%x' $bitmask
@@ -111,7 +111,7 @@ enable_affinity() {
 
     # assign nss_queue0 to 2-3
     set_affinity 'nss_queue0' 2-3 1
-    
+
     # assign Copy Engine
     set_affinity 'bam_dma' 1 1
     set_affinity 'bam_dma' 2 2
