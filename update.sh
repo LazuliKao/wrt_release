@@ -867,9 +867,9 @@ add_nbtverify() {
     fi
     local arch=$(_get_arch_from_config)
     if [[ $arch == "x86_64" ]]; then
-        wget https://github.com/nbtca/luci-app-nbtverify/releases/download/v0.1.9/luci-app-nbtverify_amd64_x86_64.ipk -O "$ipk_path"
+        wget https://github.com/LazuliKao/luci-app-nbtverify/releases/download/v0.1.9/luci-app-nbtverify_amd64_x86_64.ipk -O "$ipk_path"
     elif [[ $arch == "aarch64" ]]; then
-        wget https://github.com/nbtca/luci-app-nbtverify/releases/download/v0.1.9/luci-app-nbtverify_arm64_aarch64_cortex-a53.ipk -O "$ipk_path"
+        wget https://github.com/LazuliKao/luci-app-nbtverify/releases/download/v0.1.9/luci-app-nbtverify_arm64_aarch64_cortex-a53.ipk -O "$ipk_path"
     else
         echo "[nbtverify] Unsupported architecture: $arch"
         return
