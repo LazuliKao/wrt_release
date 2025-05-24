@@ -938,6 +938,11 @@ EOF
     fi
 }
 
+update_mt76() {
+    echo "Update Mt76 version."
+    patch -p1 <"$BASE_PATH/patches/update_mt76.patch"
+}
+
 _trim_space() {
     local str=$1
     echo "$str" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
@@ -1037,6 +1042,7 @@ main() {
     # update_proxy_app_menu_location
     update_dns_app_menu_location
     # fix_kernel_magic
+    # update_mt76
 
 EOF
 }
