@@ -1,0 +1,26 @@
+# https://patchwork.kernel.org/project/linux-wireless/patch/20250209011856.6726-4-razvan.grigore@vampirebyte.ro/
+diff --git a/mt7925/main.c b/mt7925/main.c
+index 98daf80ac131..9da7897c0267 100644
+--- a/mt7925/main.c
++++ b/mt7925/main.c
+@@ -1656,6 +1656,8 @@  int mt7925_set_tx_sar_pwr(struct ieee80211_hw *hw,
+ 			  const struct cfg80211_sar_specs *sar)
+ {
+ 	struct mt76_phy *mphy = hw->priv;
++	int tx_power;
++	struct mt76_power_limits limits_array;
+ 
+ 	if (sar) {
+ 		int err = mt76_init_sar_power(hw, sar);
+@@ -1665,6 +1667,11 @@  int mt7925_set_tx_sar_pwr(struct ieee80211_hw *hw,
+ 	}
+ 	mt792x_init_acpi_sar_power(mt792x_hw_phy(hw), !sar);
+ 
++	tx_power = mt76_get_power_bound(mphy, hw->conf.power_level);
++	tx_power = mt76_get_rate_power_limits(mphy, mphy->chandef.chan,
++					      &limits_array, tx_power);
++	mphy->txpower_cur = tx_power;
++
+ 	return mt7925_mcu_set_rate_txpower(mphy);
+ }
+ 

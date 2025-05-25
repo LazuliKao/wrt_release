@@ -941,6 +941,14 @@ EOF
 update_mt76() {
     echo "Update Mt76 version."
     patch -p1 <"$BASE_PATH/patches/update_mt76.patch"
+    echo "Add extra patch file for mt76."
+    local mt76_patch_dir="$BUILD_DIR/package/kernel/mt76/patches"
+    if [ -d "$mt76_patch_dir" ]; then
+        cp -f "$BASE_PATH/patches/mt76/002_mt76_mt7921_fix_returned_txpower.patch" "$mt76_patch_dir"
+        cp -f "$BASE_PATH/patches/mt76/003_mt76_mt7925_fix_returned_txpower.patch" "$mt76_patch_dir"
+    else
+        echo "Mt76 patch directory does not exist: $mt76_patch_dir"
+    fi
 }
 
 _trim_space() {

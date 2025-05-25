@@ -1,0 +1,38 @@
+# https://patchwork.kernel.org/project/linux-wireless/patch/20250209011856.6726-2-razvan.grigore@vampirebyte.ro/
+# Already applied to mt76: https://github.com/openwrt/mt76/commit/f1180736425854be73113a5c19ecc690b49f0008
+diff --git a/mac80211.c b/mac80211.c
+index 508b472408c2..2c98cc42cd7e 100644
+--- a/mac80211.c
++++ b/mac80211.c
+@@ -1697,6 +1697,17 @@  void mt76_wcid_add_poll(struct mt76_dev *dev, struct mt76_wcid *wcid)
+ }
+ EXPORT_SYMBOL_GPL(mt76_wcid_add_poll);
+ 
++s8 mt76_get_power_bound(struct mt76_phy *phy, s8 txpower)
++{
++	int n_chains = hweight16(phy->chainmask);
++
++	txpower = mt76_get_sar_power(phy, phy->chandef.chan, txpower * 2);
++	txpower -= mt76_tx_power_nss_delta(n_chains);
++
++	return txpower;
++}
++EXPORT_SYMBOL_GPL(mt76_get_power_bound);
++
+ int mt76_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		     unsigned int link_id, int *dbm)
+ {
+diff --git a/mt76.h b/mt76.h
+index 132148f7b107..96f98a0d55a8 100644
+--- a/mt76.h
++++ b/mt76.h
+@@ -1482,6 +1482,8 @@  void mt76_sta_pre_rcu_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ int mt76_get_min_avg_rssi(struct mt76_dev *dev, u8 phy_idx);
+ 
++s8 mt76_get_power_bound(struct mt76_phy *phy, s8 txpower);
++
+ int mt76_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		     unsigned int link_id, int *dbm);
+ int mt76_init_sar_power(struct ieee80211_hw *hw,
+
