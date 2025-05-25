@@ -940,7 +940,7 @@ EOF
 
 update_mt76() {
     echo "Update Mt76 version."
-    patch -p1 <"$BASE_PATH/patches/update_mt76.patch"
+    # patch -p1 <"$BASE_PATH/patches/update_mt76.patch"
     echo "Add extra patch file for mt76."
     local mt76_patch_dir="$BUILD_DIR/package/kernel/mt76/patches"
     if [ -d "$mt76_patch_dir" ]; then
