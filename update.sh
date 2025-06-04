@@ -121,11 +121,12 @@ update_feeds() {
         touch "$BUILD_DIR/include/bpf.mk"
     fi
     # 切换nss-packages源
-    #if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
-    #    sed -i '/nss_packages/d' "$BUILD_DIR/$FEEDS_CONF"
-    #    [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
-    #    echo "src-git nss_packages https://github.com/ZqinKing/nss-packages.git" >>"$BUILD_DIR/$FEEDS_CONF"
-    #fi
+    # if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
+    #     sed -i '/nss_packages/d' "$BUILD_DIR/$FEEDS_CONF"
+    #     [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
+    #     echo "src-git nss_packages https://github.com/LiBwrt/nss-packages.git" >>"$BUILD_DIR/$FEEDS_CONF"
+    # fi
+
     # 更新 feeds
     ./scripts/feeds clean
     ./scripts/feeds update -a
@@ -173,9 +174,9 @@ remove_unwanted_packages() {
     \rm -rf ./feeds/luci/themes/luci-theme-argon-new
 
     # ipq60xx不支持NSS offload mnet_rx
-    if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
-        rm -rf "$BUILD_DIR/feeds/nss_packages/wwan"
-    fi
+    # if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
+    #     rm -rf "$BUILD_DIR/feeds/nss_packages/wwan"
+    # fi
 
     # 临时放一下，清理脚本
     if [ -d "$BUILD_DIR/target/linux/qualcommax/base-files/etc/uci-defaults" ]; then
@@ -831,6 +832,23 @@ update_lucky() {
     fi
 }
 
+fix_rust_compile_error() {
+    if [ -f "$BUILD_DIR/feeds/packages/lang/rust/Makefile" ]; then
+        sed -i 's/download-ci-llvm=true/download-ci-llvm=false/g' "$BUILD_DIR/feeds/packages/lang/rust/Makefile"
+    fi
+}
+
+update_smartdns_luci() {
+    if [ -d "$BUILD_DIR/feeds/small8/luci-app-smartdns" ]; then
+        rm -rf "$BUILD_DIR/feeds/small8/luci-app-smartdns"
+    fi
+    git clone --depth 1 -b master https://github.com/pymumu/luci-app-smartdns.git "$BUILD_DIR/feeds/small8/luci-app-smartdns"
+
+    if [ -f "$BUILD_DIR/feeds/small8/luci-app-smartdns/Makefile" ]; then
+        sed -i 's/\.\.\/\.\.\/luci\.mk/\$(TOPDIR)\/feeds\/luci\/luci\.mk/g' "$BUILD_DIR/feeds/small8/luci-app-smartdns/Makefile"
+    fi
+}
+
 update_base_files() {
     local base_files_path="$BUILD_DIR/package/base-files/files"
     local uci_defaults_path="$base_files_path/etc/uci-defaults"
@@ -1036,6 +1054,8 @@ main() {
     add_timecontrol
     add_gecoosac
     # update_lucky
+    fix_rust_compile_error
+    update_smartdns_luci
     install_feeds
     support_fw4_adg
     update_script_priority
@@ -1046,7 +1066,7 @@ main() {
     # fix_cudy_tr3000_114m
     fix_easytier
     update_geoip
-    update_package "xray-core"
+    # update_package "xray-core"
     # update_proxy_app_menu_location
     update_dns_app_menu_location
     # fix_kernel_magic
