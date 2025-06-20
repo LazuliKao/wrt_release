@@ -111,7 +111,7 @@ update_feeds() {
     # 检查并添加 kwrt 源
     add_feeds "kiddin9" "https://github.com/kiddin9/kwrt-packages.git"
     # 检查并添加 opentopd 源
-    add_feeds "opentopd" "https://github.com/sirpdboy/sirpdboy-package"
+    # add_feeds "opentopd" "https://github.com/sirpdboy/sirpdboy-package"
     # 检查并添加 node 源
     add_feeds "node" "https://github.com/nxhack/openwrt-node-packages.git"
     # 检查并添加 libremesh 源
@@ -222,11 +222,11 @@ install_small8() {
         easytier luci-app-easytier msd_lite luci-app-msd_lite cups luci-app-cupsd
 }
 
-install_opentopd() {
-    # \rm -rf ./feeds/opentopd/luci-app-advancedplus
-    # git clone https://github.com/sirpdboy/luci-app-advancedplus.git ./feeds/opentopd/luci-app-advancedplus
-    ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advanced
-}
+# install_opentopd() {
+#     # \rm -rf ./feeds/opentopd/luci-app-advancedplus
+#     # git clone https://github.com/sirpdboy/luci-app-advancedplus.git ./feeds/opentopd/luci-app-advancedplus
+#     ./scripts/feeds install -p opentopd -f cpulimit luci-app-cpulimit luci-app-advanced
+# }
 
 install_kiddin9() {
     ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest qosmate luci-app-qosmate luci-app-unishare unishare
@@ -248,8 +248,8 @@ install_feeds() {
             if [[ "$dir_name" == "small8" ]]; then
                 install_small8
                 install_fullconenat
-            elif [[ "$dir_name" == "opentopd" ]]; then
-                install_opentopd
+            # elif [[ "$dir_name" == "opentopd" ]]; then
+            #     install_opentopd
             elif [[ "$dir_name" == "kiddin9" ]]; then
                 install_kiddin9
             elif [[ "$dir_name" == "node" ]]; then
