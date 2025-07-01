@@ -1132,7 +1132,7 @@ main() {
     update_package "dockerd" "releases" "v28.2.2"
     # update_package "xray-core"
     # update_proxy_app_menu_location
-    update_dns_app_menu_location
+    # update_dns_app_menu_location
     # fix_kernel_magic
     # update_mt76
 
