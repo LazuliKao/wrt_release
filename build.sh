@@ -6,7 +6,6 @@ sudo apt-get install jq -y
 
 set -e
 
-source /etc/profile
 BASE_PATH=$(cd $(dirname $0) && pwd)
 
 Dev=$1
@@ -30,6 +29,34 @@ read_ini_by_key() {
     awk -F"=" -v key="$key" '$1 == key {print $2}' "$INI_FILE"
 }
 
+# 移除 uhttpd 依赖
+# 当启用luci-app-quickfile插件时，表示启动nginx，所以移除luci对uhttp(luci-light)的依赖
+remove_uhttpd_dependency() {
+    local config_path="$BASE_PATH/$BUILD_DIR/.config"
+    local luci_makefile_path="$BASE_PATH/$BUILD_DIR/feeds/luci/collections/luci/Makefile"
+
+    if grep -q "CONFIG_PACKAGE_luci-app-quickfile=y" "$config_path"; then
+        if [ -f "$luci_makefile_path" ]; then
+            sed -i '/luci-light/d' "$luci_makefile_path"
+            echo "Removed uhttpd (luci-light) dependency as luci-app-quickfile (nginx) is enabled."
+        fi
+    fi
+}
+
+# 应用配置文件
+apply_config() {
+    # 复制基础配置文件
+    \cp -f "$CONFIG_FILE" "$BASE_PATH/$BUILD_DIR/.config"
+    
+    # 如果是 ipq60xx 或 ipq807x 平台，则追加 NSS 配置
+    if grep -qE "(ipq60xx|ipq807x)" "$BASE_PATH/$BUILD_DIR/.config"; then
+        cat "$BASE_PATH/deconfig/nss.config" >> "$BASE_PATH/$BUILD_DIR/.config"
+    fi
+
+    # 追加代理配置
+    cat "$BASE_PATH/deconfig/proxy.config" >> "$BASE_PATH/$BUILD_DIR/.config"
+}
+
 REPO_URL=$(read_ini_by_key "REPO_URL")
 REPO_BRANCH=$(read_ini_by_key "REPO_BRANCH")
 REPO_BRANCH=${REPO_BRANCH:-main}
@@ -47,7 +74,8 @@ fi
 chmod +x "$BASE_PATH/update.sh"
 $BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT_HASH" "$CONFIG_FILE" "$DISABLED_FUNCTIONS" "$ENABLED_FUNCTIONS" "$KERNEL_VERMAGIC" "$KERNEL_MODULES"
 
-\cp -f "$CONFIG_FILE" "$BASE_PATH/$BUILD_DIR/.config"
+apply_config
+remove_uhttpd_dependency
 
 cd "$BASE_PATH/$BUILD_DIR"
 make defconfig

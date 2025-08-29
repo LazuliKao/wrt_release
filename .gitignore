@@ -8,6 +8,7 @@ imm-nss/
 imm-x64/
 lede/
 libwrt-k612/
+immortalwrt/
 compilecfg/test.ini
 deconfig/test.config
 *.swp
@@ -19,3 +20,5 @@ domain_rule.json
 reality_server.json
 xray-client.json
 xray-server.json
+.clineignore
+update.sh.bak
