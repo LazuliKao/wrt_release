@@ -225,7 +225,7 @@ install_small8() {
         luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf \
         luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon \
         luci-app-supervisord \
-        easytier luci-app-easytier msd_lite luci-app-msd_lite cups luci-app-cupsd
+        easytier luci-app-easytier msd_lite luci-app-msd_lite cups luci-app-cupsd \
         luci-app-passwall v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go \
         luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
         luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest netdata luci-app-netdata \
