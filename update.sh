@@ -817,7 +817,6 @@ add_gecoosac() {
     local repo_url="https://github.com/lwb1978/openwrt-gecoosac.git"
     # 删除旧的目录（如果存在）
     rm -rf "$gecoosac_dir" 2>/dev/null
-    git clone --depth 1 https://github.com/lwb1978/openwrt-gecoosac.git "$gecoosac_dir"
     echo "正在添加 openwrt-gecoosac..."
     if ! git clone --depth 1 "$repo_url" "$gecoosac_dir"; then
         echo "错误：从 $repo_url 克隆 openwrt-gecoosac 仓库失败" >&2
