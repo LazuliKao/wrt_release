@@ -1217,7 +1217,7 @@ fix_kernel_magic() {
         if [ -d "$uci_defaults_path" ]; then
             cat <<EOF >"$uci_defaults_path/99-kmod-distfeeds.sh"
 echo "src/gz kmod $KERNEL_MODULES" >> /etc/opkg/distfeeds.conf
-EOF        
+EOF
         fi
     fi
 }
@@ -1277,7 +1277,7 @@ _foreach_function() {
         fi
     done < <(cat)
 }
- 
+
 main() {
     cat <<EOF | _foreach_function
 
