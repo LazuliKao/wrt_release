@@ -24,6 +24,12 @@ docker compose up
 docker run --rm -it \
   -v "$(pwd)":/build \
   -w /build \
+  immortalwrt/sdk:mediatek-filogic \
+  bash build.sh jdcloud_ax6000_immwrt | tee build.log
+
+docker run --rm -it \
+  -v "$(pwd)":/build \
+  -w /build \
   immortalwrt/sdk:qualcommax-ipq60xx \
   bash build.sh jdcloud_ipq60xx_immwrt
 docker run --rm -it \
@@ -55,7 +61,7 @@ create vm use https://github.com/nbtca/hyperv-ubuntu-provisioning
 创建参考：
 
 ```ps1
-.\New-HyperVCloudImageVM.ps1 -VMProcessorCount 16 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "22.04" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -ImageTypeAzure $true -VMMachine_StoragePath "F:\hyper-v" -ShowSerialConsoleWindow
+.\New-HyperVCloudImageVM.ps1 -VMProcessorCount 32 -VMMemoryStartupBytes 6GB -VMMinimumBytes 6GB -VMMaximumBytes 16GB -VHDSizeBytes 128GB -VMName "openwrt-development-1" -ImageVersion "25.04" -VMGeneration 2 -KeyboardLayout en -GuestAdminUsername lk -GuestAdminPassword lk233 -VMDynamicMemoryEnabled $true -VirtualSwitchName WAN -Verbose -VMMachine_StoragePath "Y:\hyper-v" -ShowSerialConsoleWindow -PreInstallDocker
 ```
 
 # HyperV or VMware

@@ -115,7 +115,7 @@ update_feeds() {
     # 检查并添加 opentopd 源
     # add_feeds "opentopd" "https://github.com/sirpdboy/sirpdboy-package"
     # 检查并添加 node 源
-    add_feeds "node" "https://github.com/nxhack/openwrt-node-packages.git"
+    # add_feeds "node" "https://github.com/nxhack/openwrt-node-packages.git"
     # 检查并添加 libremesh 源
     # add_feeds "libremesh" "https://github.com/libremesh/lime-packages"
     # 添加bpf.mk解决更新报错
@@ -253,12 +253,12 @@ install_kiddin9() {
     ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest qosmate luci-app-qosmate luci-app-unishare unishare
 }
 
-install_node() {
-    ./scripts/feeds update node
-    \rm -rf ./package/feeds/packages/node
-    \rm -rf ./package/feeds/packages/node-*
-    ./scripts/feeds install -a -p node
-}
+# install_node() {
+#     ./scripts/feeds update node
+#     \rm -rf ./package/feeds/packages/node
+#     \rm -rf ./package/feeds/packages/node-*
+#     ./scripts/feeds install -a -p node
+# }
 
 install_feeds() {
     ./scripts/feeds update -i
@@ -273,8 +273,8 @@ install_feeds() {
             #     install_opentopd
             elif [[ "$dir_name" == "kiddin9" ]]; then
                 install_kiddin9
-            elif [[ "$dir_name" == "node" ]]; then
-                install_node
+            # elif [[ "$dir_name" == "node" ]]; then
+            #     install_node
             else
                 ./scripts/feeds install -f -ap $(basename "$dir")
             fi
