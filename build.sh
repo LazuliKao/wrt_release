@@ -96,8 +96,103 @@ if [[ -d $TARGET_DIR ]]; then
     find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*efi.img.gz" -o -name "*.itb" -o -name "*.fip" -o -name "*.ubi" -o -name "*rootfs.tar.gz" \) -exec rm -f {} +
 fi
 
-make download -j$(($(nproc) * 2))
-make -j$(($(nproc) + 1)) || make -j$(nproc) || make -j1 || make -j1 V=s
+
+### DOWNLOAD ###
+# make download -j$(($(nproc) * 2))
+# 重试 download 直到成功
+NPROC_DL=$(nproc)
+MAKE_DOWNLOAD_JOBS=$((NPROC_DL * 2))
+DOWNLOAD_LOG_BASE="$BASE_PATH/download.log"
+attempt=0
+
+while :; do
+    if [ "$attempt" -eq 0 ]; then
+        LOG_FILE="$DOWNLOAD_LOG_BASE"
+    else
+        LOG_FILE="$BASE_PATH/download_${attempt}.log"
+    fi
+    : > "$LOG_FILE"
+    echo "Download attempt $((attempt+1)) - log: $(basename "$LOG_FILE")" | tee -a "$LOG_FILE"
+    echo "Running: make download -j$MAKE_DOWNLOAD_JOBS" | tee -a "$LOG_FILE"
+
+    set -o pipefail
+    make download -j"$MAKE_DOWNLOAD_JOBS" 2>&1 | tee -a "$LOG_FILE"
+    MAKE_EXIT=${PIPESTATUS[0]}
+    set +o pipefail
+
+    if [ "$MAKE_EXIT" -eq 0 ]; then
+        echo "Download succeeded at $(date)" | tee -a "$LOG_FILE"
+        break
+    fi
+
+    echo "Download failed (exit $MAKE_EXIT) at $(date)" | tee -a "$LOG_FILE"
+    attempt=$((attempt+1))
+
+    # 指数/饱和退避：最多增长到 30s
+    if [ "$attempt" -lt 6 ]; then
+        SLEEP_SEC=$((attempt * 5))
+        [ "$SLEEP_SEC" -lt 5 ] && SLEEP_SEC=5
+    else
+        SLEEP_SEC=30
+    fi
+    echo "Retrying after ${SLEEP_SEC}s..." | tee -a "$LOG_FILE"
+    sleep "$SLEEP_SEC"
+done
+### DOWNLOAD ###
+
+
+
+### BUILD ###
+# make -j$(($(nproc) + 1)) || make -j$(nproc) || make -j1 || make -j1 V=s
+BUILD_LOG_BASE="$BASE_PATH/build.log"
+MAX_ATTEMPTS=10
+
+NPROC=$(nproc)
+MAKE_JOBS=$((NPROC * 2))
+
+# 简化重试逻辑：按顺序尝试 make 参数，日志依次写入 build.log, build_1.log, ...
+JOBS_OPTS=("-j$MAKE_JOBS" "-j$NPROC" "-j1" "-j1 V=s")
+attempt=0
+
+while :; do
+    if [ "$attempt" -eq 0 ]; then
+        LOG_FILE="$BUILD_LOG_BASE"
+    else
+        LOG_FILE="$BASE_PATH/build_${attempt}.log"
+    fi
+    : > "$LOG_FILE"
+    echo "Build attempt $((attempt+1)) - log: $(basename "$LOG_FILE")" | tee -a "$LOG_FILE"
+
+    if [ "$attempt" -lt "${#JOBS_OPTS[@]}" ]; then
+        OPT="${JOBS_OPTS[$attempt]}"
+    else
+        OPT="${JOBS_OPTS[$(( ${#JOBS_OPTS[@]} - 1 ))]}"
+    fi
+
+    echo "Running: make $OPT" | tee -a "$LOG_FILE"
+
+    set -o pipefail
+    read -r -a ARGS <<< "$OPT"
+    make "${ARGS[@]}" 2>&1 | tee -a "$LOG_FILE"
+    MAKE_EXIT=${PIPESTATUS[0]}
+    set +o pipefail
+
+    if [ "$MAKE_EXIT" -eq 0 ]; then
+        echo "Build succeeded at $(date)" | tee -a "$LOG_FILE"
+        break
+    fi
+
+    echo "Build failed (exit $MAKE_EXIT) at $(date)" | tee -a "$LOG_FILE"
+    attempt=$((attempt+1))
+    if [ "$attempt" -ge "$MAX_ATTEMPTS" ]; then
+        echo "Reached max attempts ($MAX_ATTEMPTS). Exiting." | tee -a "$LOG_FILE"
+        exit "$MAKE_EXIT"
+    fi
+done
+### BUILD ###
+
+
+
 
 FIRMWARE_DIR="$BASE_PATH/firmware/$BUILD_DIR"
 \rm -rf "$FIRMWARE_DIR"
