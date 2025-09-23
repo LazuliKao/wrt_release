@@ -145,7 +145,7 @@ remove_unwanted_packages() {
         "haproxy" "xray-core" "xray-plugin" "dns2socks" "alist" "hysteria"
         "mosdns" "adguardhome" "ddns-go" "naiveproxy" "shadowsocks-rust"
         "sing-box" "v2ray-core" "v2ray-geodata" "v2ray-plugin" "tuic-client"
-        "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs" "shadowsocksr-libev" 
+        "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs" "shadowsocksr-libev"
         "dae" "daed" "mihomo" "geoview" "tailscale" "open-app-filter" "msd_lite"
     )
     local packages_utils=(
@@ -216,14 +216,7 @@ update_golang() {
 
 install_small8() {
     # string.Join(" ","""_""".Replace("\r", "").Split("\n"))
-    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata
-v2ray-geoview v2ray-plugin tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev
-luci-app-passwall luci-app-passwall2 alist luci-app-alist smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns
-adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart
-luci-app-quickstart luci-app-istorex luci-theme-argon netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash
-luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf
-luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon
-luci-app-wrtbwmon luci-app-supervisord msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-cloudflarespeedtest
+    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev luci-app-passwall luci-app-passwall2 alist luci-app-alist smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart luci-app-quickstart luci-app-istorex luci-theme-argon netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon luci-app-supervisord msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-cloudflarespeedtest
 }
 
 install_fullconenat() {
@@ -392,7 +385,7 @@ apply_hash_fixes() {
         "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
         "a1c084dcc4fb7f87641d706b70168fc3c159f60f37d4b7eac6089ae68f0a18a1" \
         "ab7d303a538871ae4a70ead2e90d35e24fcc36bc20f5b6c5d963a3e283ea43b1" \
-        "smartdns"    
+        "smartdns"
 }
 
 update_ath11k_fw() {
@@ -530,7 +523,7 @@ apply_passwall_tweaks() {
     # 清理 Passwall 的 chnlist 规则文件
     local chnlist_path="$BUILD_DIR/feeds/small8/luci-app-passwall/root/usr/share/passwall/rules/chnlist"
     if [ -f "$chnlist_path" ]; then
-        > "$chnlist_path"
+        >"$chnlist_path"
     fi
 
     # 调整 Xray 最大 RTT 和 保留记录数量
@@ -1075,7 +1068,7 @@ set_nginx_default_config() {
     local nginx_config_path="$BUILD_DIR/feeds/packages/net/nginx-util/files/nginx.config"
     if [ -f "$nginx_config_path" ]; then
         # 使用 cat 和 heredoc 覆盖写入 nginx.config 文件
-        cat > "$nginx_config_path" <<EOF
+        cat >"$nginx_config_path" <<EOF
 config main 'global'
         option uci_enable 'true'
 
