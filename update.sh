@@ -65,6 +65,9 @@ clone_repo() {
             exit 1
         fi
     fi
+    if [[ "$Build_Mod" == "container" ]]; then
+        ln -sf /home/build/immortalwrt/staging_dir "$BUILD_DIR/staging_dir"
+    fi
 }
 
 clean_up() {
