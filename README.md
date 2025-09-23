@@ -31,27 +31,27 @@ docker run --rm -it \
   -v "$(pwd)":/build \
   -w /build \
   immortalwrt/sdk:qualcommax-ipq60xx \
-  bash build.sh jdcloud_ipq60xx_immwrt
+  bash build_container.sh jdcloud_ipq60xx_immwrt
 docker run --rm -it \
   -v "$(pwd)":/build \
   -w /build \
   immortalwrt/sdk:qualcommax-ipq60xx \
-  bash build.sh jdcloud_ipq60xx_libwrt
+  bash build_container.sh jdcloud_ipq60xx_libwrt
 docker run --rm -it \
   -v "$(pwd)":/build \
   -w /build \
-  immortalwrt/sdk:x86_64 \
-  bash build.sh x64_immwrt
-docker run --rm -it \
-  -v "$(pwd)":/build \
-  -w /build \
-  immortalwrt/sdk:mediatek-filogic-openwrt-24.10 \
-  bash build.sh cudy_tr3000
+  immortalwrt/sdk:x86-64-openwrt-24.10 \
+  bash build_container.sh x64_immwrt
 docker run --rm -it \
   -v "$(pwd)":/build \
   -w /build \
   immortalwrt/sdk:mediatek-filogic-openwrt-24.10 \
-  bash build.sh cudy_tr3000-5.4
+  bash build_container.sh cudy_tr3000
+docker run --rm -it \
+  -v "$(pwd)":/build \
+  -w /build \
+  immortalwrt/sdk:mediatek-filogic-openwrt-24.10 \
+  bash build_container.sh cudy_tr3000-5.4
 ```
 
 # Compile Using Windows HyperV (ubuntu 22.04):
