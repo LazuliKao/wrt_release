@@ -67,13 +67,6 @@ COMMIT_HASH=${COMMIT_HASH:-none}
 if [[ -d $BASE_PATH/action_build ]]; then
     BUILD_DIR="action_build"
 fi
-
-mkdir -p "$BASE_PATH/$BUILD_DIR"
-
-if [[ "$Build_Mod" == "container" ]]; then
-    ln -sf /home/build/immortalwrt/staging_dir "$BASE_PATH/$BUILD_DIR/staging_dir"
-fi
-
 chmod +x "$BASE_PATH/update.sh"
 $BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT_HASH" "$CONFIG_FILE" "$DISABLED_FUNCTIONS" "$ENABLED_FUNCTIONS" "$KERNEL_VERMAGIC" "$KERNEL_MODULES"
 
