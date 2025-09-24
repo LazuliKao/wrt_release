@@ -14,6 +14,7 @@ set -x
 git config --global pull.rebase false
 sudo apt-get update
 sudo apt-get install jq -y
+sudo apt-get install build-essential cmake g++ clang bison flex libelf-dev libncurses5-dev python3-distutils zlib1g-dev -y
 
 BASE_PATH=$(cd $(dirname $0) && pwd)
 
