@@ -66,6 +66,7 @@ clone_repo() {
         fi
     fi
     if [[ "$Build_Mod" == "container" ]]; then
+        rm -rf "$BUILD_DIR/staging_dir"
         ln -sf /home/build/immortalwrt/staging_dir "$BUILD_DIR/staging_dir"
     fi
 }
@@ -1123,7 +1124,8 @@ add_ohmyzsh() {
     if [ -d "$base_files_path/root/.oh-my-zsh" ]; then
         rm -rf "$base_files_path/root/.oh-my-zsh"
     fi
-    git clone https://mirror.nju.edu.cn/git/ohmyzsh.git "$base_files_path/root/.oh-my-zsh"
+    # git clone https://mirror.nju.edu.cn/git/ohmyzsh.git "$base_files_path/root/.oh-my-zsh"
+    git clone https://github.com/ohmyzsh/ohmyzsh.git "$base_files_path/root/.oh-my-zsh"
     if [ -f "$base_files_path/root/.zshrc" ]; then
         rm "$base_files_path/root/.zshrc"
     fi

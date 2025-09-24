@@ -24,8 +24,8 @@ docker compose up
 docker run --rm -it \
   -v "$(pwd)":/build \
   -w /build \
-  immortalwrt/sdk:mediatek-filogic \
-  bash build.sh jdcloud_ax6000_immwrt | tee build.log
+  immortalwrt/sdk:mediatek-filogic-openwrt-24.10 \
+  bash build_container.sh jdcloud_ax6000_immwrt
 
 docker run --rm -it \
   -v "$(pwd)":/build \

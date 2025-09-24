@@ -11,7 +11,7 @@ exec > >(tee -a "$LOGFILE") 2>&1
 set -x
 
 
-git config pull.rebase false
+git config --global pull.rebase false
 sudo apt-get update
 sudo apt-get install jq -y
 
