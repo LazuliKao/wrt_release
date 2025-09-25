@@ -643,7 +643,7 @@ update_dnsmasq_conf() {
 
 # 更新版本
 update_package() {
-    local dir=$(find "$BUILD_DIR/package" \( -type d -o -type l \) -name "$1")
+    local dir=$(find "$BUILD_DIR/package/feeds" \( -type d -o -type l \) -name "$1")
     if [ -z "$dir" ]; then
         return 0
     fi
@@ -708,8 +708,9 @@ update_package() {
 update_packages() {
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
-    update_package "docker" "tags" "v28.2.2"
-    update_package "dockerd" "releases" "v28.2.2"
+    update_package "docker" "tags" "v28.4.0"
+    update_package "dockerd" "releases" "v28.4.0"
+    update_package "docker-compose" "releases" "v2.39.4"
 }
 # 添加系统升级时的备份信息
 function add_backup_info_to_sysupgrade() {
