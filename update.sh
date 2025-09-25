@@ -395,7 +395,7 @@ fix_hash_value() {
 }
 
 # 应用所有哈希值修正
-apply_hash_fixes() {
+# apply_hash_fixes() {
     #fix_hash_value \
     #    "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
     #    "a7edb052fea61418c91c7a052f7eb1478fe6d844aec5e3eda0f2fcf82de29a10" \
@@ -407,7 +407,7 @@ apply_hash_fixes() {
     #     "a1c084dcc4fb7f87641d706b70168fc3c159f60f37d4b7eac6089ae68f0a18a1" \
     #     "ab7d303a538871ae4a70ead2e90d35e24fcc36bc20f5b6c5d963a3e283ea43b1" \
     #     "smartdns"
-}
+# }
 
 update_ath11k_fw() {
     local makefile="$BUILD_DIR/package/firmware/ath11k-firmware/Makefile"
