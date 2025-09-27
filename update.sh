@@ -143,6 +143,7 @@ update_feeds() {
     if [ ! -f "$BUILD_DIR/include/bpf.mk" ]; then
         touch "$BUILD_DIR/include/bpf.mk"
     fi
+
     # 切换nss-packages源
     # if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
     #     sed -i '/nss_packages/d' "$BUILD_DIR/$FEEDS_CONF"
@@ -395,19 +396,20 @@ fix_hash_value() {
 }
 
 # 应用所有哈希值修正
-# apply_hash_fixes() {
+apply_hash_fixes() {
+    echo "apply_hash_fixes"
     #fix_hash_value \
     #    "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
     #    "a7edb052fea61418c91c7a052f7eb1478fe6d844aec5e3eda0f2fcf82de29a10" \
     #    "b11e175970e08115fe3b0d7a543fa8d3a6239d3c24eeecfd8cfd2fef3f52c6c9" \
     #    "smartdns"
 
-    # fix_hash_value \
-    #     "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
-    #     "a1c084dcc4fb7f87641d706b70168fc3c159f60f37d4b7eac6089ae68f0a18a1" \
-    #     "ab7d303a538871ae4a70ead2e90d35e24fcc36bc20f5b6c5d963a3e283ea43b1" \
-    #     "smartdns"
-# }
+    #fix_hash_value \
+    #    "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
+    #    "a1c084dcc4fb7f87641d706b70168fc3c159f60f37d4b7eac6089ae68f0a18a1" \
+    #    "ab7d303a538871ae4a70ead2e90d35e24fcc36bc20f5b6c5d963a3e283ea43b1" \
+    #    "smartdns"    
+}
 
 update_ath11k_fw() {
     local makefile="$BUILD_DIR/package/firmware/ath11k-firmware/Makefile"
@@ -544,7 +546,7 @@ apply_passwall_tweaks() {
     # 清理 Passwall 的 chnlist 规则文件
     local chnlist_path="$BUILD_DIR/feeds/small8/luci-app-passwall/root/usr/share/passwall/rules/chnlist"
     if [ -f "$chnlist_path" ]; then
-        >"$chnlist_path"
+        > "$chnlist_path"
     fi
 
     # 调整 Xray 最大 RTT 和 保留记录数量
