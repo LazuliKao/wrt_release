@@ -696,7 +696,7 @@ update_package() {
 }
 
 update_packages() {
-    update_package "runc" "releases" "v1.2.6" || exit 1
+    update_package "runc" "releases" "v1.3.0" || exit 1
     update_package "containerd" "releases" "v1.7.28" || exit 1
     update_package "docker" "tags" "v28.4.0" || exit 1
     update_package "dockerd" "releases" "v28.4.0" || exit 1
