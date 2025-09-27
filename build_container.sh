@@ -2,7 +2,8 @@
 
 set -e
 
-LOGFILE="build.log"
+
+LOGFILE="build-$(date +%Y%m%d-%H%M%S).log"
 
 # 把标准输出和标准错误都重定向到 tee
 exec > >(tee -a "$LOGFILE") 2>&1
