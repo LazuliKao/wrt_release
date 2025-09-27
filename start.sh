@@ -43,6 +43,7 @@ echo ""
 echo -n "请输入选择的编号 (1-2): "
 read -r build_choice
 
+BASE_PATH=$(pwd)
 INI_FILE="$BASE_PATH/compilecfg/$Dev.ini"
 read_ini_by_key() {
     local key=$1
