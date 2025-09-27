@@ -43,6 +43,7 @@ echo ""
 echo -n "请输入选择的编号 (1-2): "
 read -r build_choice
 
+INI_FILE="$BASE_PATH/compilecfg/$Dev.ini"
 read_ini_by_key() {
     local key=$1
     awk -F"=" -v key="$key" '$1 == key {print $2}' "$INI_FILE"
