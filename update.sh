@@ -703,14 +703,18 @@ update_package() {
         sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
 
         echo "更新软件包 $1 到 $PKG_VER $PKG_HASH"
+    else
+        echo "错误：未找到 $1 的 Makefile" >&2
+        return 1
     fi
 }
+
 update_packages() {
-    update_package "runc" "releases" "v1.2.6"
-    update_package "containerd" "releases" "v1.7.27"
-    update_package "docker" "tags" "v28.4.0"
-    update_package "dockerd" "releases" "v28.4.0"
-    update_package "docker-compose" "releases" "v2.39.4"
+    update_package "runc" "releases" "v1.2.6" || exit 1
+    update_package "containerd" "releases" "v1.7.27" || exit 1
+    update_package "docker" "tags" "v28.4.0" || exit 1
+    update_package "dockerd" "releases" "v28.4.0" || exit 1
+    update_package "docker-compose" "releases" "v2.39.4" || exit 1
 }
 # 添加系统升级时的备份信息
 function add_backup_info_to_sysupgrade() {

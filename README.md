@@ -21,37 +21,33 @@ docker compose up
 - (docker command)
 
 ```bash
-docker run --rm -it \
-  -v "$(pwd)":/build \
-  -w /build \
-  immortalwrt/sdk:mediatek-filogic-openwrt-24.10 \
-  bash build_container.sh jdcloud_ax6000_immwrt
+
+target_config="jdcloud_ax6000_immwrt"
+target_sdk="immortalwrt/sdk:mediatek-filogic-openwrt-24.10"
+
+target_config="jdcloud_ipq60xx_immwrt"
+target_sdk="immortalwrt/sdk:qualcommax-ipq60xx"
+
+target_config="jdcloud_ipq60xx_libwrt"
+target_sdk="immortalwrt/sdk:qualcommax-ipq60xx"
+
+target_config="x64_immwrt"
+target_sdk="immortalwrt/sdk:x86-64-openwrt-24.10"
+
+target_config="cudy_tr3000"
+target_sdk="immortalwrt/sdk:mediatek-filogic-openwrt-24.10"
+
+target_config="cudy_tr3000-5.4"
+target_sdk="immortalwrt/sdk:mediatek-filogic-openwrt-24.10"
 
 docker run --rm -it \
   -v "$(pwd)":/build \
   -w /build \
-  immortalwrt/sdk:qualcommax-ipq60xx \
-  bash build_container.sh jdcloud_ipq60xx_immwrt
-docker run --rm -it \
-  -v "$(pwd)":/build \
-  -w /build \
-  immortalwrt/sdk:qualcommax-ipq60xx \
-  bash build_container.sh jdcloud_ipq60xx_libwrt
-docker run --rm -it \
-  -v "$(pwd)":/build \
-  -w /build \
-  immortalwrt/sdk:x86-64-openwrt-24.10 \
-  bash build_container.sh x64_immwrt
-docker run --rm -it \
-  -v "$(pwd)":/build \
-  -w /build \
-  immortalwrt/sdk:mediatek-filogic-openwrt-24.10 \
-  bash build_container.sh cudy_tr3000
-docker run --rm -it \
-  -v "$(pwd)":/build \
-  -w /build \
-  immortalwrt/sdk:mediatek-filogic-openwrt-24.10 \
-  bash build_container.sh cudy_tr3000-5.4
+  --shm-size=8g \
+  --ipc=shareable \
+  --ulimit nofile=65535:65535 \
+  $target_sdk \
+  bash build_container.sh $target_config
 ```
 
 # Compile Using Windows HyperV (ubuntu 22.04):
