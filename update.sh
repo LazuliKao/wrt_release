@@ -530,7 +530,7 @@ apply_passwall_tweaks() {
     # 清理 Passwall 的 chnlist 规则文件
     local chnlist_path="$BUILD_DIR/feeds/small8/luci-app-passwall/root/usr/share/passwall/rules/chnlist"
     if [ -f "$chnlist_path" ]; then
-        > "$chnlist_path"
+        >"$chnlist_path"
     fi
 
     # 调整 Xray 最大 RTT 和 保留记录数量
@@ -1201,6 +1201,19 @@ update_mt76() {
     fi
 }
 
+fix_node_build() {
+    # build node in single thread to avoid out of memory
+    local node_makefile="$BUILD_DIR/feeds/packages/lang/node/Makefile"
+    if [ -f "$node_makefile" ]; then
+        # 禁止并行编译，避免 OOM
+        if ! grep -q "^PKG_BUILD_PARALLEL:=0" "$node_makefile"; then
+            sed -i '/^PKG_NAME:=node/a PKG_BUILD_PARALLEL:=0' "$node_makefile"
+        else
+            echo "PKG_BUILD_PARALLEL already set to 0 in $node_makefile"
+        fi
+    fi
+}
+
 _trim_space() {
     local str=$1
     echo "$str" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
@@ -1301,6 +1314,7 @@ main() {
     fix_easytier
     update_geoip
     update_packages
+    fix_node_build
     # update_proxy_app_menu_location
     # update_dns_app_menu_location
     # fix_kernel_magic
