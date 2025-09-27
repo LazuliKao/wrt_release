@@ -80,12 +80,12 @@ clone_repo() {
             exit 1
         fi
     fi
-    if [[ "$Build_Mod" == "container" ]]; then
-        rm -rf "$BUILD_DIR/staging_dir"
-        rm -rf "$BUILD_DIR/build_dir"
-        ln -sf /home/build/immortalwrt/build_dir "$BUILD_DIR/build_dir"
-        ln -sf /home/build/immortalwrt/staging_dir "$BUILD_DIR/staging_dir"
-    fi
+    # if [[ "$Build_Mod" == "container" ]]; then
+    #     rm -rf "$BUILD_DIR/staging_dir"
+    #     rm -rf "$BUILD_DIR/build_dir"
+    #     ln -sf /home/build/immortalwrt/build_dir "$BUILD_DIR/build_dir"
+    #     ln -sf /home/build/immortalwrt/staging_dir "$BUILD_DIR/staging_dir"
+    # fi
 }
 
 clean_up() {
