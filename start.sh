@@ -54,13 +54,15 @@ BUILD_TARGET_SDK=$(read_ini_by_key "BUILD_TARGET_SDK")
 case $build_choice in
 1)
     echo "启动容器构建..."
+    CONTAINER="$(echo $Dev | tr '[:upper:]' '[:lower:]' | tr '/:' '-_')-build-container"
+    ./prepare_container.sh "$BUILD_TARGET_SDK" "$CONTAINER"
     docker run --rm -it \
         -v "$(pwd)":/build \
         -w /build \
         --shm-size=8g \
         --ipc=shareable \
         --ulimit nofile=65535:65535 \
-        $BUILD_TARGET_SDK \
+        $CONTAINER \
         bash build_container.sh $Dev
     ;;
 2)
