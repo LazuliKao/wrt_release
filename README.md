@@ -26,10 +26,10 @@ target_config="jdcloud_ax6000_immwrt"
 target_sdk="immortalwrt/sdk:mediatek-filogic-openwrt-24.10"
 
 target_config="jdcloud_ipq60xx_immwrt"
-target_sdk="immortalwrt/sdk:qualcommax-ipq60xx"
+target_sdk="immortalwrt/sdk:qualcommax-ipq60xx-openwrt-24.10"
 
 target_config="jdcloud_ipq60xx_libwrt"
-target_sdk="immortalwrt/sdk:qualcommax-ipq60xx"
+target_sdk="immortalwrt/sdk:qualcommax-ipq60xx-openwrt-24.10"
 
 target_config="x64_immwrt"
 target_sdk="immortalwrt/sdk:x86-64-openwrt-24.10"

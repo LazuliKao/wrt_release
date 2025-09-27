@@ -22,6 +22,12 @@ BASE_PATH=$(cd $(dirname $0) && pwd)
 Dev=$1
 Build_Mod=$2
 
+if [ -z "$Dev" ]; then
+    echo "Usage: $0 <dev_name> [build_mod]"
+    echo "或者运行 ./start.sh 进行交互式选择"
+    exit 1
+fi
+
 CONFIG_FILE="$BASE_PATH/deconfig/$Dev.config"
 INI_FILE="$BASE_PATH/compilecfg/$Dev.ini"
 
