@@ -408,7 +408,7 @@ apply_hash_fixes() {
     #    "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
     #    "a1c084dcc4fb7f87641d706b70168fc3c159f60f37d4b7eac6089ae68f0a18a1" \
     #    "ab7d303a538871ae4a70ead2e90d35e24fcc36bc20f5b6c5d963a3e283ea43b1" \
-    #    "smartdns"    
+    #    "smartdns"
 }
 
 update_ath11k_fw() {
@@ -1320,7 +1320,6 @@ main() {
     update_packages
     fix_node_build
     # update_proxy_app_menu_location
-    # update_dns_app_menu_location
     # fix_kernel_magic
     # update_mt76
 EOF
