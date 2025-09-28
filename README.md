@@ -86,30 +86,33 @@ cd wrt_relese
 ./build.sh jdcloud_ipq60xx_libwrt
 
 编译京东云百里:  
-./build.sh jdcloud_ax6000_immwrt
-
-编译阿里云 AP8220:  
-./build.sh aliyun_ap8220_immwrt
-
-编译红米 AX5:  
-./build.sh redmi_ax5_immwrt
-
-编译红米 AX6:  
-./build.sh redmi_ax6_immwrt
-
-编译红米 AX6000:  
-./build.sh redmi_ax6000_immwrt21
-
-编译 CMCC RAX3000M:  
-./build.sh cmcc_rax3000m_immwrt
-
-编译 N1:  
-./build.sh n1_immwrt
-
-编译 X64:  
-./build.sh x64_immwrt
-
-编译兆能 M2:  
+./build.sh jdcloud_ax6000_immwrt  
+  
+编译阿里云AP8220:  
+./build.sh aliyun_ap8220_immwrt  
+  
+编译奇虎360v6:  
+./build.sh qihoo_360v6_immwrt  
+  
+编译红米AX5:  
+./build.sh redmi_ax5_immwrt  
+  
+编译红米AX6:  
+./build.sh redmi_ax6_immwrt  
+  
+编译红米AX6000:  
+./build.sh redmi_ax6000_immwrt21  
+  
+编译CMCC RAX3000M:  
+./build.sh cmcc_rax3000m_immwrt  
+  
+编译N1:  
+./build.sh n1_immwrt  
+  
+编译X64:  
+./build.sh x64_immwrt  
+  
+编译兆能M2:  
 ./build.sh zn_m2_immwrt  
 ./build.sh zn_m2_libwrt
 

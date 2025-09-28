@@ -395,6 +395,22 @@ fix_hash_value() {
     fi
 }
 
+# 应用所有哈希值修正
+apply_hash_fixes() {
+    echo "apply_hash_fixes"
+    #fix_hash_value \
+    #    "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
+    #    "a7edb052fea61418c91c7a052f7eb1478fe6d844aec5e3eda0f2fcf82de29a10" \
+    #    "b11e175970e08115fe3b0d7a543fa8d3a6239d3c24eeecfd8cfd2fef3f52c6c9" \
+    #    "smartdns"
+
+    #fix_hash_value \
+    #    "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
+    #    "a1c084dcc4fb7f87641d706b70168fc3c159f60f37d4b7eac6089ae68f0a18a1" \
+    #    "ab7d303a538871ae4a70ead2e90d35e24fcc36bc20f5b6c5d963a3e283ea43b1" \
+    #    "smartdns"    
+}
+
 update_ath11k_fw() {
     local makefile="$BUILD_DIR/package/firmware/ath11k-firmware/Makefile"
     local new_mk="$BASE_PATH/patches/ath11k_fw.mk"
@@ -785,17 +801,6 @@ EOF
     fi
 }
 
-support_fw4_adg() {
-    local src_path="$BASE_PATH/patches/AdGuardHome"
-    local dst_path="$BUILD_DIR/package/feeds/small8/luci-app-adguardhome/root/etc/init.d/AdGuardHome"
-    # 验证源路径是否文件存在且是文件，目标路径目录存在且脚本路径合法
-    if [ -f "$src_path" ] && [ -d "${dst_path%/*}" ] && [ -f "$dst_path" ]; then
-        # 使用 install 命令替代 cp 以确保权限和备份处理
-        install -Dm 755 "$src_path" "$dst_path"
-        echo "已更新AdGuardHome启动脚本"
-    fi
-}
-
 add_timecontrol() {
     local timecontrol_dir="$BUILD_DIR/package/luci-app-timecontrol"
     local repo_url="https://github.com/sirpdboy/luci-app-timecontrol.git"
@@ -853,17 +858,16 @@ update_proxy_app_menu_location() {
     fi
 }
 
-update_dns_app_menu_location() {
-    # mosdns
-    local mosdns_path="$BUILD_DIR/package/feeds/small8/luci-app-mosdns/root/usr/share/luci/menu.d/luci-app-mosdns.json"
-    if [ -d "${mosdns_path%/*}" ] && [ -f "$mosdns_path" ]; then
-        sed -i 's/\/services\//\/dns\//g' "$mosdns_path"
-    fi
+update_adguardhome() {
+    local adguardhome_dir="$BUILD_DIR/package/feeds/small8/luci-app-adguardhome"
+    local repo_url="https://github.com/ZqinKing/luci-app-adguardhome.git"
 
-    # AdGuardHome
-    local adg_path="$BUILD_DIR/package/feeds/small8/luci-app-adguardhome/luasrc/controller/AdGuardHome.lua"
-    if [ -d "${adg_path%/*}" ] && [ -f "$adg_path" ]; then
-        sed -i 's/"services"/"dns"/g' "$adg_path"
+    echo "正在更新 luci-app-adguardhome..."
+    rm -rf "$adguardhome_dir" 2>/dev/null
+
+    if ! git clone --depth 1 "$repo_url" "$adguardhome_dir"; then
+        echo "错误：从 $repo_url 克隆 luci-app-adguardhome 仓库失败" >&2
+        exit 1
     fi
 }
 
@@ -1304,7 +1308,7 @@ main() {
     update_uwsgi_limit_as
     update_argon
     install_feeds
-    support_fw4_adg
+    update_adguardhome
     update_script_priority
     update_base_files
     add_ohmyzsh
