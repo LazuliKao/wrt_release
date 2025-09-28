@@ -649,6 +649,7 @@ update_package() {
     if [ -z "$dir" ]; then
         return 0
     fi
+    echo "更新软件包 $dir"
     local branch="$2"
     if [ -z "$branch" ]; then
         branch="releases"
@@ -696,11 +697,13 @@ update_package() {
         PKG_SOURCE=${PKG_SOURCE//\$\(PKG_VERSION\)/$PKG_VER}
 
         local PKG_HASH
-        if ! PKG_HASH=$(curl -fsSL "$PKG_SOURCE_URL""$PKG_SOURCE" | sha256sum | cut -b -64); then
+        if ! PKG_HASH=$(curl -fsSL "$PKG_SOURCE_URL"/"$PKG_SOURCE" | sha256sum | cut -b -64); then
             echo "错误：从 $PKG_SOURCE_URL$PKG_SOURCE 获取软件包哈希失败" >&2
             return 1
         fi
 
+        local old_version=$(awk -F"=" '/PKG_VERSION:=/ {print $NF}' "$mk_path" | grep -oE "[\.0-9]{1,}")
+        echo "当前版本: $old_version, 目标版本: $PKG_VER"
         sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:='$PKG_VER'/g' "$mk_path"
         sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
 
@@ -718,6 +721,7 @@ update_packages() {
     update_package "dockerd" "releases" "v28.4.0" || exit 1
     update_package "docker-compose" "releases" "v2.39.4" || exit 1
 }
+
 # 添加系统升级时的备份信息
 function add_backup_info_to_sysupgrade() {
     local conf_path="$BUILD_DIR/package/base-files/files/etc/sysupgrade.conf"
@@ -1218,6 +1222,15 @@ fix_node_build() {
     fi
 }
 
+fix_libffi() {
+    local original_makefile="$BUILD_DIR/package/feeds/packages/libffi/Makefile"
+    if [ -f "$original_makefile" ]; then
+        echo "Restoring original libffi Makefile from openwrt..."
+        curl -fsSL -o "$original_makefile" "https://raw.githubusercontent.com/openwrt/packages/refs/heads/openwrt-24.10/libs/libffi/Makefile"
+    fi
+    update_package "libffi" "releases" "v3.5.2" || exit 1
+}
+
 _trim_space() {
     local str=$1
     echo "$str" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
@@ -1319,6 +1332,7 @@ main() {
     update_geoip
     update_packages
     fix_node_build
+    fix_libffi
     # update_proxy_app_menu_location
     # fix_kernel_magic
     # update_mt76
