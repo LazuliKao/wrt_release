@@ -893,7 +893,24 @@ fix_easytier() {
     local easytier_path="$BUILD_DIR/package/feeds/small8/luci-app-easytier/luasrc/model/cbi/easytier.lua"
     if [ -d "${easytier_path%/*}" ] && [ -f "$easytier_path" ]; then
         sed -i 's/util/xml/g' "$easytier_path"
+        if ! grep -q "function xml.trim" "$easytier_path" && ! grep -q 'xml.trim' "$easytier_path"; then
+            tmpfile=$(mktemp)
+            cat >"$tmpfile" <<EOF
+local util = require "luci.util"
+local xml  = require "luci.xml"
+
+-- 给 luci.xml 动态增加 trim 方法
+if not xml.trim then
+    function xml.trim(s)
+        return util.trim(s)
+    end
+end
+EOF
+            cat "$easytier_path" >>"$tmpfile"
+            mv -f "$tmpfile" "$easytier_path"
+        fi
     fi
+
 }
 
 update_geoip() {
@@ -1245,6 +1262,12 @@ fix_libffi() {
     update_package "libffi" "releases" "v3.5.2" || exit 1
 }
 
+tailscale_use_awg() {
+    local tailscale_makefile="$BUILD_DIR/package/feeds/small8/tailscale/Makefile"
+    sed -i 's|^PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=https://codeload.github.com/LiuTangLei/tailscale/tar.gz/v$(PKG_VERSION)?|' "$tailscale_makefile"
+    update_package "tailscale" "releases" "v1.88.2" || exit 1
+}
+
 _trim_space() {
     local str=$1
     echo "$str" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
@@ -1348,6 +1371,7 @@ main() {
     update_packages
     fix_node_build
     fix_libffi
+    tailscale_use_awg
     # update_proxy_app_menu_location
     # fix_kernel_magic
     # update_mt76
