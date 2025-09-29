@@ -72,6 +72,9 @@ apply_config() {
 
     # 追加代理配置
     cat "$BASE_PATH/deconfig/proxy.config" >> "$BASE_PATH/$BUILD_DIR/.config"
+    
+    # 追加 AWG 配置
+    cat "$BASE_PATH/deconfig/awg.config" >> "$BASE_PATH/$BUILD_DIR/.config"
 }
 
 REPO_URL=$(read_ini_by_key "REPO_URL")

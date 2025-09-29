@@ -133,6 +133,8 @@ update_feeds() {
     add_feeds "small8" "https://github.com/kenzok8/small-package"
     # 检查并添加 kwrt 源
     add_feeds "kiddin9" "https://github.com/kiddin9/kwrt-packages.git"
+    # 检查并添加 AWG-OpenWRT 源
+    add_feeds "awg" "https://github.com/Slava-Shchipunov/awg-openwrt"
     # 检查并添加 opentopd 源
     # add_feeds "opentopd" "https://github.com/sirpdboy/sirpdboy-package"
     # 检查并添加 node 源
@@ -829,6 +831,18 @@ add_gecoosac() {
     fi
 }
 
+add_awg() {
+    local awg_dir="$BUILD_DIR/package/awg-openwrt"
+    local repo_url="https://github.com/Slava-Shchipunov/awg-openwrt.git"
+    # 删除旧的目录（如果存在）
+    rm -rf "$awg_dir" 2>/dev/null
+    echo "正在添加 awg-openwrt..."
+    if ! git clone --depth 1 "$repo_url" "$awg_dir"; then
+        echo "错误：从 $repo_url 克隆 awg-openwrt 仓库失败" >&2
+        exit 1
+    fi
+}
+
 update_proxy_app_menu_location() {
     # passwall
     local passwall_path="$BUILD_DIR/package/feeds/small8/luci-app-passwall/luasrc/controller/passwall.lua"
@@ -1313,6 +1327,7 @@ main() {
     update_oaf_deconfig
     add_timecontrol
     add_gecoosac
+    add_awg
     # update_lucky
     add_quickfile
     fix_rust_compile_error
