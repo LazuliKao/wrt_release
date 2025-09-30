@@ -1334,7 +1334,7 @@ main() {
     update_diskman
     set_nginx_default_config
     update_uwsgi_limit_as
-    update_argon
+    # update_argon
     install_feeds
     update_adguardhome
     update_script_priority
