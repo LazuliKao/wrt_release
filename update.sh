@@ -399,12 +399,11 @@ fix_hash_value() {
 
 # 应用所有哈希值修正
 apply_hash_fixes() {
-    echo "apply_hash_fixes"
-    #fix_hash_value \
-    #    "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
-    #    "a7edb052fea61418c91c7a052f7eb1478fe6d844aec5e3eda0f2fcf82de29a10" \
-    #    "b11e175970e08115fe3b0d7a543fa8d3a6239d3c24eeecfd8cfd2fef3f52c6c9" \
-    #    "smartdns"
+    fix_hash_value \
+        "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
+        "deb3ba1a8ca88fb7294acfb46c5d8881dfe36e816f4746f4760245907ebd0b98" \
+        "04d1ca0990a840a6e5fd05fe8c59b6c71e661a07d6e131e863441f3a9925b9c8" \
+        "smartdns"
 
     #fix_hash_value \
     #    "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
@@ -889,30 +888,6 @@ update_adguardhome() {
     fi
 }
 
-fix_easytier() {
-    local easytier_path="$BUILD_DIR/package/feeds/small8/luci-app-easytier/luasrc/model/cbi/easytier.lua"
-    if [ -d "${easytier_path%/*}" ] && [ -f "$easytier_path" ]; then
-        sed -i 's/util/xml/g' "$easytier_path"
-        if ! grep -q "function xml.trim" "$easytier_path" && ! grep -q 'xml.trim' "$easytier_path"; then
-            tmpfile=$(mktemp)
-            cat >"$tmpfile" <<EOF
-local util = require "luci.util"
-local xml  = require "luci.xml"
-
--- 给 luci.xml 动态增加 trim 方法
-if not xml.trim then
-    function xml.trim(s)
-        return util.trim(s)
-    end
-end
-EOF
-            cat "$easytier_path" >>"$tmpfile"
-            mv -f "$tmpfile" "$easytier_path"
-        fi
-    fi
-
-}
-
 update_geoip() {
     local geodata_path="$BUILD_DIR/package/feeds/small8/v2ray-geodata/Makefile"
     if [ -d "${geodata_path%/*}" ] && [ -f "$geodata_path" ]; then
@@ -1366,7 +1341,6 @@ main() {
     add_nbtverify
     # add_turboacc
     # fix_cudy_tr3000_114m
-    fix_easytier
     update_geoip
     update_packages
     fix_node_build
