@@ -833,7 +833,7 @@ add_gecoosac() {
 
 add_awg() {
     local awg_dir="$BUILD_DIR/package/awg-openwrt"
-    local repo_url="https://github.com/Slava-Shchipunov/awg-openwrt.git"
+    local repo_url="https://github.com/lolo6oT/awg-openwrt"
     # 删除旧的目录（如果存在）
     rm -rf "$awg_dir" 2>/dev/null
     echo "正在添加 awg-openwrt..."
