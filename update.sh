@@ -1315,17 +1315,34 @@ define Image/upx_compress
 	@echo "Running UPX compression on rootfs..."
 	@echo "=========================================="
 	@if [ -d "$(TARGET_DIR)" ]; then \
+		compressed=0; failed=0; skipped=0; \
 		find "$(TARGET_DIR)" -type f 2>/dev/null | while read file; do \
-			if file "$$file" 2>/dev/null | grep -qE "ELF.*(executable|shared object)"; then \
+			# 跳过符号链接 \
+			[ -L "$$file" ] && continue; \
+			\
+			# 排除不应该压缩的文件 \
+			case "$$file" in \
+				*/lib/modules/*) continue ;; \
+				*/lib/firmware/*) continue ;; \
+				*/lib/*.so|*/lib/*.so.*|*/usr/lib/*.so|*/usr/lib/*.so.*) \
+					echo "  Skipped shared library: $${file#$(TARGET_DIR)}"; skipped=$$((skipped + 1)); continue ;; \
+			esac; \
+			\
+			# 检查是否为ELF可执行文件（不压缩共享库） \
+			if file "$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
 				size_before=$$(stat -c%s "$$file" 2>/dev/null || echo 0); \
 				if UPX_BINARY --best --lzma -q "$$file" 2>/dev/null; then \
 					size_after=$$(stat -c%s "$$file" 2>/dev/null || echo $$size_before); \
 					saved=$$((size_before - size_after)); \
 					[ $$saved -gt 0 ] && echo "  Compressed: $${file#$(TARGET_DIR)} (saved $$saved bytes)"; \
+					compressed=$$((compressed + 1)); \
+				else \
+					echo "  Failed: $${file#$(TARGET_DIR)}"; \
+					failed=$$((failed + 1)); \
 				fi; \
 			fi; \
 		done; \
-		echo "UPX compression completed for $(TARGET_DIR)"; \
+		echo "UPX compression completed: $$compressed compressed, $$failed failed, $$skipped skipped"; \
 	else \
 		echo "Warning: TARGET_DIR not found, skipping UPX compression"; \
 	fi
@@ -1389,11 +1406,25 @@ EOFMK
 define prepare_rootfs_upx
 	@echo "Running UPX compression before image packaging..."
 	@if [ -d "\$(TARGET_DIR)" ] && [ -f "$upx_binary" ]; then \\
+		compressed=0; failed=0; skipped=0; \\
 		find "\$(TARGET_DIR)" -type f 2>/dev/null | while read file; do \\
-			if file "\$\$file" 2>/dev/null | grep -qE "ELF.*(executable|shared object)"; then \\
-				$upx_binary --best --lzma -q "\$\$file" 2>/dev/null && echo "Compressed: \$\${file#\$(TARGET_DIR)}" || true; \\
+			[ -L "$$file" ] && continue; \\
+			case "$$file" in \\
+				*/lib/modules/*) continue ;; \\
+				*/lib/firmware/*) continue ;; \\
+				*/lib/*.so|*/lib/*.so.*|*/usr/lib/*.so|*/usr/lib/*.so.*) \\
+					skipped=$$((skipped + 1)); continue ;; \\
+			esac; \\
+			if file "$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \\
+				if $upx_binary --best --lzma -q "$$file" 2>/dev/null; then \\
+					echo "Compressed: $${file#\$(TARGET_DIR)}"; \\
+					compressed=$$((compressed + 1)); \\
+				else \\
+					failed=$$((failed + 1)); \\
+				fi; \\
 			fi; \\
 		done; \\
+		echo "UPX: $$compressed compressed, $$failed failed, $$skipped skipped"; \\
 	fi
 endef
 
