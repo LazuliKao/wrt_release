@@ -1317,27 +1317,28 @@ define Build/upx_compress_hook
 	@echo "UPX: Compressing binaries in $(PKG_BUILD_DIR) for package $(PKG_NAME)..."
 	@if [ -d "$(PKG_BUILD_DIR)" ] && [ -f "UPX_BINARY_PATH" ]; then \
 		compressed=0; failed=0; skipped=0; \
-		find "$(PKG_BUILD_DIR)" -type f 2>/dev/null | while read file; do \
-			[ -L "$$file" ] && continue; \
-			case "$$file" in \
+		find "$(PKG_BUILD_DIR)" -type f 2>/dev/null | while read -r file; do \
+			[ -L "$$$$file" ] && continue; \
+			case "$$$$file" in \
 				*.ko) continue ;; \
 				*/lib/modules/*) continue ;; \
 				*/lib/firmware/*) continue ;; \
-				*.so|*.so.*) skipped=$$((skipped + 1)); continue ;; \
+				*.so|*.so.*) skipped=$$$$(($$$$skipped + 1)); continue ;; \
 			esac; \
-			if file "$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
-				size_before=$$(stat -c%s "$$file" 2>/dev/null || echo 0); \
-				if UPX_BINARY_PATH --best --lzma -q "$$file" 2>/dev/null; then \
-					size_after=$$(stat -c%s "$$file" 2>/dev/null || echo $$size_before); \
-					saved=$$((size_before - size_after)); \
-					[ $$saved -gt 0 ] && echo "  Compressed: $${file#$(PKG_BUILD_DIR)/} (-$$saved bytes)"; \
-					compressed=$$((compressed + 1)); \
+			if file "$$$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
+				size_before=$$$$( stat -c%s "$$$$file" 2>/dev/null || echo 0 ); \
+				if UPX_BINARY_PATH --best --lzma -q "$$$$file" 2>/dev/null; then \
+					size_after=$$$$( stat -c%s "$$$$file" 2>/dev/null || echo $$$$size_before ); \
+					saved=$$$$(($$$$size_before - $$$$size_after)); \
+					rel_path=$$$${file\#$(PKG_BUILD_DIR)/}; \
+					[ $$$$saved -gt 0 ] && echo "  Compressed: $$$$rel_path (-$$$$saved bytes)"; \
+					compressed=$$$$(($$$$compressed + 1)); \
 				else \
-					failed=$$((failed + 1)); \
+					failed=$$$$(($$$$failed + 1)); \
 				fi; \
 			fi; \
 		done; \
-		[ $$compressed -gt 0 ] && echo "  Total: $$compressed compressed, $$failed failed, $$skipped skipped"; \
+		[ $$$$compressed -gt 0 ] && echo "  Total: $$$$compressed compressed, $$$$failed failed, $$$$skipped skipped"; \
 	fi
 endef
 
@@ -1372,16 +1373,16 @@ EOFPKG
 # UPX compression before ipkg packaging
 define Package/Default/install/post
 	@if [ -d "$(1)" ] && [ -f "UPX_BINARY_PATH" ]; then \
-		find "$(1)" -type f 2>/dev/null | while read file; do \
-			[ -L "$$file" ] && continue; \
-			case "$$file" in \
+		find "$(1)" -type f 2>/dev/null | while read -r file; do \
+			[ -L "$$$$file" ] && continue; \
+			case "$$$$file" in \
 				*.ko) continue ;; \
 				*/lib/modules/*) continue ;; \
 				*/lib/firmware/*) continue ;; \
 				*.so|*.so.*) continue ;; \
 			esac; \
-			if file "$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
-				UPX_BINARY_PATH --best --lzma -q "$$file" 2>/dev/null || true; \
+			if file "$$$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
+				UPX_BINARY_PATH --best --lzma -q "$$$$file" 2>/dev/null || true; \
 			fi; \
 		done; \
 	fi
