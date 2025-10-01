@@ -1245,6 +1245,171 @@ tailscale_use_awg() {
     update_package "tailscale" "releases" "v1.88.2" || exit 1
 }
 
+use_upx_for_binaries(){
+    echo "=== Setting up UPX compression for binaries ==="
+    
+    # 检查是否启用了UPX压缩功能
+    if [[ "$DISABLED_FUNCTIONS" == *"use_upx_for_binaries"* ]]; then
+        echo "UPX compression is disabled, skipping..."
+        return 0
+    fi
+    
+    # 获取目标架构（仅用于显示信息）
+    local target_arch=$(_get_arch_from_config)
+    echo "Target architecture: $target_arch"
+    
+    # 设置UPX版本和下载URL
+    # UPX 运行在构建主机上（amd64），可以处理所有目标架构的二进制文件
+    local upx_version="5.0.2"
+    local upx_dir="$BUILD_DIR/tools/upx"
+    local upx_url="https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-amd64_linux.tar.xz"
+    local upx_binary="$upx_dir/upx-${upx_version}-amd64_linux/upx"
+    
+    # 下载和安装UPX
+    if [[ ! -f "$upx_binary" ]]; then
+        echo "Downloading UPX v${upx_version}..."
+        mkdir -p "$upx_dir"
+        local current_dir=$(pwd)
+        cd "$upx_dir"
+        
+        if ! wget -q "$upx_url" -O "upx.tar.xz"; then
+            echo "Failed to download UPX from $upx_url"
+            cd "$current_dir"
+            return 1
+        fi
+        
+        if ! tar -xf "upx.tar.xz"; then
+            echo "Failed to extract UPX archive"
+            cd "$current_dir"
+            return 1
+        fi
+        
+        rm -f "upx.tar.xz"
+        
+        if [[ ! -f "$upx_binary" ]]; then
+            echo "UPX binary not found after extraction: $upx_binary"
+            cd "$current_dir"
+            return 1
+        fi
+        
+        chmod +x "$upx_binary"
+        echo "UPX installed successfully at $upx_binary"
+        cd "$current_dir"
+    else
+        echo "UPX already installed at $upx_binary"
+    fi
+    
+    # 方案：修改 target/linux/*/image/*.mk 文件，在镜像打包前添加UPX压缩
+    # 查找所有的 image/*.mk 文件并添加 UPX 压缩步骤
+    
+    echo "Adding UPX compression hooks to image build files..."
+    
+    # 创建 UPX 压缩的 makefile 函数
+    local upx_makefile_include="$BUILD_DIR/include/upx-compress.mk"
+    cat > "$upx_makefile_include" << 'EOFMK'
+# UPX Binary Compression for OpenWrt
+# This file is included in image build process
+
+define Image/upx_compress
+	@echo "=========================================="
+	@echo "Running UPX compression on rootfs..."
+	@echo "=========================================="
+	@if [ -d "$(TARGET_DIR)" ]; then \
+		find "$(TARGET_DIR)" -type f 2>/dev/null | while read file; do \
+			if file "$$file" 2>/dev/null | grep -qE "ELF.*(executable|shared object)"; then \
+				size_before=$$(stat -c%s "$$file" 2>/dev/null || echo 0); \
+				if UPX_BINARY --best --lzma -q "$$file" 2>/dev/null; then \
+					size_after=$$(stat -c%s "$$file" 2>/dev/null || echo $$size_before); \
+					saved=$$((size_before - size_after)); \
+					[ $$saved -gt 0 ] && echo "  Compressed: $${file#$(TARGET_DIR)} (saved $$saved bytes)"; \
+				fi; \
+			fi; \
+		done; \
+		echo "UPX compression completed for $(TARGET_DIR)"; \
+	else \
+		echo "Warning: TARGET_DIR not found, skipping UPX compression"; \
+	fi
+endef
+EOFMK
+    
+    # 替换 UPX_BINARY 占位符为实际路径
+    sed -i "s|UPX_BINARY|$upx_binary|g" "$upx_makefile_include"
+    
+    echo "Created UPX makefile include: $upx_makefile_include"
+    
+    # 修改所有 target/linux/*/image/*.mk 文件
+    local image_mk_files=()
+    while IFS= read -r -d '' mkfile; do
+        image_mk_files+=("$mkfile")
+    done < <(find "$BUILD_DIR/target/linux" -type f -name "*.mk" -path "*/image/*" -print0 2>/dev/null)
+    
+    if [[ ${#image_mk_files[@]} -eq 0 ]]; then
+        echo "Warning: No image .mk files found"
+    else
+        echo "Found ${#image_mk_files[@]} image .mk file(s)"
+        
+        for mkfile in "${image_mk_files[@]}"; do
+            # 备份文件
+            [[ ! -f "$mkfile.backup" ]] && cp "$mkfile" "$mkfile.backup"
+            
+            # 检查是否已经包含了 UPX 压缩
+            if ! grep -q "upx-compress.mk" "$mkfile"; then
+                # 在文件开头添加 include 语句
+                sed -i "1i# Include UPX compression\ninclude \$(INCLUDE_DIR)/upx-compress.mk\n" "$mkfile"
+                
+                # 在 define Device/Default 或类似的定义后添加 UPX 压缩调用
+                # 查找 KERNEL_INITRAMFS 或 IMAGE/sysupgrade.bin 等关键字，在其前面添加压缩步骤
+                if grep -q "define Device/Default" "$mkfile"; then
+                    # 在 Device/Default 定义的末尾（endef前）添加 UPX 压缩
+                    awk '/define Device\/Default/,/^endef/ {
+                        if (/^endef/ && !done) {
+                            print "  IMAGES := $(call Image/upx_compress,$(IMAGES))"
+                            done=1
+                        }
+                        print
+                        next
+                    } {print}' "$mkfile" > "$mkfile.tmp" && mv "$mkfile.tmp" "$mkfile"
+                fi
+                
+                echo "  Added UPX hooks to: $mkfile"
+            fi
+        done
+    fi
+    
+    # 同时修改主要的 include/image.mk 文件，确保在 rootfs 准备完成后运行 UPX
+    local main_image_mk="$BUILD_DIR/include/image.mk"
+    if [[ -f "$main_image_mk" ]]; then
+        [[ ! -f "$main_image_mk.backup" ]] && cp "$main_image_mk" "$main_image_mk.backup"
+        
+        if ! grep -q "UPX_COMPRESS_ROOTFS" "$main_image_mk"; then
+            # 在文件末尾添加 UPX 压缩钩子
+            cat >> "$main_image_mk" << EOFIMG
+
+# UPX Binary Compression Hook
+define prepare_rootfs_upx
+	@echo "Running UPX compression before image packaging..."
+	@if [ -d "\$(TARGET_DIR)" ] && [ -f "$upx_binary" ]; then \\
+		find "\$(TARGET_DIR)" -type f 2>/dev/null | while read file; do \\
+			if file "\$\$file" 2>/dev/null | grep -qE "ELF.*(executable|shared object)"; then \\
+				$upx_binary --best --lzma -q "\$\$file" 2>/dev/null && echo "Compressed: \$\${file#\$(TARGET_DIR)}" || true; \\
+			fi; \\
+		done; \\
+	fi
+endef
+
+UPX_COMPRESS_ROOTFS := 1
+
+# Hook into prepare_rootfs
+Hooks/Prepare/Post += prepare_rootfs_upx
+EOFIMG
+            echo "Added UPX compression to main image.mk"
+        fi
+    fi
+    
+    echo "=== UPX compression setup completed ==="
+    echo "UPX will automatically compress all binaries before image packaging"
+}
+
 _trim_space() {
     local str=$1
     echo "$str" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
@@ -1348,6 +1513,7 @@ main() {
     fix_node_build
     fix_libffi
     tailscale_use_awg
+    use_upx_for_binaries
     # update_proxy_app_menu_location
     # fix_kernel_magic
     # update_mt76
