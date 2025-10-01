@@ -1260,7 +1260,7 @@ use_upx_for_binaries(){
     
     # 设置UPX版本和下载URL
     # UPX 运行在构建主机上（amd64），可以处理所有目标架构的二进制文件
-    local upx_version="5.0.2"
+    local upx_version="4.2.4"
     local upx_dir="$BUILD_DIR/tools/upx"
     local upx_url="https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-amd64_linux.tar.xz"
     local upx_binary="$upx_dir/upx-${upx_version}-amd64_linux/upx"
@@ -1299,146 +1299,109 @@ use_upx_for_binaries(){
         echo "UPX already installed at $upx_binary"
     fi
     
-    # 方案：修改 target/linux/*/image/*.mk 文件，在镜像打包前添加UPX压缩
-    # 查找所有的 image/*.mk 文件并添加 UPX 压缩步骤
+    echo "Adding UPX compression hook to package compilation..."
     
-    echo "Adding UPX compression hooks to image build files..."
-    
-    # 创建 UPX 压缩的 makefile 函数
-    local upx_makefile_include="$BUILD_DIR/include/upx-compress.mk"
-    cat > "$upx_makefile_include" << 'EOFMK'
-# UPX Binary Compression for OpenWrt
-# This file is included in image build process
+    # 创建 UPX 压缩钩子，集成到包编译流程中
+    local package_mk="$BUILD_DIR/include/package.mk"
+    if [[ -f "$package_mk" ]]; then
+        # 备份原文件
+        [[ ! -f "$package_mk.backup" ]] && cp "$package_mk" "$package_mk.backup"
+        
+        # 检查是否已经添加了UPX钩子
+        if ! grep -q "UPX_COMPRESS_BINARIES" "$package_mk"; then
+            # 在文件末尾添加 UPX 压缩钩子
+            cat >> "$package_mk" << 'EOFPKG'
 
-define Image/upx_compress
-	@echo "=========================================="
-	@echo "Running UPX compression on rootfs..."
-	@echo "=========================================="
-	@if [ -d "$(TARGET_DIR)" ]; then \
+# UPX Binary Compression Hook - runs after package compilation
+define Build/upx_compress_hook
+	@echo "UPX: Compressing binaries in $(PKG_BUILD_DIR) for package $(PKG_NAME)..."
+	@if [ -d "$(PKG_BUILD_DIR)" ] && [ -f "UPX_BINARY_PATH" ]; then \
 		compressed=0; failed=0; skipped=0; \
-		find "$(TARGET_DIR)" -type f 2>/dev/null | while read file; do \
-			# 跳过符号链接 \
+		find "$(PKG_BUILD_DIR)" -type f 2>/dev/null | while read file; do \
 			[ -L "$$file" ] && continue; \
-			\
-			# 排除不应该压缩的文件 \
 			case "$$file" in \
+				*.ko) continue ;; \
 				*/lib/modules/*) continue ;; \
 				*/lib/firmware/*) continue ;; \
-				*/lib/*.so|*/lib/*.so.*|*/usr/lib/*.so|*/usr/lib/*.so.*) \
-					echo "  Skipped shared library: $${file#$(TARGET_DIR)}"; skipped=$$((skipped + 1)); continue ;; \
+				*.so|*.so.*) skipped=$$((skipped + 1)); continue ;; \
 			esac; \
-			\
-			# 检查是否为ELF可执行文件（不压缩共享库） \
 			if file "$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
 				size_before=$$(stat -c%s "$$file" 2>/dev/null || echo 0); \
-				if UPX_BINARY --best --lzma -q "$$file" 2>/dev/null; then \
+				if UPX_BINARY_PATH --best --lzma -q "$$file" 2>/dev/null; then \
 					size_after=$$(stat -c%s "$$file" 2>/dev/null || echo $$size_before); \
 					saved=$$((size_before - size_after)); \
-					[ $$saved -gt 0 ] && echo "  Compressed: $${file#$(TARGET_DIR)} (saved $$saved bytes)"; \
+					[ $$saved -gt 0 ] && echo "  Compressed: $${file#$(PKG_BUILD_DIR)/} (-$$saved bytes)"; \
 					compressed=$$((compressed + 1)); \
 				else \
-					echo "  Failed: $${file#$(TARGET_DIR)}"; \
 					failed=$$((failed + 1)); \
 				fi; \
 			fi; \
 		done; \
-		echo "UPX compression completed: $$compressed compressed, $$failed failed, $$skipped skipped"; \
-	else \
-		echo "Warning: TARGET_DIR not found, skipping UPX compression"; \
+		[ $$compressed -gt 0 ] && echo "  Total: $$compressed compressed, $$failed failed, $$skipped skipped"; \
 	fi
 endef
-EOFMK
-    
-    # 替换 UPX_BINARY 占位符为实际路径
-    sed -i "s|UPX_BINARY|$upx_binary|g" "$upx_makefile_include"
-    
-    echo "Created UPX makefile include: $upx_makefile_include"
-    
-    # 修改所有 target/linux/*/image/*.mk 文件
-    local image_mk_files=()
-    while IFS= read -r -d '' mkfile; do
-        image_mk_files+=("$mkfile")
-    done < <(find "$BUILD_DIR/target/linux" -type f -name "*.mk" -path "*/image/*" -print0 2>/dev/null)
-    
-    if [[ ${#image_mk_files[@]} -eq 0 ]]; then
-        echo "Warning: No image .mk files found"
-    else
-        echo "Found ${#image_mk_files[@]} image .mk file(s)"
-        
-        for mkfile in "${image_mk_files[@]}"; do
-            # 备份文件
-            [[ ! -f "$mkfile.backup" ]] && cp "$mkfile" "$mkfile.backup"
+
+# 添加到编译后钩子
+Hooks/Compile/Post += Build/upx_compress_hook
+
+UPX_COMPRESS_BINARIES := 1
+EOFPKG
             
-            # 检查是否已经包含了 UPX 压缩
-            if ! grep -q "upx-compress.mk" "$mkfile"; then
-                # 在文件开头添加 include 语句
-                sed -i "1i# Include UPX compression\ninclude \$(INCLUDE_DIR)/upx-compress.mk\n" "$mkfile"
-                
-                # 在 define Device/Default 或类似的定义后添加 UPX 压缩调用
-                # 查找 KERNEL_INITRAMFS 或 IMAGE/sysupgrade.bin 等关键字，在其前面添加压缩步骤
-                if grep -q "define Device/Default" "$mkfile"; then
-                    # 在 Device/Default 定义的末尾（endef前）添加 UPX 压缩
-                    awk '/define Device\/Default/,/^endef/ {
-                        if (/^endef/ && !done) {
-                            print "  IMAGES := $(call Image/upx_compress,$(IMAGES))"
-                            done=1
-                        }
-                        print
-                        next
-                    } {print}' "$mkfile" > "$mkfile.tmp" && mv "$mkfile.tmp" "$mkfile"
-                fi
-                
-                echo "  Added UPX hooks to: $mkfile"
-            fi
-        done
+            # 替换 UPX_BINARY_PATH 占位符为实际路径
+            sed -i "s|UPX_BINARY_PATH|$upx_binary|g" "$package_mk"
+            
+            echo "Added UPX compression hook to package.mk"
+        else
+            echo "UPX compression hook already exists in package.mk"
+        fi
+    else
+        echo "Warning: package.mk not found at $package_mk"
     fi
     
-    # 同时修改主要的 include/image.mk 文件，确保在 rootfs 准备完成后运行 UPX
-    local main_image_mk="$BUILD_DIR/include/image.mk"
-    if [[ -f "$main_image_mk" ]]; then
-        [[ ! -f "$main_image_mk.backup" ]] && cp "$main_image_mk" "$main_image_mk.backup"
+    # 同时在 include/package-ipkg.mk 中添加钩子，确保在 ipkg 打包前压缩
+    local package_ipkg_mk="$BUILD_DIR/include/package-ipkg.mk"
+    if [[ -f "$package_ipkg_mk" ]]; then
+        # 备份原文件
+        [[ ! -f "$package_ipkg_mk.backup" ]] && cp "$package_ipkg_mk" "$package_ipkg_mk.backup"
         
-        if ! grep -q "UPX_COMPRESS_ROOTFS" "$main_image_mk"; then
-            # 在文件末尾添加 UPX 压缩钩子
-            cat >> "$main_image_mk" << EOFIMG
+        # 检查是否已经添加了UPX钩子
+        if ! grep -q "UPX_COMPRESS_IPKG" "$package_ipkg_mk"; then
+            # 在 Package/*/install 定义后添加压缩步骤
+            cat >> "$package_ipkg_mk" << 'EOFIPKG'
 
-# UPX Binary Compression Hook
-define prepare_rootfs_upx
-	@echo "Running UPX compression before image packaging..."
-	@if [ -d "\$(TARGET_DIR)" ] && [ -f "$upx_binary" ]; then \\
-		compressed=0; failed=0; skipped=0; \\
-		find "\$(TARGET_DIR)" -type f 2>/dev/null | while read file; do \\
-			[ -L "$$file" ] && continue; \\
-			case "$$file" in \\
-				*/lib/modules/*) continue ;; \\
-				*/lib/firmware/*) continue ;; \\
-				*/lib/*.so|*/lib/*.so.*|*/usr/lib/*.so|*/usr/lib/*.so.*) \\
-					skipped=$$((skipped + 1)); continue ;; \\
-			esac; \\
-			if file "$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \\
-				if $upx_binary --best --lzma -q "$$file" 2>/dev/null; then \\
-					echo "Compressed: $${file#\$(TARGET_DIR)}"; \\
-					compressed=$$((compressed + 1)); \\
-				else \\
-					failed=$$((failed + 1)); \\
-				fi; \\
-			fi; \\
-		done; \\
-		echo "UPX: $$compressed compressed, $$failed failed, $$skipped skipped"; \\
+# UPX compression before ipkg packaging
+define Package/Default/install/post
+	@if [ -d "$(1)" ] && [ -f "UPX_BINARY_PATH" ]; then \
+		find "$(1)" -type f 2>/dev/null | while read file; do \
+			[ -L "$$file" ] && continue; \
+			case "$$file" in \
+				*.ko) continue ;; \
+				*/lib/modules/*) continue ;; \
+				*/lib/firmware/*) continue ;; \
+				*.so|*.so.*) continue ;; \
+			esac; \
+			if file "$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
+				UPX_BINARY_PATH --best --lzma -q "$$file" 2>/dev/null || true; \
+			fi; \
+		done; \
 	fi
 endef
 
-UPX_COMPRESS_ROOTFS := 1
-
-# Hook into prepare_rootfs
-Hooks/Prepare/Post += prepare_rootfs_upx
-EOFIMG
-            echo "Added UPX compression to main image.mk"
+UPX_COMPRESS_IPKG := 1
+EOFIPKG
+            
+            # 替换 UPX_BINARY_PATH 占位符为实际路径
+            sed -i "s|UPX_BINARY_PATH|$upx_binary|g" "$package_ipkg_mk"
+            
+            echo "Added UPX compression hook to package-ipkg.mk"
+        else
+            echo "UPX compression hook already exists in package-ipkg.mk"
         fi
     fi
     
     echo "=== UPX compression setup completed ==="
-    echo "UPX will automatically compress all binaries before image packaging"
+    echo "UPX will automatically compress binaries after each package compilation"
+    echo "Compressed binaries will be packaged into ipk files"
 }
 
 _trim_space() {
