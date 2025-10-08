@@ -838,7 +838,7 @@ add_awg() {
     # 删除旧的目录（如果存在）
     rm -rf "$awg_dir" 2>/dev/null
     echo "正在添加 awg-openwrt..."
-    if ! git clone --depth 1 "$repo_url" "$awg_dir" -b feat/awg-2.0; then
+    if ! git clone --depth 1 "$repo_url" "$awg_dir" -b master; then
         echo "错误：从 $repo_url 克隆 awg-openwrt 仓库失败" >&2
         exit 1
     fi
