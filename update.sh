@@ -1314,31 +1314,53 @@ use_upx_for_binaries(){
 
 # UPX Binary Compression Hook - runs after package compilation
 define Build/upx_compress_hook
-	@echo "UPX: Compressing binaries in $(PKG_BUILD_DIR) for package $(PKG_NAME)..."
+	@echo "========================================"
+	@echo "UPX: Starting binary compression"
+	@echo "Package: $(PKG_NAME)"
+	@echo "Build Dir: $(PKG_BUILD_DIR)"
+	@echo "========================================"
 	@if [ -d "$(PKG_BUILD_DIR)" ] && [ -f "UPX_BINARY_PATH" ]; then \
-		compressed=0; failed=0; skipped=0; \
+		echo "UPX: Scanning for ELF executables..."; \
+		compressed=0; failed=0; skipped=0; total_saved=0; \
 		find "$(PKG_BUILD_DIR)" -type f 2>/dev/null | while read -r file; do \
-			[ -L "$$$$file" ] && continue; \
-			case "$$$$file" in \
+			[ -L "$$file" ] && continue; \
+			case "$$file" in \
 				*.ko) continue ;; \
 				*/lib/modules/*) continue ;; \
 				*/lib/firmware/*) continue ;; \
-				*.so|*.so.*) skipped=$$$$(($$$$skipped + 1)); continue ;; \
+				*.so|*.so.*) \
+					rel_path=$${file#$(PKG_BUILD_DIR)/}; \
+					echo "  [SKIP] Shared library: $$rel_path"; \
+					skipped=$$(($$skipped + 1)); \
+					continue ;; \
 			esac; \
-			if file "$$$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
-				size_before=$$$$( stat -c%s "$$$$file" 2>/dev/null || echo 0 ); \
-				if UPX_BINARY_PATH --best --lzma -q "$$$$file" 2>/dev/null; then \
-					size_after=$$$$( stat -c%s "$$$$file" 2>/dev/null || echo $$$$size_before ); \
-					saved=$$$$(($$$$size_before - $$$$size_after)); \
-					rel_path=$$$${file\#$(PKG_BUILD_DIR)/}; \
-					[ $$$$saved -gt 0 ] && echo "  Compressed: $$$$rel_path (-$$$$saved bytes)"; \
-					compressed=$$$$(($$$$compressed + 1)); \
+			if file "$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
+				rel_path=$${file#$(PKG_BUILD_DIR)/}; \
+				size_before=$$( stat -c%s "$$file" 2>/dev/null || echo 0 ); \
+				printf "  [EXEC] Processing: $$rel_path ($$size_before bytes)... "; \
+				if UPX_BINARY_PATH --best --lzma -q "$$file" 2>/dev/null; then \
+					size_after=$$( stat -c%s "$$file" 2>/dev/null || echo $$size_before ); \
+					saved=$$(($$size_before - $$size_after)); \
+					total_saved=$$(($$total_saved + $$saved)); \
+					ratio=$$(($$saved * 100 / $$size_before)); \
+					echo "OK (saved $$saved bytes, -$$ratio%)"; \
+					compressed=$$(($$compressed + 1)); \
 				else \
-					failed=$$$$(($$$$failed + 1)); \
+					echo "FAILED"; \
+					failed=$$(($$failed + 1)); \
 				fi; \
 			fi; \
 		done; \
-		[ $$$$compressed -gt 0 ] && echo "  Total: $$$$compressed compressed, $$$$failed failed, $$$$skipped skipped"; \
+		echo "========================================"; \
+		echo "UPX: Compression Summary for $(PKG_NAME)"; \
+		echo "  Compressed: $$compressed files"; \
+		echo "  Failed: $$failed files"; \
+		echo "  Skipped: $$skipped files"; \
+		[ $$total_saved -gt 0 ] && echo "  Total saved: $$total_saved bytes"; \
+		echo "========================================"; \
+	else \
+		[ ! -d "$(PKG_BUILD_DIR)" ] && echo "UPX: Build directory not found, skipping..."; \
+		[ ! -f "UPX_BINARY_PATH" ] && echo "UPX: Binary not found, skipping..."; \
 	fi
 endef
 

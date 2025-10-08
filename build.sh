@@ -117,6 +117,8 @@ if [[ -d $TARGET_DIR ]]; then
 fi
 
 make download -j$(($(nproc) * 2)) || make download -j$(nproc) || make download -j1 || make download -j1 V=1 || make download -j1 V=s || exit 1
+
+make package/sing-box/compile V=s || exit 1
 make -j$(($(nproc) + 1)) || make -j$(nproc) || make -j$(nproc) V=1 || make -j1 V=1 || make -j1 V=s || exit 1
 
 FIRMWARE_DIR="$BASE_PATH/firmware/$BUILD_DIR"
