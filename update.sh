@@ -1247,7 +1247,7 @@ fix_libffi() {
 tailscale_use_awg() {
     local tailscale_makefile="$BUILD_DIR/package/feeds/small8/tailscale/Makefile"
     sed -i 's|^PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=https://codeload.github.com/LiuTangLei/tailscale/tar.gz/v$(PKG_VERSION)?|' "$tailscale_makefile"
-    update_package "tailscale" "releases" "v1.88.2" || exit 1
+    update_package "tailscale" "releases" "v1.88.3" || exit 1
 }
 
 _trim_space() {
