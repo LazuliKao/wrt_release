@@ -703,7 +703,7 @@ update_package() {
             return 1
         fi
 
-        local old_version=$(awk -F"=" '/PKG_VERSION:=/ {print $NF}' "$mk_path" | grep -oE "[\.0-9]{1,}")
+        local old_version=$(awk -F"=" '/PKG_VERSION:=/ {print $NF}' "$mk_path" | grep -oE "[\.0-9]{1,}" | head -1)
         echo "当前版本: $old_version, 目标版本: $PKG_VER"
         sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:='$PKG_VER'/g' "$mk_path"
         sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
@@ -716,11 +716,16 @@ update_package() {
 }
 
 update_packages() {
+    # https://github.com/opencontainers/runc
     update_package "runc" "releases" "v1.3.0" || exit 1
+    # https://github.com/containerd/containerd
     update_package "containerd" "releases" "v1.7.28" || exit 1
-    update_package "docker" "tags" "v28.4.0" || exit 1
-    update_package "dockerd" "releases" "v28.4.0" || exit 1
-    update_package "docker-compose" "releases" "v2.39.4" || exit 1
+    # https://github.com/docker/cli
+    update_package "docker" "tags" "v28.5.1" || exit 1
+    # https://github.com/moby/moby
+    update_package "dockerd" "releases" "v28.5.1" || exit 1
+    # https://github.com/docker/compose
+    update_package "docker-compose" "releases" "v2.40.0" || exit 1
 }
 
 # 添加系统升级时的备份信息
