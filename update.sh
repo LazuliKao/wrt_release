@@ -1299,6 +1299,11 @@ use_upx_for_binaries(){
         echo "UPX already installed at $upx_binary"
     fi
     
+    # 安装 UPX 压缩脚本
+    local upx_script="$upx_dir/upx_compress.sh"
+    echo "Installing UPX compression script to $upx_script"
+    install -Dm755 "$BASE_PATH/scripts/upx_compress.sh" "$upx_script"
+    
     echo "Adding UPX compression hook to package compilation..."
     
     # 创建 UPX 压缩钩子，集成到包编译流程中
@@ -1312,65 +1317,19 @@ use_upx_for_binaries(){
             # 在文件末尾添加 UPX 压缩钩子
             cat >> "$package_mk" << 'EOFPKG'
 
-# UPX Binary Compression Hook - runs after package compilation
+# === UPX Binary Compression Hook ===
+
 define Build/upx_compress_hook
-	@echo "========================================"
-	@echo "UPX: Starting binary compression"
-	@echo "Package: $(PKG_NAME)"
-	@echo "Build Dir: $(PKG_BUILD_DIR)"
-	@echo "========================================"
-	@if [ -d "$(PKG_BUILD_DIR)" ] && [ -f "UPX_BINARY_PATH" ]; then \
-		echo "UPX: Scanning for ELF executables..."; \
-		compressed=0; failed=0; skipped=0; total_saved=0; \
-		find "$(PKG_BUILD_DIR)" -type f 2>/dev/null | while read -r file; do \
-			[ -L "$$file" ] && continue; \
-			case "$$file" in \
-				*.ko) continue ;; \
-				*/lib/modules/*) continue ;; \
-				*/lib/firmware/*) continue ;; \
-				*.so|*.so.*) \
-					rel_path=$${file#$(PKG_BUILD_DIR)/}; \
-					echo "  [SKIP] Shared library: $$rel_path"; \
-					skipped=$$(($$skipped + 1)); \
-					continue ;; \
-			esac; \
-			if file "$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
-				rel_path=$${file#$(PKG_BUILD_DIR)/}; \
-				size_before=$$( stat -c%s "$$file" 2>/dev/null || echo 0 ); \
-				printf "  [EXEC] Processing: $$rel_path ($$size_before bytes)... "; \
-				if UPX_BINARY_PATH --best --lzma -q "$$file" 2>/dev/null; then \
-					size_after=$$( stat -c%s "$$file" 2>/dev/null || echo $$size_before ); \
-					saved=$$(($$size_before - $$size_after)); \
-					total_saved=$$(($$total_saved + $$saved)); \
-					ratio=$$(($$saved * 100 / $$size_before)); \
-					echo "OK (saved $$saved bytes, -$$ratio%)"; \
-					compressed=$$(($$compressed + 1)); \
-				else \
-					echo "FAILED"; \
-					failed=$$(($$failed + 1)); \
-				fi; \
-			fi; \
-		done; \
-		echo "========================================"; \
-		echo "UPX: Compression Summary for $(PKG_NAME)"; \
-		echo "  Compressed: $$compressed files"; \
-		echo "  Failed: $$failed files"; \
-		echo "  Skipped: $$skipped files"; \
-		[ $$total_saved -gt 0 ] && echo "  Total saved: $$total_saved bytes"; \
-		echo "========================================"; \
-	else \
-		[ ! -d "$(PKG_BUILD_DIR)" ] && echo "UPX: Build directory not found, skipping..."; \
-		[ ! -f "UPX_BINARY_PATH" ] && echo "UPX: Binary not found, skipping..."; \
-	fi
+	@UPX_SCRIPT_PATH "UPX_BINARY_PATH" "$(PKG_BUILD_DIR)" "$(PKG_NAME)" || true
 endef
 
-# 添加到编译后钩子
+ifdef UPX_COMPRESS_BINARIES
 Hooks/Compile/Post += Build/upx_compress_hook
-
-UPX_COMPRESS_BINARIES := 1
+endif
 EOFPKG
             
-            # 替换 UPX_BINARY_PATH 占位符为实际路径
+            # 替换占位符为实际路径
+            sed -i "s|UPX_SCRIPT_PATH|$upx_script|g" "$package_mk"
             sed -i "s|UPX_BINARY_PATH|$upx_binary|g" "$package_mk"
             
             echo "Added UPX compression hook to package.mk"
@@ -1381,7 +1340,7 @@ EOFPKG
         echo "Warning: package.mk not found at $package_mk"
     fi
     
-    # 同时在 include/package-ipkg.mk 中添加钩子，确保在 ipkg 打包前压缩
+    # 同时在 include/package-ipkg.mk 中添加钩子
     local package_ipkg_mk="$BUILD_DIR/include/package-ipkg.mk"
     if [[ -f "$package_ipkg_mk" ]]; then
         # 备份原文件
@@ -1389,31 +1348,19 @@ EOFPKG
         
         # 检查是否已经添加了UPX钩子
         if ! grep -q "UPX_COMPRESS_IPKG" "$package_ipkg_mk"; then
-            # 在 Package/*/install 定义后添加压缩步骤
+            # 在文件末尾添加压缩步骤
             cat >> "$package_ipkg_mk" << 'EOFIPKG'
 
 # UPX compression before ipkg packaging
 define Package/Default/install/post
-	@if [ -d "$(1)" ] && [ -f "UPX_BINARY_PATH" ]; then \
-		find "$(1)" -type f 2>/dev/null | while read -r file; do \
-			[ -L "$$$$file" ] && continue; \
-			case "$$$$file" in \
-				*.ko) continue ;; \
-				*/lib/modules/*) continue ;; \
-				*/lib/firmware/*) continue ;; \
-				*.so|*.so.*) continue ;; \
-			esac; \
-			if file "$$$$file" 2>/dev/null | grep -qE "ELF.*executable"; then \
-				UPX_BINARY_PATH --best --lzma -q "$$$$file" 2>/dev/null || true; \
-			fi; \
-		done; \
-	fi
+	@[ -d "$(1)" ] && UPX_SCRIPT_PATH "UPX_BINARY_PATH" "$(1)" "$(PKG_NAME)" || true
 endef
 
 UPX_COMPRESS_IPKG := 1
 EOFIPKG
             
-            # 替换 UPX_BINARY_PATH 占位符为实际路径
+            # 替换占位符为实际路径
+            sed -i "s|UPX_SCRIPT_PATH|$upx_script|g" "$package_ipkg_mk"
             sed -i "s|UPX_BINARY_PATH|$upx_binary|g" "$package_ipkg_mk"
             
             echo "Added UPX compression hook to package-ipkg.mk"
