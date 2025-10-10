@@ -1014,7 +1014,9 @@ remove_tweaked_packages() {
 
 update_argon() {
     git clone https://github.com/LazuliKao/luci-theme-argon -b openwrt-24.10 ./feeds/luci/themes/luci-theme-argon-new
+    rm -rf ./feeds/luci/themes/luci-theme-argon
     mv ./feeds/luci/themes/luci-theme-argon-new/luci-theme-argon ./feeds/luci/themes/luci-theme-argon
+    rm -rf ./feeds/luci/applications/luci-app-argon-config
     mv ./feeds/luci/themes/luci-theme-argon-new/luci-app-argon-config ./feeds/luci/applications/luci-app-argon-config
     \rm -rf ./feeds/luci/themes/luci-theme-argon-new
 
