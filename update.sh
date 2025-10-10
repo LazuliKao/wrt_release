@@ -592,7 +592,9 @@ update_nss_pbuf_performance() {
 set_build_signature() {
     local file="$BUILD_DIR/feeds/luci/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js"
     if [ -d "$(dirname "$file")" ] && [ -f $file ]; then
-        sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ build by LazuliKao')/g" "$file"
+        BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S %Z")
+        ESC_TIME=$(printf '%s' "$BUILD_TIME" | sed 's/[&]/\\&/g')
+        sed -i "s@(\(luciversion || ''\))@(\1) + (' / build by LazuliKao - $ESC_TIME')@g" "$file"
     fi
 }
 
