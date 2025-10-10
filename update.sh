@@ -211,11 +211,6 @@ remove_unwanted_packages() {
         \rm -rf ./package/istore
     fi
 
-    git clone https://github.com/LazuliKao/luci-theme-argon -b openwrt-24.10 ./feeds/luci/themes/luci-theme-argon-new
-    mv ./feeds/luci/themes/luci-theme-argon-new/luci-theme-argon ./feeds/luci/themes/luci-theme-argon
-    mv ./feeds/luci/themes/luci-theme-argon-new/luci-app-argon-config ./feeds/luci/applications/luci-app-argon-config
-    \rm -rf ./feeds/luci/themes/luci-theme-argon-new
-
     # ipq60xx不支持NSS offload mnet_rx
     # if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
     #     rm -rf "$BUILD_DIR/feeds/nss_packages/wwan"
@@ -240,7 +235,7 @@ update_golang() {
 
 install_small8() {
     # string.Join(" ","""_""".Replace("\r", "").Split("\n"))
-    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev luci-app-passwall luci-app-passwall2 alist luci-app-alist v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart luci-app-quickstart luci-app-istorex luci-theme-argon netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon luci-app-supervisord msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-cloudflarespeedtest
+    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev luci-app-passwall luci-app-passwall2 alist luci-app-alist v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart luci-app-quickstart luci-app-istorex netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon luci-app-supervisord msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-cloudflarespeedtest
 }
 
 install_fullconenat() {
@@ -1018,22 +1013,27 @@ remove_tweaked_packages() {
 }
 
 update_argon() {
-    local repo_url="https://github.com/ZqinKing/luci-theme-argon.git"
-    local dst_theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon"
-    local tmp_dir
-    tmp_dir=$(mktemp -d)
+    git clone https://github.com/LazuliKao/luci-theme-argon -b openwrt-24.10 ./feeds/luci/themes/luci-theme-argon-new
+    mv ./feeds/luci/themes/luci-theme-argon-new/luci-theme-argon ./feeds/luci/themes/luci-theme-argon
+    mv ./feeds/luci/themes/luci-theme-argon-new/luci-app-argon-config ./feeds/luci/applications/luci-app-argon-config
+    \rm -rf ./feeds/luci/themes/luci-theme-argon-new
 
-    echo "正在更新 argon 主题..."
+    # local repo_url="https://github.com/LazuliKao/luci-theme-argon.git"
+    # local dst_theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon"
+    # local tmp_dir
+    # tmp_dir=$(mktemp -d)
 
-    if ! git clone --depth 1 "$repo_url" "$tmp_dir"; then
-        echo "错误：从 $repo_url 克隆 argon 主题仓库失败" >&2
-        rm -rf "$tmp_dir"
-        exit 1
-    fi
+    # echo "正在更新 argon 主题..."
 
-    rm -rf "$dst_theme_path"
-    rm -rf "$tmp_dir/.git"
-    mv "$tmp_dir" "$dst_theme_path"
+    # if ! git clone --depth 1 "$repo_url" "$tmp_dir"; then
+    #     echo "错误：从 $repo_url 克隆 argon 主题仓库失败" >&2
+    #     rm -rf "$tmp_dir"
+    #     exit 1
+    # fi
+
+    # rm -rf "$dst_theme_path"
+    # rm -rf "$tmp_dir/.git"
+    # mv "$tmp_dir" "$dst_theme_path"
 
     echo "luci-theme-argon 更新完成"
 }
@@ -1341,7 +1341,7 @@ main() {
     update_diskman
     set_nginx_default_config
     update_uwsgi_limit_as
-    # update_argon
+    update_argon
     install_feeds
     update_adguardhome
     update_script_priority
