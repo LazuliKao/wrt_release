@@ -1121,7 +1121,7 @@ add_ohmyzsh() {
         rm -rf "$base_files_path/root/.oh-my-zsh"
     fi
     # git clone https://mirror.nju.edu.cn/git/ohmyzsh.git "$base_files_path/root/.oh-my-zsh"
-    git clone https://github.com/ohmyzsh/ohmyzsh.git "$base_files_path/root/.oh-my-zsh"
+    git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh.git "$base_files_path/root/.oh-my-zsh"
     if [ -f "$base_files_path/root/.zshrc" ]; then
         rm "$base_files_path/root/.zshrc"
     fi
@@ -1129,6 +1129,28 @@ add_ohmyzsh() {
     # echo "source /etc/profile" >> "$base_files_path/root/.zshrc"
     sed -i "1i source /etc/profile" "$base_files_path/root/.zshrc"
     # sed -i "s:/bin/ash:/usr/bin/zsh:g" "base_files_path/etc/passwd"
+
+    # add plugins
+    local plugins_dir="$base_files_path/root/.oh-my-zsh/custom/plugins"
+    mkdir -p "$plugins_dir"
+    
+    echo "Installing zsh-autocomplete plugin..."
+    if [ ! -d "$plugins_dir/zsh-autocomplete" ]; then
+        git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git "$plugins_dir/zsh-autocomplete"
+    fi
+    
+    echo "Installing zsh-autosuggestions plugin..."
+    if [ ! -d "$plugins_dir/zsh-autosuggestions" ]; then
+        git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions.git "$plugins_dir/zsh-autosuggestions"
+    fi
+    
+    echo "Installing zsh-syntax-highlighting plugin..."
+    if [ ! -d "$plugins_dir/zsh-syntax-highlighting" ]; then
+        git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git "$plugins_dir/zsh-syntax-highlighting"
+    fi
+    
+    # Update .zshrc to enable plugins
+    sed -i 's/^plugins=(.*/plugins=(git zsh-autocomplete zsh-autosuggestions zsh-syntax-highlighting)/' "$base_files_path/root/.zshrc"
 }
 
 add_nbtverify() {
