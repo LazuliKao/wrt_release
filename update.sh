@@ -1069,33 +1069,59 @@ set_nginx_default_config() {
     if [ -f "$nginx_config_path" ]; then
         # 使用 cat 和 heredoc 覆盖写入 nginx.config 文件
         cat >"$nginx_config_path" <<EOF
-config main 'global'
-        option uci_enable 'true'
+config main global
+	option uci_enable 'true'
 
 config server '_lan'
-        list listen '443 ssl default_server'
-        list listen '[::]:443 ssl default_server'
-        option server_name '_lan'
-        list include 'restrict_locally'
-        list include 'conf.d/*.locations'
-        option uci_manage_ssl 'self-signed'
-        option ssl_certificate '/etc/nginx/conf.d/_lan.crt'
-        option ssl_certificate_key '/etc/nginx/conf.d/_lan.key'
-        option ssl_session_cache 'shared:SSL:32k'
-        option ssl_session_timeout '64m'
-        option access_log 'off; # logd openwrt'
-
-config server 'http_only'
-        list listen '80'
-        list listen '[::]:80'
-        option server_name 'http_only'
-        list include 'conf.d/*.locations'
-        option access_log 'off; # logd openwrt'
+	list listen '80 default_server'
+	list listen '[::]:80 default_server'
+	option server_name '_lan'
+	list include 'restrict_locally'
+	list include 'conf.d/*.locations'
+	# option uci_manage_ssl 'self-signed'
+	option ssl_session_cache 'shared:SSL:32k'
+	option ssl_session_timeout '64m'
+	option access_log 'off; # logd openwrt'
 EOF
     fi
 
     local nginx_template="$BUILD_DIR/feeds/packages/net/nginx-util/files/uci.conf.template"
     if [ -f "$nginx_template" ]; then
+        cat >"$nginx_template" <<EOF
+# Consider using UCI or creating files in /etc/nginx/conf.d/ for configuration.
+# Parsing UCI configuration is skipped if uci set nginx.global.uci_enable=false
+# For details see: https://openwrt.org/docs/guide-user/services/webserver/nginx
+# UCI_CONF_VERSION=1.2
+
+worker_processes auto;
+
+user root;
+
+include module.d/*.module;
+
+events {}
+
+http {
+        access_log off;
+        log_format openwrt
+                '\$request_method \$scheme://\$host\$request_uri => \$status'
+                ' (\${body_bytes_sent}B in \${request_time}s) <- \$http_referer';
+
+        include mime.types;
+        default_type application/octet-stream;
+        sendfile on;
+
+        gzip on;
+        gzip_vary on;
+        gzip_proxied any;
+
+        root /www;
+
+        #UCI_HTTP_CONFIG
+        include conf.d/*.conf;
+}
+EOF
+
         # 检查是否已存在配置，避免重复添加
         if ! grep -q "client_body_in_file_only clean;" "$nginx_template"; then
             sed -i "/client_max_body_size 128M;/a\\
@@ -1133,22 +1159,22 @@ add_ohmyzsh() {
     # add plugins
     local plugins_dir="$base_files_path/root/.oh-my-zsh/custom/plugins"
     mkdir -p "$plugins_dir"
-    
+
     echo "Installing zsh-autocomplete plugin..."
     if [ ! -d "$plugins_dir/zsh-autocomplete" ]; then
         git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git "$plugins_dir/zsh-autocomplete"
     fi
-    
+
     echo "Installing zsh-autosuggestions plugin..."
     if [ ! -d "$plugins_dir/zsh-autosuggestions" ]; then
         git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions.git "$plugins_dir/zsh-autosuggestions"
     fi
-    
+
     echo "Installing zsh-syntax-highlighting plugin..."
     if [ ! -d "$plugins_dir/zsh-syntax-highlighting" ]; then
         git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git "$plugins_dir/zsh-syntax-highlighting"
     fi
-    
+
     # Update .zshrc to enable plugins
     sed -i 's/^plugins=(.*/plugins=(git zsh-autocomplete zsh-autosuggestions zsh-syntax-highlighting)/' "$base_files_path/root/.zshrc"
 }
