@@ -396,14 +396,14 @@ fix_hash_value() {
 apply_hash_fixes() {
     fix_hash_value \
         "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
-        "deb3ba1a8ca88fb7294acfb46c5d8881dfe36e816f4746f4760245907ebd0b98" \
-        "04d1ca0990a840a6e5fd05fe8c59b6c71e661a07d6e131e863441f3a9925b9c8" \
+        "860a816bf1e69d5a8a2049483197dbebe8a3da2c9b05b2da68c85ef7dee7bdde" \
+        "582021891808442b01f551bc41d7d95c38fb00c1ec78a58ac3aaaf898fbd2b5b" \
         "smartdns"
 
     fix_hash_value \
         "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
-        "29970b932d9abdb2a53085d71b4f4964ec3291d8d7c49794a04f2c35fbc6b665" \
-        "f56db9077acb7750d0d5b3016ac7d5b9c758898c4d42a7a0956cea204448a182" \
+        "320c99a65ca67a98d11a45292aa99b8904b5ebae5b0e17b302932076bf62b1ec" \
+        "43e58467690476a77ce644f9dc246e8a481353160644203a1bd01eb09c881275" \
         "smartdns"
 }
 
@@ -722,7 +722,7 @@ update_packages() {
     # https://github.com/moby/moby
     update_package "dockerd" "releases" "v28.5.1" || exit 1
     # https://github.com/docker/compose
-    update_package "docker-compose" "releases" "v2.40.0" || exit 1
+    update_package "docker-compose" "releases" "v2.40.2" || exit 1
 }
 
 # 添加系统升级时的备份信息
@@ -956,6 +956,29 @@ fix_rust_compile_error() {
     fi
 }
 
+update_smartdns() {
+    # smartdns 仓库地址
+    local SMARTDNS_REPO="https://github.com/ZqinKing/openwrt-smartdns.git"
+    local SMARTDNS_DIR="$BUILD_DIR/feeds/packages/net/smartdns"
+    # luci-app-smartdns 仓库地址
+    local LUCI_APP_SMARTDNS_REPO="https://github.com/pymumu/luci-app-smartdns.git"
+    local LUCI_APP_SMARTDNS_DIR="$BUILD_DIR/feeds/luci/applications/luci-app-smartdns"
+    echo "正在更新 smartdns..."
+    rm -rf "$SMARTDNS_DIR"
+    if ! git clone --depth=1 "$SMARTDNS_REPO" "$SMARTDNS_DIR"; then
+        echo "错误：从 $SMARTDNS_REPO 克隆 smartdns 仓库失败" >&2
+        exit 1
+    fi
+    install -Dm644 "$BASE_PATH/patches/100-smartdns-optimize.patch" "$SMARTDNS_DIR/patches/100-smartdns-optimize.patch"
+    sed -i '/define Build\/Compile\/smartdns-ui/,/endef/s/CC=\$(TARGET_CC)/CC="\$(TARGET_CC_NOCACHE)"/' "$SMARTDNS_DIR/Makefile"
+    echo "正在更新 luci-app-smartdns..."
+    rm -rf "$LUCI_APP_SMARTDNS_DIR"
+    if ! git clone --depth=1 "$LUCI_APP_SMARTDNS_REPO" "$LUCI_APP_SMARTDNS_DIR"; then
+        echo "错误：从 $LUCI_APP_SMARTDNS_REPO 克隆 luci-app-smartdns 仓库失败" >&2
+        exit 1
+    fi
+}
+
 update_diskman() {
     local path="$BUILD_DIR/feeds/luci/applications/luci-app-diskman"
     local repo_url="https://github.com/lisaac/luci-app-diskman.git"
@@ -985,16 +1008,88 @@ update_diskman() {
     fi
 }
 
+add_quickfile() {
+    local repo_url="https://github.com/sbwml/luci-app-quickfile.git"
+    local target_dir="$BUILD_DIR/package/emortal/quickfile"
+    if [ -d "$target_dir" ]; then
+        rm -rf "$target_dir"
+    fi
+    echo "正在添加 luci-app-quickfile..."
+    if ! git clone --depth 1 "$repo_url" "$target_dir"; then
+        echo "错误：从 $repo_url 克隆 luci-app-quickfile 仓库失败" >&2
+        exit 1
+    fi
+    local makefile_path="$target_dir/quickfile/Makefile"
+    if [ -f "$makefile_path" ]; then
+        sed -i '/\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-\$(ARCH_PACKAGES)/c\
+\tif [ "\$(ARCH_PACKAGES)" = "x86_64" ]; then \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-x86_64 \$(1)\/usr\/bin\/quickfile; \\\
+\telse \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-aarch64_generic \$(1)\/usr\/bin\/quickfile; \\\
+\tfi' "$makefile_path"
+    fi
+}
+
+# 设置 Nginx 默认配置
+set_nginx_default_config() {
+    local nginx_config_path="$BUILD_DIR/feeds/packages/net/nginx-util/files/nginx.config"
+    if [ -f "$nginx_config_path" ]; then
+        # 使用 cat 和 heredoc 覆盖写入 nginx.config 文件
+        cat >"$nginx_config_path" <<EOF
+config main 'global'
+        option uci_enable 'true'
+
+config server '_lan'
+        list listen '443 ssl default_server'
+        list listen '[::]:443 ssl default_server'
+        option server_name '_lan'
+        list include 'restrict_locally'
+        list include 'conf.d/*.locations'
+        option uci_manage_ssl 'self-signed'
+        option ssl_certificate '/etc/nginx/conf.d/_lan.crt'
+        option ssl_certificate_key '/etc/nginx/conf.d/_lan.key'
+        option ssl_session_cache 'shared:SSL:32k'
+        option ssl_session_timeout '64m'
+        option access_log 'off; # logd openwrt'
+
+config server 'http_only'
+        list listen '80'
+        list listen '[::]:80'
+        option server_name 'http_only'
+        list include 'conf.d/*.locations'
+        option access_log 'off; # logd openwrt'
+EOF
+    fi
+
+    local nginx_template="$BUILD_DIR/feeds/packages/net/nginx-util/files/uci.conf.template"
+    if [ -f "$nginx_template" ]; then
+        # 检查是否已存在配置，避免重复添加
+        if ! grep -q "client_body_in_file_only clean;" "$nginx_template"; then
+            sed -i "/client_max_body_size 128M;/a\\
+\tclient_body_in_file_only clean;\\
+\tclient_body_temp_path /mnt/tmp;" "$nginx_template"
+        fi
+    fi
+
+    local luci_support_script="$BUILD_DIR/feeds/packages/net/nginx/files-luci-support/60_nginx-luci-support"
+
+    if [ -f "$luci_support_script" ]; then
+        # 检查是否已经为 ubus location 应用了修复
+        if ! grep -q "client_body_in_file_only off;" "$luci_support_script"; then
+            echo "正在为 Nginx ubus location 配置应用修复..."
+            sed -i "/ubus_parallel_req 2;/a\\        client_body_in_file_only off;\\n        client_max_body_size 1M;" "$luci_support_script"
+        fi
+    fi
+}
+
 update_uwsgi_limit_as() {
     # 更新 uwsgi 的 limit-as 配置，将其值更改为 8192
     local cgi_io_ini="$BUILD_DIR/feeds/packages/net/uwsgi/files-luci-support/luci-cgi_io.ini"
     local webui_ini="$BUILD_DIR/feeds/packages/net/uwsgi/files-luci-support/luci-webui.ini"
-
     if [ -f "$cgi_io_ini" ]; then
         # 将 luci-cgi_io.ini 文件中的 limit-as 值更新为 8192
         sed -i 's/^limit-as = .*/limit-as = 8192/g' "$cgi_io_ini"
     fi
-
     if [ -f "$webui_ini" ]; then
         # 将 luci-webui.ini 文件中的 limit-as 值更新为 8192
         sed -i 's/^limit-as = .*/limit-as = 8192/g' "$webui_ini"
@@ -1352,6 +1447,23 @@ fix_easytier_lua() {
     fi
 }
 
+# 更新 nginx-mod-ubus 模块
+update_nginx_ubus_module() {
+    local makefile_path="$BUILD_DIR/feeds/packages/net/nginx/Makefile"
+    local source_date="2024-03-02"
+    local source_version="564fa3e9c2b04ea298ea659b793480415da26415"
+    local mirror_hash="92c9ab94d88a2fe8d7d1e8a15d15cfc4d529fdc357ed96d22b65d5da3dd24d7f"
+
+    if [ -f "$makefile_path" ]; then
+        sed -i "s/SOURCE_DATE:=2020-09-06/SOURCE_DATE:=$source_date/g" "$makefile_path"
+        sed -i "s/SOURCE_VERSION:=b2d7260dcb428b2fb65540edb28d7538602b4a26/SOURCE_VERSION:=$source_version/g" "$makefile_path"
+        sed -i "s/MIRROR_HASH:=515bb9d355ad80916f594046a45c190a68fb6554d6795a54ca15cab8bdd12fda/MIRROR_HASH:=$mirror_hash/g" "$makefile_path"
+        echo "已更新 nginx-mod-ubus 模块的 SOURCE_DATE, SOURCE_VERSION 和 MIRROR_HASH。"
+    else
+        echo "错误：未找到 $makefile_path 文件，无法更新 nginx-mod-ubus 模块。" >&2
+    fi
+}
+
 main() {
     cat <<EOF | _foreach_function
 
@@ -1399,6 +1511,7 @@ main() {
     set_nginx_default_config
     update_uwsgi_limit_as
     update_argon
+    update_nginx_ubus_module # 更新 nginx-mod-ubus 模块
     install_feeds
     fix_easytier_lua
     update_adguardhome
@@ -1416,6 +1529,7 @@ main() {
     # update_proxy_app_menu_location
     # fix_kernel_magic
     # update_mt76
+    # apply_hash_fixes # 调用哈希修正函数
 EOF
 }
 

@@ -12,6 +12,7 @@ on:
         options:
           - aliyun_ap8220_immwrt
           - cmcc_rax3000m_immwrt
+          - gemtek_w1701k_openwrt
           - jdcloud_ax6000_immwrt
           - jdcloud_ipq60xx_immwrt
           - jdcloud_ipq60xx_libwrt

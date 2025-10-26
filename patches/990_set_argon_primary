@@ -10,4 +10,3 @@ uci set argon.@global[0].progressbar_font='#2e2b60'
 uci set argon.@global[0].transparency='0.3'
 uci set argon.@global[0].online_wallpaper='bing'
 uci commit argon
-
