@@ -1019,133 +1019,6 @@ add_quickfile() {
         echo "错误：从 $repo_url 克隆 luci-app-quickfile 仓库失败" >&2
         exit 1
     fi
-    local makefile_path="$target_dir/quickfile/Makefile"
-    if [ -f "$makefile_path" ]; then
-        sed -i '/\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-\$(ARCH_PACKAGES)/c\
-\tif [ "\$(ARCH_PACKAGES)" = "x86_64" ]; then \\\
-\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-x86_64 \$(1)\/usr\/bin\/quickfile; \\\
-\telse \\\
-\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-aarch64_generic \$(1)\/usr\/bin\/quickfile; \\\
-\tfi' "$makefile_path"
-    fi
-}
-
-# 设置 Nginx 默认配置
-set_nginx_default_config() {
-    local nginx_config_path="$BUILD_DIR/feeds/packages/net/nginx-util/files/nginx.config"
-    if [ -f "$nginx_config_path" ]; then
-        # 使用 cat 和 heredoc 覆盖写入 nginx.config 文件
-        cat >"$nginx_config_path" <<EOF
-config main 'global'
-        option uci_enable 'true'
-
-config server '_lan'
-        list listen '443 ssl default_server'
-        list listen '[::]:443 ssl default_server'
-        option server_name '_lan'
-        list include 'restrict_locally'
-        list include 'conf.d/*.locations'
-        option uci_manage_ssl 'self-signed'
-        option ssl_certificate '/etc/nginx/conf.d/_lan.crt'
-        option ssl_certificate_key '/etc/nginx/conf.d/_lan.key'
-        option ssl_session_cache 'shared:SSL:32k'
-        option ssl_session_timeout '64m'
-        option access_log 'off; # logd openwrt'
-
-config server 'http_only'
-        list listen '80'
-        list listen '[::]:80'
-        option server_name 'http_only'
-        list include 'conf.d/*.locations'
-        option access_log 'off; # logd openwrt'
-EOF
-    fi
-
-    local nginx_template="$BUILD_DIR/feeds/packages/net/nginx-util/files/uci.conf.template"
-    if [ -f "$nginx_template" ]; then
-        # 检查是否已存在配置，避免重复添加
-        if ! grep -q "client_body_in_file_only clean;" "$nginx_template"; then
-            sed -i "/client_max_body_size 128M;/a\\
-\tclient_body_in_file_only clean;\\
-\tclient_body_temp_path /mnt/tmp;" "$nginx_template"
-        fi
-    fi
-
-    local luci_support_script="$BUILD_DIR/feeds/packages/net/nginx/files-luci-support/60_nginx-luci-support"
-
-    if [ -f "$luci_support_script" ]; then
-        # 检查是否已经为 ubus location 应用了修复
-        if ! grep -q "client_body_in_file_only off;" "$luci_support_script"; then
-            echo "正在为 Nginx ubus location 配置应用修复..."
-            sed -i "/ubus_parallel_req 2;/a\\        client_body_in_file_only off;\\n        client_max_body_size 1M;" "$luci_support_script"
-        fi
-    fi
-}
-
-update_uwsgi_limit_as() {
-    # 更新 uwsgi 的 limit-as 配置，将其值更改为 8192
-    local cgi_io_ini="$BUILD_DIR/feeds/packages/net/uwsgi/files-luci-support/luci-cgi_io.ini"
-    local webui_ini="$BUILD_DIR/feeds/packages/net/uwsgi/files-luci-support/luci-webui.ini"
-    if [ -f "$cgi_io_ini" ]; then
-        # 将 luci-cgi_io.ini 文件中的 limit-as 值更新为 8192
-        sed -i 's/^limit-as = .*/limit-as = 8192/g' "$cgi_io_ini"
-    fi
-    if [ -f "$webui_ini" ]; then
-        # 将 luci-webui.ini 文件中的 limit-as 值更新为 8192
-        sed -i 's/^limit-as = .*/limit-as = 8192/g' "$webui_ini"
-    fi
-}
-
-remove_tweaked_packages() {
-    local target_mk="$BUILD_DIR/include/target.mk"
-    if [ -f "$target_mk" ]; then
-        # 检查目标行是否未被注释
-        if grep -q "^DEFAULT_PACKAGES += \$(DEFAULT_PACKAGES.tweak)" "$target_mk"; then
-            # 如果未被注释，则添加注释
-            sed -i 's/DEFAULT_PACKAGES += $(DEFAULT_PACKAGES.tweak)/# DEFAULT_PACKAGES += $(DEFAULT_PACKAGES.tweak)/g' "$target_mk"
-        fi
-    fi
-}
-
-update_argon() {
-    git clone https://github.com/LazuliKao/luci-theme-argon -b openwrt-24.10 ./feeds/luci/themes/luci-theme-argon-new
-    rm -rf ./feeds/luci/themes/luci-theme-argon
-    mv ./feeds/luci/themes/luci-theme-argon-new/luci-theme-argon ./feeds/luci/themes/luci-theme-argon
-    rm -rf ./feeds/luci/applications/luci-app-argon-config
-    mv ./feeds/luci/themes/luci-theme-argon-new/luci-app-argon-config ./feeds/luci/applications/luci-app-argon-config
-    \rm -rf ./feeds/luci/themes/luci-theme-argon-new
-
-    # local repo_url="https://github.com/LazuliKao/luci-theme-argon.git"
-    # local dst_theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon"
-    # local tmp_dir
-    # tmp_dir=$(mktemp -d)
-
-    # echo "正在更新 argon 主题..."
-
-    # if ! git clone --depth 1 "$repo_url" "$tmp_dir"; then
-    #     echo "错误：从 $repo_url 克隆 argon 主题仓库失败" >&2
-    #     rm -rf "$tmp_dir"
-    #     exit 1
-    # fi
-
-    # rm -rf "$dst_theme_path"
-    # rm -rf "$tmp_dir/.git"
-    # mv "$tmp_dir" "$dst_theme_path"
-
-    echo "luci-theme-argon 更新完成"
-}
-
-add_quickfile() {
-    local repo_url="https://github.com/sbwml/luci-app-quickfile.git"
-    local target_dir="$BUILD_DIR/package/emortal/quickfile"
-    if [ -d "$target_dir" ]; then
-        rm -rf "$target_dir"
-    fi
-    echo "正在添加 luci-app-quickfile..."
-    if ! git clone --depth 1 "$repo_url" "$target_dir"; then
-        echo "错误：从 $repo_url 克隆 luci-app-quickfile 仓库失败" >&2
-        exit 1
-    fi
 
     local makefile_path="$target_dir/quickfile/Makefile"
     if [ -f "$makefile_path" ]; then
@@ -1224,6 +1097,69 @@ EOF
 \tclient_body_temp_path /mnt/tmp;" "$nginx_template"
         fi
     fi
+
+    local luci_support_script="$BUILD_DIR/feeds/packages/net/nginx/files-luci-support/60_nginx-luci-support"
+
+    if [ -f "$luci_support_script" ]; then
+        # 检查是否已经为 ubus location 应用了修复
+        if ! grep -q "client_body_in_file_only off;" "$luci_support_script"; then
+            echo "正在为 Nginx ubus location 配置应用修复..."
+            sed -i "/ubus_parallel_req 2;/a\\        client_body_in_file_only off;\\n        client_max_body_size 1M;" "$luci_support_script"
+        fi
+    fi
+}
+
+update_uwsgi_limit_as() {
+    # 更新 uwsgi 的 limit-as 配置，将其值更改为 8192
+    local cgi_io_ini="$BUILD_DIR/feeds/packages/net/uwsgi/files-luci-support/luci-cgi_io.ini"
+    local webui_ini="$BUILD_DIR/feeds/packages/net/uwsgi/files-luci-support/luci-webui.ini"
+    if [ -f "$cgi_io_ini" ]; then
+        # 将 luci-cgi_io.ini 文件中的 limit-as 值更新为 8192
+        sed -i 's/^limit-as = .*/limit-as = 8192/g' "$cgi_io_ini"
+    fi
+    if [ -f "$webui_ini" ]; then
+        # 将 luci-webui.ini 文件中的 limit-as 值更新为 8192
+        sed -i 's/^limit-as = .*/limit-as = 8192/g' "$webui_ini"
+    fi
+}
+
+remove_tweaked_packages() {
+    local target_mk="$BUILD_DIR/include/target.mk"
+    if [ -f "$target_mk" ]; then
+        # 检查目标行是否未被注释
+        if grep -q "^DEFAULT_PACKAGES += \$(DEFAULT_PACKAGES.tweak)" "$target_mk"; then
+            # 如果未被注释，则添加注释
+            sed -i 's/DEFAULT_PACKAGES += $(DEFAULT_PACKAGES.tweak)/# DEFAULT_PACKAGES += $(DEFAULT_PACKAGES.tweak)/g' "$target_mk"
+        fi
+    fi
+}
+
+update_argon() {
+    git clone https://github.com/LazuliKao/luci-theme-argon -b openwrt-24.10 ./feeds/luci/themes/luci-theme-argon-new
+    rm -rf ./feeds/luci/themes/luci-theme-argon
+    mv ./feeds/luci/themes/luci-theme-argon-new/luci-theme-argon ./feeds/luci/themes/luci-theme-argon
+    rm -rf ./feeds/luci/applications/luci-app-argon-config
+    mv ./feeds/luci/themes/luci-theme-argon-new/luci-app-argon-config ./feeds/luci/applications/luci-app-argon-config
+    \rm -rf ./feeds/luci/themes/luci-theme-argon-new
+
+    # local repo_url="https://github.com/LazuliKao/luci-theme-argon.git"
+    # local dst_theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon"
+    # local tmp_dir
+    # tmp_dir=$(mktemp -d)
+
+    # echo "正在更新 argon 主题..."
+
+    # if ! git clone --depth 1 "$repo_url" "$tmp_dir"; then
+    #     echo "错误：从 $repo_url 克隆 argon 主题仓库失败" >&2
+    #     rm -rf "$tmp_dir"
+    #     exit 1
+    # fi
+
+    # rm -rf "$dst_theme_path"
+    # rm -rf "$tmp_dir/.git"
+    # mv "$tmp_dir" "$dst_theme_path"
+
+    echo "luci-theme-argon 更新完成"
 }
 
 update_base_files() {
