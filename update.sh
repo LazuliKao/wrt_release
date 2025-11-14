@@ -714,15 +714,17 @@ update_package() {
 
 update_packages() {
     # https://github.com/opencontainers/runc
-    update_package "runc" "releases" "v1.3.0" || exit 1
+    # https://github.com/moby/moby/blob/docker-v29.0.1/hack/dockerfile/install/runc.installer
+    update_package "runc" "releases" "v1.3.3" || exit 1
     # https://github.com/containerd/containerd
-    update_package "containerd" "releases" "v1.7.28" || exit 1
+    # https://github.com/moby/moby/blob/docker-v29.0.1/hack/dockerfile/install/containerd.installer
+    update_package "containerd" "releases" "v2.1.5" || exit 1
     # https://github.com/docker/cli
-    update_package "docker" "tags" "v28.5.1" || exit 1
+    update_package "docker" "tags" "v29.0.1" || exit 1
     # https://github.com/moby/moby
-    update_package "dockerd" "releases" "v28.5.1" || exit 1
+    update_package "dockerd" "releases" "v29.0.1" || exit 1
     # https://github.com/docker/compose
-    update_package "docker-compose" "releases" "v2.40.2" || exit 1
+    update_package "docker-compose" "releases" "v2.40.3" || exit 1
 }
 
 # 添加系统升级时的备份信息
