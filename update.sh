@@ -1320,6 +1320,18 @@ fix_node_build() {
     fi
 }
 
+fix_docker_build() {
+    # build docker in single thread to avoid out of memory
+    local containerd_makefile="$BUILD_DIR/feeds/packages/utils/containerd/Makefile"
+    # original:
+    # $(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2} $(1)/usr/bin/
+    # new: 
+    # $(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/{ctr,containerd,containerd-stress,containerd-shim-runc-v2} $(1)/usr/bin/
+    if [ -f "$containerd_makefile" ]; then
+        sed -i '/$(INSTALL_BIN) $(PKG_INSTALL_DIR)\/bin\/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2} $(1)\/usr\/bin\//c\        $(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/{ctr,containerd,containerd-stress,containerd-shim-runc-v2} $(1)/usr/bin/' "$containerd_makefile"
+    fi
+}
+
 fix_libffi() {
     local original_makefile="$BUILD_DIR/package/feeds/packages/libffi/Makefile"
     if [ -f "$original_makefile" ]; then
@@ -1461,6 +1473,7 @@ main() {
     # fix_cudy_tr3000_114m
     update_geoip
     update_packages
+    fix_docker_build
     fix_node_build
     fix_libffi
     tailscale_use_awg
