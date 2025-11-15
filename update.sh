@@ -722,7 +722,7 @@ update_packages() {
     # https://github.com/docker/cli
     update_package "docker" "tags" "v29.0.1" || exit 1
     # https://github.com/moby/moby
-    update_package "dockerd" "tags" "docker-v29.0.1" || exit 1
+    update_package "dockerd" "releases" "v29.0.1" || exit 1
     # https://github.com/docker/compose
     update_package "docker-compose" "releases" "v2.40.3" || exit 1
 }
