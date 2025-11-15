@@ -1328,7 +1328,8 @@ fix_docker_build() {
     # new: 
     # $(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/{ctr,containerd,containerd-stress,containerd-shim-runc-v2} $(1)/usr/bin/
     if [ -f "$containerd_makefile" ]; then
-        sed -i '/$(INSTALL_BIN) $(PKG_INSTALL_DIR)\/bin\/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2} $(1)\/usr\/bin\//c\        $(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/{ctr,containerd,containerd-stress,containerd-shim-runc-v2} $(1)/usr/bin/' "$containerd_makefile"
+        # replace `/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2}`
+        sed -i 's|/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2}|/bin/{ctr,containerd,containerd-stress,containerd-shim-runc-v2}|g' "$containerd_makefile"
     fi
 }
 
