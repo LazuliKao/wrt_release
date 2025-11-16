@@ -1322,7 +1322,7 @@ fix_node_build() {
 
 fix_docker_build() {
     # build docker in single thread to avoid out of memory
-    local containerd_makefile="$BUILD_DIR/feeds/packages/utils/containerd/Makefile"
+    local containerd_makefile="$BUILD_DIR/package/feeds/packages/containerd/Makefile"
     # original:
     # $(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2} $(1)/usr/bin/
     # new: 
@@ -1330,6 +1330,14 @@ fix_docker_build() {
     if [ -f "$containerd_makefile" ]; then
         # replace `/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2}`
         sed -i 's|/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2}|/bin/{ctr,containerd,containerd-stress,containerd-shim-runc-v2}|g' "$containerd_makefile"
+
+    fi
+    
+    local docker_makefile="$BUILD_DIR/package/feeds/packages/dockerd/Makefile"
+    if [ -f "$docker_makefile" ]; then
+        # PKG_GIT_REF:=v$(PKG_VERSION)
+        # PKG_GIT_REF:=docker-v$(PKG_VERSION)
+        sed -i 's|^PKG_GIT_REF:=v$(PKG_VERSION)|PKG_GIT_REF:=docker-v$(PKG_VERSION)|g' "$docker_makefile"
     fi
 }
 
@@ -1345,7 +1353,7 @@ fix_libffi() {
 tailscale_use_awg() {
     local tailscale_makefile="$BUILD_DIR/package/feeds/small8/tailscale/Makefile"
     sed -i 's|^PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=https://codeload.github.com/LiuTangLei/tailscale/tar.gz/v$(PKG_VERSION)?|' "$tailscale_makefile"
-    update_package "tailscale" "releases" "v1.88.3" || exit 1
+    update_package "tailscale" "releases" "v1.90.6" || exit 1
 }
 
 _trim_space() {
@@ -1473,8 +1481,8 @@ main() {
     # add_turboacc
     # fix_cudy_tr3000_114m
     update_geoip
-    update_packages
     fix_docker_build
+    update_packages
     fix_node_build
     fix_libffi
     tailscale_use_awg
