@@ -668,31 +668,25 @@ update_package() {
             echo "错误：从 https://api.github.com/repos/$PKG_REPO/$branch 获取版本信息失败" >&2
             return 1
         fi
+        local PKG_RELEASE_TAG="$PKG_VER"
         if [ -n "$3" ]; then
-            PKG_VER="$3"
+            PKG_RELEASE_TAG="$3"
         fi
-        local COMMIT_SHA
-        if ! COMMIT_SHA=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/tags" | jq -r '.[] | select(.name=="'$PKG_VER'") | .commit.sha' | cut -c1-7); then
-            echo "错误：从 https://api.github.com/repos/$PKG_REPO/tags 获取提交哈希失败" >&2
-            return 1
+        local PKG_VERSION_VALUE
+        PKG_VERSION_VALUE=$(printf '%s' "$PKG_RELEASE_TAG" | sed 's/^[^0-9]*//')
+        if [ -z "$PKG_VERSION_VALUE" ]; then
+            PKG_VERSION_VALUE="$PKG_RELEASE_TAG"
         fi
-        if [ -n "$COMMIT_SHA" ]; then
-            sed -i 's/^PKG_GIT_SHORT_COMMIT:=.*/PKG_GIT_SHORT_COMMIT:='$COMMIT_SHA'/g' "$mk_path"
-        fi
-        PKG_VER=$(echo "$PKG_VER" | grep -oE "[\.0-9]{1,}")
-
-        local PKG_NAME=$(awk -F"=" '/PKG_NAME:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
-        local PKG_SOURCE=$(awk -F"=" '/PKG_SOURCE:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
-        local PKG_SOURCE_URL=$(awk -F"=" '/PKG_SOURCE_URL:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\{\}\?\.a-zA-Z0-9]{1,}")
+        local PKG_REPO=$(grep -oE "^PKG_GIT_URL.*github.com(/[-_a-zA-Z0-9]{1,}){2}" "$mk_path" | awk -F"/" '{print $(NF - 1) "/" $NF}')
         local PKG_GIT_URL=$(awk -F"=" '/PKG_GIT_URL:=/ {print $NF}' "$mk_path")
         local PKG_GIT_REF=$(awk -F"=" '/PKG_GIT_REF:=/ {print $NF}' "$mk_path")
 
-        PKG_SOURCE_URL=${PKG_SOURCE_URL//\$\(PKG_GIT_URL\)/$PKG_GIT_URL}
-        PKG_SOURCE_URL=${PKG_SOURCE_URL//\$\(PKG_GIT_REF\)/$PKG_GIT_REF}
-        PKG_SOURCE_URL=${PKG_SOURCE_URL//\$\(PKG_NAME\)/$PKG_NAME}
-        PKG_SOURCE_URL=$(echo "$PKG_SOURCE_URL" | sed "s/\${PKG_VERSION}/$PKG_VER/g; s/\$(PKG_VERSION)/$PKG_VER/g")
-        PKG_SOURCE=${PKG_SOURCE//\$\(PKG_NAME\)/$PKG_NAME}
-        PKG_SOURCE=${PKG_SOURCE//\$\(PKG_VERSION\)/$PKG_VER}
+        PKG_SOURCE_URL=${PKG_SOURCE_URL//\$(PKG_GIT_URL)/$PKG_GIT_URL}
+        PKG_SOURCE_URL=${PKG_SOURCE_URL//\$(PKG_GIT_REF)/$PKG_GIT_REF}
+        PKG_SOURCE_URL=${PKG_SOURCE_URL//\$(PKG_NAME)/$PKG_NAME}
+        PKG_SOURCE_URL=$(echo "$PKG_SOURCE_URL" | sed "s/\${PKG_VERSION}/$PKG_VERSION_VALUE/g; s/\$(PKG_VERSION)/$PKG_VERSION_VALUE/g")
+        PKG_SOURCE=${PKG_SOURCE//\$(PKG_NAME)/$PKG_NAME}
+        PKG_SOURCE=${PKG_SOURCE//\$(PKG_VERSION)/$PKG_VERSION_VALUE}
 
         local PKG_HASH
         if ! PKG_HASH=$(curl -fsSL "$PKG_SOURCE_URL"/"$PKG_SOURCE" | sha256sum | cut -b -64); then
@@ -701,11 +695,37 @@ update_package() {
         fi
 
         local old_version=$(awk -F"=" '/PKG_VERSION:=/ {print $NF}' "$mk_path" | grep -oE "[\.0-9]{1,}" | head -1)
-        echo "当前版本: $old_version, 目标版本: $PKG_VER"
-        sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:='$PKG_VER'/g' "$mk_path"
-        sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
+        echo "当前版本: $old_version, 目标版本: $PKG_VERSION_VALUE"
+        sed -i "s/^PKG_VERSION:=.*/PKG_VERSION:=$PKG_VERSION_VALUE/g" "$mk_path"
+        sed -i "s/^PKG_HASH:=.*/PKG_HASH:=$PKG_HASH/g" "$mk_path"
 
-        echo "更新软件包 $1 到 $PKG_VER $PKG_HASH"
+        local git_ref_to_resolve=""
+        if grep -q '^PKG_SOURCE_VERSION:=' "$mk_path"; then
+            git_ref_to_resolve=$(awk -F":=" '/PKG_SOURCE_VERSION:=/ {print $2}' "$mk_path")
+        elif grep -q '^PKG_GIT_REF:=' "$mk_path"; then
+            git_ref_to_resolve=$(awk -F":=" '/PKG_GIT_REF:=/ {print $2}' "$mk_path")
+        fi
+        git_ref_to_resolve=${git_ref_to_resolve//\$(PKG_VERSION)/$PKG_VERSION_VALUE}
+        git_ref_to_resolve=${git_ref_to_resolve//\${PKG_VERSION}/$PKG_VERSION_VALUE}
+        git_ref_to_resolve=$(_trim_space "$git_ref_to_resolve")
+        if [ -z "$git_ref_to_resolve" ]; then
+            git_ref_to_resolve="$PKG_RELEASE_TAG"
+        fi
+
+        local COMMIT_SHA=""
+        if [ -n "$PKG_REPO" ] && command -v git >/dev/null 2>&1; then
+            COMMIT_SHA=$(git ls-remote "https://github.com/${PKG_REPO%.git}" "$git_ref_to_resolve" | awk 'NR==1 {print $1}')
+            if [ -z "$COMMIT_SHA" ]; then
+                COMMIT_SHA=$(git ls-remote "https://github.com/${PKG_REPO%.git}" "refs/tags/$git_ref_to_resolve" | awk 'NR==1 {print $1}')
+            fi
+        fi
+        if [ -n "$COMMIT_SHA" ] && grep -q '^PKG_GIT_SHORT_COMMIT:=' "$mk_path"; then
+            sed -i "s/^PKG_GIT_SHORT_COMMIT:=.*/PKG_GIT_SHORT_COMMIT:=${COMMIT_SHA:0:7}/g" "$mk_path"
+        elif [ -z "$COMMIT_SHA" ]; then
+            echo "Warning: 无法解析 $1 的 Git 提交哈希（ref: $git_ref_to_resolve）" >&2
+        fi
+
+        echo "更新软件包 $1 到 $PKG_VERSION_VALUE $PKG_HASH"
     else
         echo "错误：未找到 $1 的 Makefile" >&2
         return 1
