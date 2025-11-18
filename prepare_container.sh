@@ -14,6 +14,7 @@ USER root
 RUN apt-get update && apt-get install -y sudo git jq build-essential cmake g++ clang bison flex libelf-dev libncurses5-dev python3-distutils zlib1g-dev python3 pkg-config libssl-dev
 USER $container_default_user
 RUN git config --global pull.rebase false
+RUN git config --global advice.detachedHead false
 CMD ["bash", "build_container.sh", "$image_name"]
 EOF
 docker build -t "$image_name" -f "$container_tmp_Dockerfile" .
