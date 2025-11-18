@@ -664,16 +664,24 @@ update_package() {
             fi
         fi
         local PKG_VER
-        if ! PKG_VER=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/$branch" | jq -r '.[0] | .tag_name // .name'); then
-            echo "错误：从 https://api.github.com/repos/$PKG_REPO/$branch 获取版本信息失败" >&2
-            return 1
-        fi
         if [ -n "$3" ]; then
             PKG_VER="$3"
+        else
+            if ! PKG_VER=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/$branch" | jq -r '.[0] | .tag_name // .name'); then
+                echo "错误：从 https://api.github.com/repos/$PKG_REPO/$branch 获取版本信息失败" >&2
+                return 1
+            fi
         fi
         local COMMIT_SHA
-        if ! COMMIT_SHA=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/tags" | jq -r '.[] | select(.name=="'$PKG_VER'") | .commit.sha' | cut -c1-7); then
-            echo "错误：从 https://api.github.com/repos/$PKG_REPO/tags 获取提交哈希失败" >&2
+        local REF_DETAIL=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/git/ref/tags/$PKG_VER")
+        local REF_SHA_TYPE=$(echo "$REF_DETAIL" | jq -r '.object.type')
+        local COMMIT_SHA_RAW=$(echo "$REF_DETAIL" | jq -r '.object.sha')
+        if [ "$REF_SHA_TYPE" = "tag" ]; then
+            COMMIT_SHA_RAW=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/git/tags/$COMMIT_SHA_RAW" |
+                jq -r '.object.sha')
+        fi
+        if ! COMMIT_SHA=$(echo "$COMMIT_SHA_RAW" | cut -c1-7); then
+            echo "错误：从 GitHub 获取提交哈希失败" >&2
             return 1
         fi
         if [ -n "$COMMIT_SHA" ]; then
@@ -1325,14 +1333,14 @@ fix_docker_build() {
     local containerd_makefile="$BUILD_DIR/package/feeds/packages/containerd/Makefile"
     # original:
     # $(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2} $(1)/usr/bin/
-    # new: 
+    # new:
     # $(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/{ctr,containerd,containerd-stress,containerd-shim-runc-v2} $(1)/usr/bin/
     if [ -f "$containerd_makefile" ]; then
         # replace `/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2}`
         sed -i 's|/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2}|/bin/{ctr,containerd,containerd-stress,containerd-shim-runc-v2}|g' "$containerd_makefile"
 
     fi
-    
+
     local docker_makefile="$BUILD_DIR/package/feeds/packages/dockerd/Makefile"
     if [ -f "$docker_makefile" ]; then
         # PKG_GIT_REF:=v$(PKG_VERSION)
