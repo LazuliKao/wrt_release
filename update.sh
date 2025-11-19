@@ -1349,6 +1349,15 @@ fix_docker_build() {
     fi
 }
 
+patch_docker_nftables() {
+    local docerman_patch_dir="$BUILD_DIR/package/feeds/luci/luci-app-dockerman/patches"
+    mkdir -p "$docerman_patch_dir"
+    cp -f "$BASE_PATH/patches/001-docerman-nftables.patch" "$docerman_patch_dir/001-docerman-nftables.patch"
+    local dockerd_patch_dir="$BUILD_DIR/package/feeds/packages/dockerd/patches"
+    mkdir -p "$dockerd_patch_dir"
+    cp -f "$BASE_PATH/patches/001-dockerd-nftables.patch" "$dockerd_patch_dir/001-dockerd-nftables.patch"
+}
+
 fix_libffi() {
     local original_makefile="$BUILD_DIR/package/feeds/packages/libffi/Makefile"
     if [ -f "$original_makefile" ]; then
@@ -1491,6 +1500,7 @@ main() {
     update_geoip
     fix_docker_build
     update_packages
+    patch_docker_nftables
     fix_node_build
     fix_libffi
     tailscale_use_awg
