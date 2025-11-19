@@ -1350,12 +1350,12 @@ fix_docker_build() {
 }
 
 patch_docker_nftables() {
-    local docerman_patch_dir="$BUILD_DIR/package/feeds/luci/luci-app-dockerman/patches"
-    mkdir -p "$docerman_patch_dir"
-    cp -f "$BASE_PATH/patches/001-docerman-nftables.patch" "$docerman_patch_dir/001-docerman-nftables.patch"
-    local dockerd_patch_dir="$BUILD_DIR/package/feeds/packages/dockerd/patches"
-    mkdir -p "$dockerd_patch_dir"
-    cp -f "$BASE_PATH/patches/001-dockerd-nftables.patch" "$dockerd_patch_dir/001-dockerd-nftables.patch"
+    pushd "$BUILD_DIR/package/feeds/luci/luci-app-dockerman"
+    patch -p1 <"$BASE_PATH/patches/001-docerman-nftables.patch"
+    popd
+    pushd "$BUILD_DIR/package/feeds/packages/dockerd"
+    patch -p1 <"$BASE_PATH/patches/001-dockerd-nftables.patch"
+    popd
 }
 
 fix_libffi() {

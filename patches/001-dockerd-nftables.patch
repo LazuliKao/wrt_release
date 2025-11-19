@@ -67,7 +67,6 @@ diff --git a/files/dockerd.init b/files/dockerd.init
  	json_add_string "log-level" "${log_level}"
 -	json_add_boolean "iptables" "${iptables}"
 -	json_add_boolean "ip6tables" "${ip6tables}"
--	json_add_boolean "ip6tables" "${ip6tables}"
 +	json_add_string "firewall-backend" "nftables"
  	[ -z "${log_driver}" ] || json_add_string "log-driver" "${log_driver}"
  	[ -z "${bip}" ] || json_add_string "bip" "${bip}"
