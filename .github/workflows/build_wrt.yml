@@ -12,12 +12,18 @@ on:
         options:
           - aliyun_ap8220_immwrt
           - cmcc_rax3000m_immwrt
+          - cudy_tr3000-mt798x
+          - cudy_tr3000
           - gemtek_w1701k_openwrt
           - jdcloud_ax6000_immwrt
           - jdcloud_ipq60xx_immwrt
           - jdcloud_ipq60xx_libwrt
           - linksys_mx4x00_immwrt
+          - n1_immwrt
           - qihoo_360v6_immwrt
+          - qnap_301w_immwrt
+          - qnap_301w_ipq
+          - qnap_301w_libwrt
           - redmi_ax5_immwrt
           - redmi_ax6_immwrt
           - redmi_ax6_libwrt
