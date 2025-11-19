@@ -61,7 +61,7 @@ diff --git a/files/dockerd.init b/files/dockerd.init
  
  	# Don't add these options by default
  	# omission == docker defaults
-@@ -195,9 +221,7 @@ process_config() {
+@@ -195,8 +221,7 @@ process_config() {
  	json_init
  	json_add_string "data-root" "${data_root}"
  	json_add_string "log-level" "${log_level}"
@@ -71,7 +71,7 @@ diff --git a/files/dockerd.init b/files/dockerd.init
  	[ -z "${log_driver}" ] || json_add_string "log-driver" "${log_driver}"
  	[ -z "${bip}" ] || json_add_string "bip" "${bip}"
  	[ -z "${registry_mirrors}" ] || json_add_array "registry-mirrors"
-@@ -222,8 +246,6 @@ process_config() {
+@@ -221,8 +246,6 @@ process_config() {
  	fi
  	[ -z "${storage_driver}" ] || json_add_string "storage-driver" "${storage_driver}"
  	json_dump > "${DOCKERD_CONF}"
@@ -80,7 +80,7 @@ diff --git a/files/dockerd.init b/files/dockerd.init
  }
  
  start_service() {
-@@ -251,49 +273,6 @@ service_triggers() {
+@@ -250,49 +273,6 @@ service_triggers() {
  	procd_add_reload_trigger 'dockerd'
  }
  
