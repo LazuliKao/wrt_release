@@ -60,6 +60,23 @@ remove_uhttpd_dependency() {
     fi
 }
 
+# 应用包配置文件
+apply_packages_config() {
+    if [ -n "$PACKAGES_CONFIG" ]; then
+        IFS=',' read -ra PACKAGES <<< "$PACKAGES_CONFIG"
+        for pkg in "${PACKAGES[@]}"; do
+            pkg=$(echo "$pkg" | xargs)  # 去除空格
+            local pkg_config="$BASE_PATH/deconfig/packages/${pkg}.config"
+            if [ -f "$pkg_config" ]; then
+                cat "$pkg_config" >> "$BASE_PATH/$BUILD_DIR/.config"
+                echo "Applied package config: ${pkg}.config"
+            else
+                echo "Warning: Package config not found: $pkg_config"
+            fi
+        done
+    fi
+}
+
 # 应用配置文件
 apply_config() {
     # 复制基础配置文件
@@ -71,11 +88,8 @@ apply_config() {
         cat "$BASE_PATH/deconfig/nss.config" >> "$BASE_PATH/$BUILD_DIR/.config"
     fi
 
-    # 追加代理配置
-    cat "$BASE_PATH/deconfig/proxy.config" >> "$BASE_PATH/$BUILD_DIR/.config"
-    
-    # 追加 AWG 配置
-    cat "$BASE_PATH/deconfig/awg.config" >> "$BASE_PATH/$BUILD_DIR/.config"
+    # 应用 PACKAGES_CONFIG 中指定的包配置
+    apply_packages_config
 }
 
 REPO_URL=$(read_ini_by_key "REPO_URL")
@@ -87,6 +101,7 @@ DISABLED_FUNCTIONS=$(read_ini_by_key "DISABLED_FUNCTIONS")
 ENABLED_FUNCTIONS=$(read_ini_by_key "ENABLED_FUNCTIONS")
 KERNEL_VERMAGIC=$(read_ini_by_key "KERNEL_VERMAGIC")
 KERNEL_MODULES=$(read_ini_by_key "KERNEL_MODULES")
+PACKAGES_CONFIG=$(read_ini_by_key "PACKAGES_CONFIG")
 COMMIT_HASH=${COMMIT_HASH:-none}
 
 if [[ -d $BASE_PATH/action_build ]]; then
