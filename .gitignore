@@ -22,3 +22,6 @@ xray-client.json
 xray-server.json
 .clineignore
 update.sh.bak
+dts/
+deconfig/redmi_ax6_nwrt.config
+compilecfg/redmi_ax6_nwrt.ini

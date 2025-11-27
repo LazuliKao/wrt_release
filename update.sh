@@ -90,16 +90,19 @@ clone_repo() {
 
 clean_up() {
     cd $BUILD_DIR
-    if [[ -f $BUILD_DIR/.config ]]; then
-        \rm -f $BUILD_DIR/.config
+    if [[ -f "$BUILD_DIR/.config" ]]; then
+        \rm -f "$BUILD_DIR/.config"
     fi
-    if [[ -d $BUILD_DIR/tmp ]]; then
-        \rm -rf $BUILD_DIR/tmp
+    if [[ -d "$BUILD_DIR/tmp" ]]; then
+        \rm -rf "$BUILD_DIR/tmp"
     fi
-    if [[ -d $BUILD_DIR/logs ]]; then
-        \rm -rf $BUILD_DIR/logs/*
+    if [[ -d "$BUILD_DIR/logs" ]]; then
+        \rm -rf "$BUILD_DIR/logs/*"
     fi
-    mkdir -p $BUILD_DIR/tmp
+    if [[ -d "$BUILD_DIR/feeds" ]]; then
+        ./scripts/feeds clean
+    fi
+    mkdir -p "$BUILD_DIR/tmp"
     echo "1" >$BUILD_DIR/tmp/.build
 }
 
@@ -119,14 +122,20 @@ reset_feeds_conf() {
 
 update_feeds() {
     # 删除注释行
-    sed -i '/^#/d' "$BUILD_DIR/$FEEDS_CONF"
+    local FEEDS_PATH="$BUILD_DIR/$FEEDS_CONF"
+    if [[ -f "$BUILD_DIR/feeds.conf" ]]; then
+        FEEDS_PATH="$BUILD_DIR/feeds.conf"
+    fi
+    sed -i '/^#/d' "$FEEDS_PATH"
+    sed -i '/packages_ext/d' "$FEEDS_PATH"
+
     add_feeds() {
         local feed=$1
         local url=$2
-        if ! grep -q "$feed" "$BUILD_DIR/$FEEDS_CONF"; then
+        if ! grep -q "$feed" "$FEEDS_PATH"; then
             # 确保文件以换行符结尾
-            [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
-            echo "src-git $feed $url" >>"$BUILD_DIR/$FEEDS_CONF"
+            [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
+            echo "src-git $feed $url" >>"$FEEDS_PATH"
         fi
     }
     # 检查并添加 small-package 源
@@ -177,7 +186,7 @@ remove_unwanted_packages() {
     )
     local small8_packages=(
         "ppp" "firewall" "dae" "daed" "daed-next" "libnftnl" "nftables" "dnsmasq" "luci-theme-argon" "luci-app-argon-config"
-        "alist" "opkg"
+        "alist" "opkg" "easytier"
     )
 
     for pkg in "${luci_packages[@]}"; do
@@ -264,11 +273,35 @@ install_kiddin9() {
 #     ./scripts/feeds install -a -p node
 # }
 
+check_default_settings() {
+    local settings_dir="$BUILD_DIR/package/emortal/default-settings"
+    if [ -z "$(find "$BUILD_DIR/package" -type d -name "default-settings" -print -quit 2>/dev/null)" ]; then
+        echo "在 $BUILD_DIR/package 中未找到 default-settings 目录，正在从 immortalwrt 仓库克隆..."
+        local tmp_dir
+        tmp_dir=$(mktemp -d)
+        if git clone --depth 1 --filter=blob:none --sparse https://github.com/immortalwrt/immortalwrt.git "$tmp_dir"; then
+            pushd "$tmp_dir" > /dev/null
+            git sparse-checkout set package/emortal/default-settings
+            # 确保目标父目录存在
+            mkdir -p "$(dirname "$settings_dir")"
+            # 移动 default-settings 目录
+            mv package/emortal/default-settings "$settings_dir"
+            popd > /dev/null
+            rm -rf "$tmp_dir"
+            echo "default-settings 克隆并移动成功。"
+        else
+            echo "错误：克隆 immortalwrt 仓库失败" >&2
+            rm -rf "$tmp_dir"
+            exit 1
+        fi
+    fi
+}
+
 install_feeds() {
     ./scripts/feeds update -i
     for dir in $BUILD_DIR/feeds/*; do
         # 检查是否为目录并且不以 .tmp 结尾，并且不是软链接
-        if [ -d "$dir" ] && [[ ! "$dir" == *.tmp ]] && [ ! -L "$dir" ]; then
+        if [ -d "$dir" ] && [[ ! "$dir" == *.tmp ]] && [[ ! "$dir" == *.index ]] && [[ ! "$dir" == *.targetindex ]]; then
             dir_name=$(basename "$dir")
             if [[ "$dir_name" == "small8" ]]; then
                 install_small8
@@ -292,8 +325,9 @@ fix_default_set() {
         find "$BUILD_DIR/feeds/luci/collections/" -type f -name "Makefile" -exec sed -i "s/luci-theme-bootstrap/luci-theme-$THEME_SET/g" {} \;
     fi
 
-    install -Dm755 "$BASE_PATH/patches/990_set_argon_primary" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/990_set_argon_primary"
-    install -Dm755 "$BASE_PATH/patches/991_custom_settings" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/991_custom_settings"
+    install -Dm544 "$BASE_PATH/patches/990_set_argon_primary" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/990_set_argon_primary"
+    install -Dm544 "$BASE_PATH/patches/991_custom_settings" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/991_custom_settings"
+    install -Dm544 "$BASE_PATH/patches/992_set-wifi-uci.sh" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/992_set-wifi-uci.sh"
 
     if [ -f "$BUILD_DIR/package/emortal/autocore/files/tempinfo" ]; then
         if [ -f "$BASE_PATH/patches/tempinfo" ]; then
@@ -321,17 +355,6 @@ fix_mk_def_depends() {
     sed -i 's/libustream-mbedtls/libustream-openssl/g' $BUILD_DIR/include/target.mk 2>/dev/null
     if [ -f $BUILD_DIR/target/linux/qualcommax/Makefile ]; then
         sed -i 's/wpad-openssl/wpad-mesh-openssl/g' $BUILD_DIR/target/linux/qualcommax/Makefile
-    fi
-}
-
-add_wifi_default_set() {
-    local qualcommax_uci_dir="$BUILD_DIR/target/linux/qualcommax/base-files/etc/uci-defaults"
-    local filogic_uci_dir="$BUILD_DIR/target/linux/mediatek/filogic/base-files/etc/uci-defaults"
-    if [ -d "$qualcommax_uci_dir" ]; then
-        install -Dm755 "$BASE_PATH/patches/992_set-wifi-uci.sh" "$qualcommax_uci_dir/992_set-wifi-uci.sh"
-    fi
-    if [ -d "$filogic_uci_dir" ]; then
-        install -Dm755 "$BASE_PATH/patches/992_set-wifi-uci.sh" "$filogic_uci_dir/992_set-wifi-uci.sh"
     fi
 }
 
@@ -487,8 +510,12 @@ change_cpuusage() {
     fi
 
     # Install platform-specific cpuusage scripts
-    install -Dm755 "$BASE_PATH/patches/cpuusage" "$qualcommax_sbin_dir/cpuusage"
-    install -Dm755 "$BASE_PATH/patches/hnatusage" "$filogic_sbin_dir/cpuusage"
+    if [ -d "$BUILD_DIR/target/linux/qualcommax" ]; then
+        install -Dm755 "$BASE_PATH/patches/cpuusage" "$qualcommax_sbin_dir/cpuusage"
+    fi
+    if [ -d "$BUILD_DIR/target/linux/mediatek" ]; then
+        install -Dm755 "$BASE_PATH/patches/hnatusage" "$filogic_sbin_dir/cpuusage"
+    fi
 }
 
 update_tcping() {
@@ -931,24 +958,69 @@ update_geoip() {
 }
 
 update_lucky() {
+    local lucky_repo_url="https://github.com/gdy666/luci-app-lucky.git"
+    local target_small8_dir="$BUILD_DIR/feeds/small8"
+    local lucky_dir="$target_small8_dir/lucky"
+    local luci_app_lucky_dir="$target_small8_dir/luci-app-lucky"
+
+    # 提前检查目标目录是否存在
+    if [ ! -d "$lucky_dir" ] || [ ! -d "$luci_app_lucky_dir" ]; then
+        echo "Warning: $lucky_dir 或 $luci_app_lucky_dir 不存在，跳过 lucky 源代码更新。" >&2
+    else
+        local tmp_dir
+        tmp_dir=$(mktemp -d)
+
+        echo "正在从 $lucky_repo_url 稀疏检出 luci-app-lucky 和 lucky..."
+
+        if ! git clone --depth 1 --filter=blob:none --no-checkout "$lucky_repo_url" "$tmp_dir"; then
+            echo "错误：从 $lucky_repo_url 克隆仓库失败" >&2
+            rm -rf "$tmp_dir"
+            return 0
+        fi
+
+        pushd "$tmp_dir" > /dev/null
+        git sparse-checkout init --cone
+        git sparse-checkout set luci-app-lucky lucky || {
+            echo "错误：稀疏检出 luci-app-lucky 或 lucky 失败" >&2
+            popd > /dev/null
+            rm -rf "$tmp_dir"
+            return 0
+        }
+        git checkout --quiet
+
+        # 覆盖到目标目录
+        \cp -rf "$tmp_dir/luci-app-lucky/." "$luci_app_lucky_dir/"
+        \cp -rf "$tmp_dir/lucky/." "$lucky_dir/"
+
+        popd > /dev/null
+        rm -rf "$tmp_dir"
+        echo "luci-app-lucky 和 lucky 源代码更新完成。"
+    fi
+
+    # 默认关闭lucky
+    local lucky_conf="$BUILD_DIR/feeds/small8/lucky/files/luckyuci"
+    if [ -f "$lucky_conf" ]; then
+        sed -i "s/option enabled '1'/option enabled '0'/g" "$lucky_conf"
+        sed -i "s/option logger '1'/option logger '0'/g" "$lucky_conf"
+    fi
+
     # 从补丁文件名中提取版本号
     local version
     version=$(find "$BASE_PATH/patches" -name "lucky_*.tar.gz" -printf "%f\n" | head -n 1 | sed -n 's/^lucky_\(.*\)_Linux.*$/\1/p')
     if [ -z "$version" ]; then
         echo "Warning: 未找到 lucky 补丁文件，跳过更新。" >&2
-        return 1
+        return 0
     fi
 
     local makefile_path="$BUILD_DIR/feeds/small8/lucky/Makefile"
     if [ ! -f "$makefile_path" ]; then
         echo "Warning: lucky Makefile not found. Skipping." >&2
-        return 1
+        return 0
     fi
 
     echo "正在更新 lucky Makefile..."
     # 使用本地补丁文件，而不是下载
     local patch_line="\\t[ -f \$(TOPDIR)/../patches/lucky_${version}_Linux_\$(LUCKY_ARCH)_wanji.tar.gz ] && install -Dm644 \$(TOPDIR)/../patches/lucky_${version}_Linux_\$(LUCKY_ARCH)_wanji.tar.gz \$(PKG_BUILD_DIR)/\$(PKG_NAME)_\$(PKG_VERSION)_Linux_\$(LUCKY_ARCH).tar.gz"
-
     # 确保 Build/Prepare 部分存在，然后在其后添加我们的行
     if grep -q "Build/Prepare" "$makefile_path"; then
         sed -i "/Build\\/Prepare/a\\$patch_line" "$makefile_path"
@@ -1423,6 +1495,13 @@ fix_easytier_lua() {
     fi
 }
 
+fix_easytier_mk() {
+	local mk_path="$BUILD_DIR/feeds/small8/luci-app-easytier/easytier/Makefile"
+    if [ -f "$mk_path" ]; then
+        sed -i 's/!@(mips||mipsel)/!TARGET_mips \&\& !TARGET_mipsel/g' "$mk_path"
+    fi
+}
+
 # 更新 nginx-mod-ubus 模块
 update_nginx_ubus_module() {
     local makefile_path="$BUILD_DIR/feeds/packages/net/nginx/Makefile"
@@ -1455,7 +1534,6 @@ main() {
     update_golang
     change_dnsmasq2full
     fix_mk_def_depends
-    add_wifi_default_set
     update_default_lan_addr
     remove_something_nss_kmod
     update_affinity_script
@@ -1466,7 +1544,6 @@ main() {
     add_ax6600_led
     set_custom_task
     apply_passwall_tweaks
-    install_opkg_distfeeds
     update_nss_pbuf_performance
     set_build_signature
     update_nss_diag
@@ -1488,6 +1565,9 @@ main() {
     update_uwsgi_limit_as
     update_argon
     update_nginx_ubus_module # 更新 nginx-mod-ubus 模块
+    check_default_settings
+    install_opkg_distfeeds
+    fix_easytier_mk
     install_feeds
     fix_easytier_lua
     update_adguardhome
