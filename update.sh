@@ -244,7 +244,7 @@ update_golang() {
 
 install_small8() {
     # string.Join(" ","""_""".Replace("\r", "").Split("\n"))
-    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev luci-app-passwall luci-app-passwall2 alist luci-app-alist v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart luci-app-quickstart luci-app-istorex netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon luci-app-supervisord msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-cloudflarespeedtest
+    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev luci-app-passwall luci-app-passwall2 alist luci-app-alist v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart luci-app-quickstart luci-app-istorex netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki tailscale oaf open-app-filter luci-app-oaf luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon luci-app-supervisord msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-cloudflarespeedtest
 }
 
 install_fullconenat() {
@@ -263,7 +263,7 @@ install_fullconenat() {
 # }
 
 install_kiddin9() {
-    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest qosmate luci-app-qosmate luci-app-unishare unishare luci-app-bandix openwrt-bandix
+    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest qosmate luci-app-qosmate luci-app-unishare unishare luci-app-bandix openwrt-bandix luci-app-tailscale-community
 }
 
 # install_node() {
@@ -634,7 +634,7 @@ update_menu_location() {
         sed -i 's/nas/services/g' "$samba4_path"
     fi
 
-    local tailscale_path="$BUILD_DIR/feeds/small8/luci-app-tailscale/root/usr/share/luci/menu.d/luci-app-tailscale.json"
+    local tailscale_path="$BUILD_DIR/feeds/kiddin9/luci-app-tailscale-community/root/usr/share/luci/menu.d/luci-app-tailscale-community.json"
     if [ -d "$(dirname "$tailscale_path")" ] && [ -f "$tailscale_path" ]; then
         sed -i 's/services/vpn/g' "$tailscale_path"
     fi
@@ -773,6 +773,7 @@ function add_backup_info_to_sysupgrade() {
 /etc/lucky/
 /etc/lxc/
 /etc/ddns-go/
+/etc/crontabs/
 EOF
     fi
 }
@@ -1442,7 +1443,7 @@ fix_libffi() {
 tailscale_use_awg() {
     local tailscale_makefile="$BUILD_DIR/package/feeds/small8/tailscale/Makefile"
     sed -i 's|^PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=https://codeload.github.com/LiuTangLei/tailscale/tar.gz/v$(PKG_VERSION)?|' "$tailscale_makefile"
-    update_package "tailscale" "releases" "v1.90.6" || exit 1
+    update_package "tailscale" "releases" "v1.92.2" || exit 1
 }
 
 _trim_space() {
