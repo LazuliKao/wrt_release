@@ -747,7 +747,7 @@ update_package() {
     fi
 }
 
-update_socat(){
+update_socat() {
     local dir=$(find "$BUILD_DIR/package/feeds" \( -type d -o -type l \) -name "socat")
     if [ -z "$dir" ]; then
         return 0
@@ -761,59 +761,27 @@ update_socat(){
     fi
     echo "更新软件包 $dir"
     local PKG_VER="1.8.1.0"
-# lk@ubuntu-devops  /home/lk/wrt_release/immortalwrt/package/feeds/packages/socat git:(83e0be6) ✗ cat Makefile
-# #
-# # This is free software, licensed under the GNU General Public License v2.
-# # See /LICENSE for more information.
-# #
 
-# include $(TOPDIR)/rules.mk
+    local PKG_NAME=$(awk -F"=" '/PKG_NAME:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
+    local PKG_SOURCE=$(awk -F"=" '/PKG_SOURCE:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
+    local PKG_SOURCE_URL=$(awk -F"=" '/PKG_SOURCE_URL:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\{\}\?\.a-zA-Z0-9]{1,}")
 
-# PKG_NAME:=socat
-# PKG_VERSION:=1.8.0.3
-# PKG_RELEASE:=2
+    PKG_SOURCE_URL=${PKG_SOURCE_URL//\$\(PKG_NAME\)/$PKG_NAME}
+    PKG_SOURCE_URL=$(echo "$PKG_SOURCE_URL" | sed "s/\${PKG_VERSION}/$PKG_VER/g; s/\$(PKG_VERSION)/$PKG_VER/g")
+    PKG_SOURCE=${PKG_SOURCE//\$\(PKG_NAME\)/$PKG_NAME}
+    PKG_SOURCE=${PKG_SOURCE//\$\(PKG_VERSION\)/$PKG_VER}
 
-# PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-# PKG_SOURCE_URL:=http://www.dest-unreach.org/socat/download
-# PKG_HASH:=01eb017361d95bb3a6941e840b59e4463a3fabf92df4154ed02b16a2ed6a0095
+    local PKG_HASH
+    echo "$PKG_SOURCE_URL"/"$PKG_SOURCE"
+    if ! PKG_HASH=$(curl -fsSL "$PKG_SOURCE_URL"/"$PKG_SOURCE" | sha256sum | cut -b -64); then
+        echo "错误：从 $PKG_SOURCE_URL$PKG_SOURCE 获取软件包哈希失败" >&2
+        return 1
+    fi
 
-# PKG_MAINTAINER:=Ted Hess <thess@kitschensync.net>
-# PKG_LICENSE:=GPL-2.0-or-later OpenSSL
-# PKG_LICENSE_FILES:=COPYING COPYING.OpenSSL
-# PKG_CPE_ID:=cpe:/a:dest-unreach:socat
-
-# PKG_INSTALL:=1
-# PKG_BUILD_PARALLEL:=1
-
-# include $(INCLUDE_DIR)/package.mk
-
-# define Package/socat
-#   SECTION:=net
-#   CATEGORY:=Network
-#   DEPENDS:=+libpthread +librt +SOCAT_SSL:libopenssl
-#   TITLE:=A multipurpose relay (SOcket CAT)
-#   URL:=http://www.dest-unreach.org/socat/
-# endef
-        local PKG_NAME=$(awk -F"=" '/PKG_NAME:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
-        local PKG_SOURCE=$(awk -F"=" '/PKG_SOURCE:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
-        local PKG_SOURCE_URL=$(awk -F"=" '/PKG_SOURCE_URL:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\{\}\?\.a-zA-Z0-9]{1,}")
-
-        PKG_SOURCE_URL=${PKG_SOURCE_URL//\$\(PKG_NAME\)/$PKG_NAME}
-        PKG_SOURCE_URL=$(echo "$PKG_SOURCE_URL" | sed "s/\${PKG_VERSION}/$PKG_VER/g; s/\$(PKG_VERSION)/$PKG_VER/g")
-        PKG_SOURCE=${PKG_SOURCE//\$\(PKG_NAME\)/$PKG_NAME}
-        PKG_SOURCE=${PKG_SOURCE//\$\(PKG_VERSION\)/$PKG_VER}
-
-        local PKG_HASH
-        echo "$PKG_SOURCE_URL"/"$PKG_SOURCE"
-        if ! PKG_HASH=$(curl -fsSL "$PKG_SOURCE_URL"/"$PKG_SOURCE" | sha256sum | cut -b -64); then
-            echo "错误：从 $PKG_SOURCE_URL$PKG_SOURCE 获取软件包哈希失败" >&2
-            return 1
-        fi
-
-        local old_version=$(awk -F"=" '/PKG_VERSION:=/ {print $NF}' "$mk_path" | grep -oE "[\.0-9]{1,}" | head -1)
-        echo "当前版本: $old_version, 目标版本: $PKG_VER"
-        sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:='$PKG_VER'/g' "$mk_path"
-        sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
+    local old_version=$(awk -F"=" '/PKG_VERSION:=/ {print $NF}' "$mk_path" | grep -oE "[\.0-9]{1,}" | head -1)
+    echo "当前版本: $old_version, 目标版本: $PKG_VER"
+    sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:='$PKG_VER'/g' "$mk_path"
+    sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
 }
 update_packages() {
     update_socat || exit 1
