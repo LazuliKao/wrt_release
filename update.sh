@@ -244,7 +244,7 @@ update_golang() {
 
 install_small8() {
     # string.Join(" ","""_""".Replace("\r", "").Split("\n"))
-    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev luci-app-passwall luci-app-passwall2 alist luci-app-alist v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart luci-app-quickstart luci-app-istorex netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki tailscale oaf open-app-filter luci-app-oaf luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon luci-app-supervisord msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-cloudflarespeedtest
+    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata geoview v2ray-plugin tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev luci-app-passwall luci-app-passwall2 alist luci-app-alist v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart luci-app-quickstart luci-app-istorex netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki tailscale oaf open-app-filter luci-app-oaf luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon luci-app-supervisord msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-cloudflarespeedtest
 }
 
 install_fullconenat() {
@@ -1520,6 +1520,15 @@ update_nginx_ubus_module() {
     fi
 }
 
+remove_attendedsysupgrade() {
+    find "$BUILD_DIR/feeds/luci/collections" -name "Makefile" | while read -r makefile; do
+        if grep -q "luci-app-attendedsysupgrade" "$makefile"; then
+            sed -i "/luci-app-attendedsysupgrade/d" "$makefile"
+            echo "Removed luci-app-attendedsysupgrade from $makefile"
+        fi
+    done
+}
+
 main() {
     cat <<EOF | _foreach_function
 
@@ -1569,6 +1578,7 @@ main() {
     check_default_settings
     install_opkg_distfeeds
     fix_easytier_mk
+    remove_attendedsysupgrade
     install_feeds
     fix_easytier_lua
     update_adguardhome
