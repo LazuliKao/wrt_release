@@ -1,0 +1,25 @@
+name: Scheduled Release Build
+
+on:
+  schedule:
+    - cron: '0 2 * * 5'
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        model:
+          - cudy_tr3000
+          - jdcloud_ax6000_immwrt
+          - jdcloud_ipq60xx_immwrt
+          - jdcloud_ipq60xx_libwrt
+          - x64_immwrt
+          - qnap_301w_immwrt
+          - qnap_301w_libwrt
+    uses: ./.github/workflows/release_wrt.yml
+    with:
+      model: ${{ matrix.model }}
