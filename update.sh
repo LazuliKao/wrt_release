@@ -796,7 +796,7 @@ update_packages() {
     # https://github.com/moby/moby
     update_package "dockerd" "tags" "docker-v29.1.3" || exit 1
     # https://github.com/docker/compose
-    update_package "docker-compose" "releases" "v5.0.0" || exit 1
+    update_package "docker-compose" "releases" "v2.40.3" || exit 1
 }
 
 # 添加系统升级时的备份信息
