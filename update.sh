@@ -45,6 +45,29 @@ GOLANG_BRANCH="25.x"
 THEME_SET="argon"
 LAN_ADDR="192.168.6.1"
 
+# GitHub Token 配置，用于提高API速率限制
+GITHUB_TOKEN="${GITHUB_TOKEN:-}"
+
+# 带Token的curl包装函数，自动为GitHub请求添加认证头
+_curl() {
+    local curl_args=("$@")
+    
+    # 检查是否是GitHub相关的URL
+    if [[ "${curl_args[@]}" =~ "github.com" ]] || [[ "${curl_args[@]}" =~ "githubusercontent.com" ]]; then
+        if [ -n "$GITHUB_TOKEN" ]; then
+            # 在最后一个参数（URL）之前插入认证头
+            local url_arg="${curl_args[-1]}"
+            unset 'curl_args[-1]'
+            curl -H "Authorization: token $GITHUB_TOKEN" "${curl_args[@]}" "$url_arg"
+        else
+            echo "Warning: GITHUB_TOKEN is not set. Proceeding without authentication for GitHub requests." >&2
+            curl "${curl_args[@]}"
+        fi
+    else
+        curl "${curl_args[@]}"
+    fi
+}
+
 _set_config() {
     key=$1
     value=$2
@@ -437,7 +460,7 @@ update_ath11k_fw() {
 
     if [ -d "$(dirname "$makefile")" ]; then
         echo "正在更新 ath11k-firmware Makefile..."
-        if ! curl -fsSL -o "$new_mk" "$url"; then
+        if ! _curl -fsSL -o "$new_mk" "$url"; then
             echo "错误：从 $url 下载 ath11k-firmware Makefile 失败" >&2
             exit 1
         fi
@@ -524,7 +547,7 @@ update_tcping() {
 
     if [ -d "$(dirname "$tcping_path")" ]; then
         echo "正在更新 tcping Makefile..."
-        if ! curl -fsSL -o "$tcping_path" "$url"; then
+        if ! _curl -fsSL -o "$tcping_path" "$url"; then
             echo "错误：从 $url 下载 tcping Makefile 失败" >&2
             exit 1
         fi
@@ -694,17 +717,17 @@ update_package() {
         if [ -n "$3" ]; then
             PKG_VER="$3"
         else
-            if ! PKG_VER=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/$branch" | jq -r '.[0] | .tag_name // .name'); then
+            if ! PKG_VER=$(_curl -fsSL "https://api.github.com/repos/$PKG_REPO/$branch" | jq -r '.[0] | .tag_name // .name'); then
                 echo "错误：从 https://api.github.com/repos/$PKG_REPO/$branch 获取版本信息失败" >&2
                 return 1
             fi
         fi
         local COMMIT_SHA
-        local REF_DETAIL=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/git/ref/tags/$PKG_VER")
+        local REF_DETAIL=$(_curl -fsSL "https://api.github.com/repos/$PKG_REPO/git/ref/tags/$PKG_VER")
         local REF_SHA_TYPE=$(echo "$REF_DETAIL" | jq -r '.object.type')
         local COMMIT_SHA_RAW=$(echo "$REF_DETAIL" | jq -r '.object.sha')
         if [ "$REF_SHA_TYPE" = "tag" ]; then
-            COMMIT_SHA_RAW=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/git/tags/$COMMIT_SHA_RAW" |
+            COMMIT_SHA_RAW=$(_curl -fsSL "https://api.github.com/repos/$PKG_REPO/git/tags/$COMMIT_SHA_RAW" |
                 jq -r '.object.sha')
         fi
         if ! COMMIT_SHA=$(echo "$COMMIT_SHA_RAW" | cut -c1-7); then
@@ -730,7 +753,7 @@ update_package() {
         PKG_SOURCE=${PKG_SOURCE//\$\(PKG_VERSION\)/$PKG_VER}
 
         local PKG_HASH
-        if ! PKG_HASH=$(curl -fsSL "$PKG_SOURCE_URL"/"$PKG_SOURCE" | sha256sum | cut -b -64); then
+        if ! PKG_HASH=$(_curl -fsSL "$PKG_SOURCE_URL"/"$PKG_SOURCE" | sha256sum | cut -b -64); then
             echo "错误：从 $PKG_SOURCE_URL$PKG_SOURCE 获取软件包哈希失败" >&2
             return 1
         fi
@@ -773,7 +796,7 @@ update_socat() {
 
     local PKG_HASH
     echo "$PKG_SOURCE_URL"/"$PKG_SOURCE"
-    if ! PKG_HASH=$(curl -fsSL "$PKG_SOURCE_URL"/"$PKG_SOURCE" | sha256sum | cut -b -64); then
+    if ! PKG_HASH=$(_curl -fsSL "$PKG_SOURCE_URL"/"$PKG_SOURCE" | sha256sum | cut -b -64); then
         echo "错误：从 $PKG_SOURCE_URL$PKG_SOURCE 获取软件包哈希失败" >&2
         return 1
     fi
@@ -850,7 +873,7 @@ fix_quickstart() {
     # 下载新的istore_backend.lua文件并覆盖
     if [ -f "$file_path" ]; then
         echo "正在修复 quickstart..."
-        if ! curl -fsSL -o "$file_path" "$url"; then
+        if ! _curl -fsSL -o "$file_path" "$url"; then
             echo "错误：从 $url 下载 istore_backend.lua 失败" >&2
             exit 1
         fi
@@ -1352,7 +1375,7 @@ add_nbtverify() {
 
 add_turboacc() {
     cd "$BUILD_DIR"
-    curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh
+    _curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh
     bash add_turboacc.sh --no-sfe
     cd -
 }
@@ -1472,7 +1495,7 @@ fix_libffi() {
     local original_makefile="$BUILD_DIR/package/feeds/packages/libffi/Makefile"
     if [ -f "$original_makefile" ]; then
         echo "Restoring original libffi Makefile from openwrt..."
-        curl -fsSL -o "$original_makefile" "https://raw.githubusercontent.com/openwrt/packages/refs/heads/openwrt-24.10/libs/libffi/Makefile"
+        _curl -fsSL -o "$original_makefile" "https://raw.githubusercontent.com/openwrt/packages/refs/heads/openwrt-24.10/libs/libffi/Makefile"
     fi
     update_package "libffi" "releases" "v3.5.2" || exit 1
 }
