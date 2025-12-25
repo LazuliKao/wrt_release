@@ -807,7 +807,7 @@ update_socat() {
     sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
 }
 update_packages() {
-    update_socat || exit 1
+    # update_socat || exit 1
     # https://github.com/opencontainers/runc
     # https://github.com/moby/moby/blob/docker-v29.1.3/hack/dockerfile/install/runc.installer
     update_package "runc" "releases" "v1.3.4" || exit 1
