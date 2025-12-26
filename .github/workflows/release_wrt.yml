@@ -146,8 +146,8 @@ jobs:
         run: |
           sudo apt-get install -y qemu-utils
           for img in $(ls ./firmware/*-combined-efi.img.gz); do
-            baseimg=$(basename $img .img.gz)
-            gunzip -c $img > ./${baseimg}.img
+            baseimg=$(basename "$img" .img.gz)
+            zcat "$img" > "./${baseimg}.img"
             qemu-img convert -O qcow2 ./${baseimg}.img ./firmware/${baseimg}.qcow2
             qemu-img convert -O vmdk ./${baseimg}.img ./firmware/${baseimg}.vmdk
             qemu-img convert -O vhdx ./${baseimg}.img ./firmware/${baseimg}.vhdx
