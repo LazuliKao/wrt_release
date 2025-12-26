@@ -806,8 +806,25 @@ update_socat() {
     sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:='$PKG_VER'/g' "$mk_path"
     sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
 }
+
+fix_update_docker_compose() {
+    #replace github.com/docker/compose/v2 -> v5
+    local dir=$(find "$BUILD_DIR/package/feeds" \( -type d -o -type l \) -name "docker-compose")
+    if [ -z "$dir" ]; then
+        return 0
+    fi
+    local mk_path="$dir/Makefile"
+    if [ -f "$mk_path" ]; then
+        echo "找到 docker-compose 目录 $dir 的 Makefile"
+    else
+        echo "错误：未找到 docker-compose 的 Makefile" >&2
+        return 1
+    fi
+    sed -i 's/github.com\/docker\/compose\/v2/github.com\/docker\/compose\/v5/g' "$mk_path"
+}
+
 update_packages() {
-    # update_socat || exit 1
+    update_socat || exit 1
     # https://github.com/opencontainers/runc
     # https://github.com/moby/moby/blob/docker-v29.1.3/hack/dockerfile/install/runc.installer
     update_package "runc" "releases" "v1.3.4" || exit 1
@@ -819,7 +836,8 @@ update_packages() {
     # https://github.com/moby/moby
     update_package "dockerd" "tags" "docker-v29.1.3" || exit 1
     # https://github.com/docker/compose
-    update_package "docker-compose" "releases" "v2.40.3" || exit 1
+    update_package "docker-compose" "releases" "v5.0.1" || exit 1
+    fix_update_docker_compose || exit 1
 }
 
 # 添加系统升级时的备份信息
