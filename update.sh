@@ -770,42 +770,42 @@ update_package() {
     fi
 }
 
-update_socat() {
-    local dir=$(find "$BUILD_DIR/package/feeds" \( -type d -o -type l \) -name "socat")
-    if [ -z "$dir" ]; then
-        return 0
-    fi
-    local mk_path="$dir/Makefile"
-    if [ -f "$mk_path" ]; then
-        echo "找到 socat 目录 $dir 的 Makefile"
-    else
-        echo "错误：未找到 socat 的 Makefile" >&2
-        return 1
-    fi
-    echo "更新软件包 $dir"
-    local PKG_VER="1.8.1.0"
+# update_socat() {
+#     local dir=$(find "$BUILD_DIR/package/feeds" \( -type d -o -type l \) -name "socat")
+#     if [ -z "$dir" ]; then
+#         return 0
+#     fi
+#     local mk_path="$dir/Makefile"
+#     if [ -f "$mk_path" ]; then
+#         echo "找到 socat 目录 $dir 的 Makefile"
+#     else
+#         echo "错误：未找到 socat 的 Makefile" >&2
+#         return 1
+#     fi
+#     echo "更新软件包 $dir"
+#     local PKG_VER="1.8.1.0"
 
-    local PKG_NAME=$(awk -F"=" '/PKG_NAME:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
-    local PKG_SOURCE=$(awk -F"=" '/PKG_SOURCE:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
-    local PKG_SOURCE_URL=$(awk -F"=" '/PKG_SOURCE_URL:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\{\}\?\.a-zA-Z0-9]{1,}")
+#     local PKG_NAME=$(awk -F"=" '/PKG_NAME:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
+#     local PKG_SOURCE=$(awk -F"=" '/PKG_SOURCE:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
+#     local PKG_SOURCE_URL=$(awk -F"=" '/PKG_SOURCE_URL:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\{\}\?\.a-zA-Z0-9]{1,}")
 
-    PKG_SOURCE_URL=${PKG_SOURCE_URL//\$\(PKG_NAME\)/$PKG_NAME}
-    PKG_SOURCE_URL=$(echo "$PKG_SOURCE_URL" | sed "s/\${PKG_VERSION}/$PKG_VER/g; s/\$(PKG_VERSION)/$PKG_VER/g")
-    PKG_SOURCE=${PKG_SOURCE//\$\(PKG_NAME\)/$PKG_NAME}
-    PKG_SOURCE=${PKG_SOURCE//\$\(PKG_VERSION\)/$PKG_VER}
+#     PKG_SOURCE_URL=${PKG_SOURCE_URL//\$\(PKG_NAME\)/$PKG_NAME}
+#     PKG_SOURCE_URL=$(echo "$PKG_SOURCE_URL" | sed "s/\${PKG_VERSION}/$PKG_VER/g; s/\$(PKG_VERSION)/$PKG_VER/g")
+#     PKG_SOURCE=${PKG_SOURCE//\$\(PKG_NAME\)/$PKG_NAME}
+#     PKG_SOURCE=${PKG_SOURCE//\$\(PKG_VERSION\)/$PKG_VER}
 
-    local PKG_HASH
-    echo "$PKG_SOURCE_URL"/"$PKG_SOURCE"
-    if ! PKG_HASH=$(_curl -fsSL "$PKG_SOURCE_URL"/"$PKG_SOURCE" | sha256sum | cut -b -64); then
-        echo "错误：从 $PKG_SOURCE_URL$PKG_SOURCE 获取软件包哈希失败" >&2
-        return 1
-    fi
+#     local PKG_HASH
+#     echo "$PKG_SOURCE_URL"/"$PKG_SOURCE"
+#     if ! PKG_HASH=$(_curl -fsSL "$PKG_SOURCE_URL"/"$PKG_SOURCE" | sha256sum | cut -b -64); then
+#         echo "错误：从 $PKG_SOURCE_URL$PKG_SOURCE 获取软件包哈希失败" >&2
+#         return 1
+#     fi
 
-    local old_version=$(awk -F"=" '/PKG_VERSION:=/ {print $NF}' "$mk_path" | grep -oE "[\.0-9]{1,}" | head -1)
-    echo "当前版本: $old_version, 目标版本: $PKG_VER"
-    sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:='$PKG_VER'/g' "$mk_path"
-    sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
-}
+#     local old_version=$(awk -F"=" '/PKG_VERSION:=/ {print $NF}' "$mk_path" | grep -oE "[\.0-9]{1,}" | head -1)
+#     echo "当前版本: $old_version, 目标版本: $PKG_VER"
+#     sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:='$PKG_VER'/g' "$mk_path"
+#     sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
+# }
 
 fix_update_docker_compose() {
     #replace github.com/docker/compose/v2 -> v5
@@ -824,7 +824,7 @@ fix_update_docker_compose() {
 }
 
 update_packages() {
-    update_socat || exit 1
+    # update_socat || exit 1
     # https://github.com/opencontainers/runc
     # https://github.com/moby/moby/blob/docker-v29.1.3/hack/dockerfile/install/runc.installer
     update_package "runc" "releases" "v1.3.4" || exit 1
@@ -958,6 +958,18 @@ add_awg() {
     echo "正在添加 awg-openwrt..."
     if ! git clone --depth 1 "$repo_url" "$awg_dir" -b master; then
         echo "错误：从 $repo_url 克隆 awg-openwrt 仓库失败" >&2
+        exit 1
+    fi
+}
+
+add_portweaver() {
+    local portweaver_dir="$BUILD_DIR/package/portweaver"
+    local repo_url="https://github.com/LazuliKao/luci-app-portweaver"
+    # 删除旧的目录（如果存在）
+    rm -rf "$portweaver_dir" 2>/dev/null
+    echo "正在添加 luci-app-portweaver..."
+    if ! git clone --depth 1 "$repo_url" "$portweaver_dir"; then
+        echo "错误：从 $repo_url 克隆 luci-app-portweaver 仓库失败" >&2
         exit 1
     fi
 }
@@ -1645,6 +1657,7 @@ main() {
     add_timecontrol
     add_gecoosac
     add_awg
+    add_portweaver
     # update_lucky
     add_quickfile
     fix_rust_compile_error
