@@ -1530,10 +1530,24 @@ fix_libffi() {
     update_package "libffi" "releases" "v3.5.2" || exit 1
 }
 
+tailscale_change_repo() {
+    # https://github.com/GuNanOvO/openwrt-tailscale/tree/main/package/tailscale
+    local tailscale_dir="$BUILD_DIR/package/feeds/small8/tailscale"
+    # local repo_url=""
+    local tmp_tailscale_repo_dir="$BUILD_DIR/package/feeds/small8/tailscale_tmp"
+    git clone --depth 1 https://github.com/GuNanOvO/openwrt-tailscale.git "$tmp_tailscale_repo_dir"
+    if [ -d "$tmp_tailscale_repo_dir" ]; then
+        rm -rf "$tailscale_dir"
+        mv "$tmp_tailscale_repo_dir/package/tailscale" "$tailscale_dir"
+    else
+        echo "Error: Failed to clone tailscale repository." >&2
+        exit 1
+    fi
+}
 tailscale_use_awg() {
     local tailscale_makefile="$BUILD_DIR/package/feeds/small8/tailscale/Makefile"
     sed -i 's|^PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=https://codeload.github.com/LiuTangLei/tailscale/tar.gz/v$(PKG_VERSION)?|' "$tailscale_makefile"
-    update_package "tailscale" "releases" "v1.92.2" || exit 1
+    update_package "tailscale" "releases" "v1.92.3" || exit 1
 }
 
 _trim_space() {
@@ -1685,6 +1699,7 @@ main() {
     patch_docker_nftables
     fix_node_build
     fix_libffi
+    tailscale_change_repo
     tailscale_use_awg
     # update_proxy_app_menu_location
     # fix_kernel_magic
