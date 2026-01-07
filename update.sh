@@ -1700,7 +1700,7 @@ main() {
     fix_node_build
     fix_libffi
     tailscale_change_repo
-    tailscale_use_awg
+    # tailscale_use_awg
     # update_proxy_app_menu_location
     # fix_kernel_magic
     # update_mt76
