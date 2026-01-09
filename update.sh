@@ -626,6 +626,54 @@ sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" $emortal_def_dir/file
     fi
 }
 
+# 准备 UPX 压缩工具，放置在 $BUILD_DIR/upx/upx 以匹配构建脚本路径
+prepare_upx() {
+    local upx_dir="$BUILD_DIR/upx"
+    local upx_bin="$upx_dir/upx"
+
+    # 已存在则跳过
+    if [ -x "$upx_bin" ]; then
+        echo "==> UPX already prepared at $upx_bin"
+        return 0
+    fi
+
+    echo "==> Preparing UPX host tool (amd64_linux)"
+    mkdir -p "$upx_dir"
+
+    # 获取最新版本信息
+    local upx_info upx_tag upx_ver upx_url tarball
+    if ! upx_info=$(_curl -fsSL "https://api.github.com/repos/upx/upx/releases/latest"); then
+        echo "Error: failed to fetch UPX release info" >&2
+        return 1
+    fi
+    upx_tag=$(echo "$upx_info" | jq -r '.tag_name // empty')
+    if [ -z "$upx_tag" ]; then
+        echo "Error: UPX tag not found from GitHub API" >&2
+        return 1
+    fi
+    upx_ver=${upx_tag#v}
+    upx_url="https://github.com/upx/upx/releases/download/${upx_tag}/upx-${upx_ver}-amd64_linux.tar.xz"
+    echo "Downloading UPX from: $upx_url"
+
+    tarball="$BUILD_DIR/upx.tar.xz"
+    if ! _curl -L -o "$tarball" "$upx_url"; then
+        echo "Error: failed to download $upx_url" >&2
+        return 1
+    fi
+
+    # 解压并设置执行权限
+    tar -xf "$tarball" -C "$upx_dir" --strip-components=1
+    chmod +x "$upx_bin" || true
+    rm -f "$tarball"
+
+    # 最终确认
+    if [ ! -x "$upx_bin" ]; then
+        echo "Error: UPX binary not found at $upx_bin after extract" >&2
+        return 1
+    fi
+    echo "==> UPX ready: $upx_bin"
+}
+
 update_nss_pbuf_performance() {
     local pbuf_path="$BUILD_DIR/package/kernel/mac80211/files/pbuf.uci"
     if [ -d "$(dirname "$pbuf_path")" ] && [ -f $pbuf_path ]; then
@@ -1639,6 +1687,7 @@ main() {
     clone_repo
     clean_up
     reset_feeds_conf
+    prepare_upx
     update_feeds
     remove_unwanted_packages
     remove_tweaked_packages
