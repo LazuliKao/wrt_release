@@ -1575,7 +1575,6 @@ fix_libffi() {
         echo "Restoring original libffi Makefile from openwrt..."
         _curl -fsSL -o "$original_makefile" "https://raw.githubusercontent.com/openwrt/packages/refs/heads/openwrt-24.10/libs/libffi/Makefile"
     fi
-    update_package "libffi" "releases" "v3.5.2" || exit 1
 }
 
 tailscale_change_repo() {
@@ -1681,6 +1680,23 @@ remove_attendedsysupgrade() {
     done
 }
 
+fix_openssl_ktls() {
+    local config_in="$BUILD_DIR/package/libs/openssl/Config.in"
+    if [ -f "$config_in" ]; then
+        echo "正在更新 OpenSSL kTLS 配置..."
+        sed -i 's/select PACKAGE_kmod-tls/depends on PACKAGE_kmod-tls/g' "$config_in"
+        sed -i '/depends on PACKAGE_kmod-tls/a\\tdefault y if PACKAGE_kmod-tls' "$config_in"
+    fi
+}
+
+fix_opkg_check() {
+    local patch_file="$BASE_PATH/patches/001-fix-provides-version-parsing.patch"
+    local opkg_dir="$BUILD_DIR/package/system/opkg"
+    if [ -f "$patch_file" ]; then
+        install -Dm644 "$patch_file" "$opkg_dir/patches/001-fix-provides-version-parsing.patch"
+    fi
+}
+
 main() {
     cat <<EOF | _foreach_function
 
@@ -1753,6 +1769,8 @@ main() {
     # update_proxy_app_menu_location
     # fix_kernel_magic
     # update_mt76
+    fix_openssl_ktls
+    fix_opkg_check
     # apply_hash_fixes # 调用哈希修正函数
 EOF
 }
