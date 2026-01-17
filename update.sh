@@ -51,7 +51,7 @@ GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 # 带Token的curl包装函数，自动为GitHub请求添加认证头
 _curl() {
     local curl_args=("$@")
-    
+
     # 检查是否是GitHub相关的URL
     if [[ "${curl_args[@]}" =~ "github.com" ]] || [[ "${curl_args[@]}" =~ "githubusercontent.com" ]]; then
         if [ -n "$GITHUB_TOKEN" ]; then
@@ -303,13 +303,13 @@ check_default_settings() {
         local tmp_dir
         tmp_dir=$(mktemp -d)
         if git clone --depth 1 --filter=blob:none --sparse https://github.com/immortalwrt/immortalwrt.git "$tmp_dir"; then
-            pushd "$tmp_dir" > /dev/null
+            pushd "$tmp_dir" >/dev/null
             git sparse-checkout set package/emortal/default-settings
             # 确保目标父目录存在
             mkdir -p "$(dirname "$settings_dir")"
             # 移动 default-settings 目录
             mv package/emortal/default-settings "$settings_dir"
-            popd > /dev/null
+            popd >/dev/null
             rm -rf "$tmp_dir"
             echo "default-settings 克隆并移动成功。"
         else
@@ -1117,11 +1117,11 @@ update_lucky() {
             return 0
         fi
 
-        pushd "$tmp_dir" > /dev/null
+        pushd "$tmp_dir" >/dev/null
         git sparse-checkout init --cone
         git sparse-checkout set luci-app-lucky lucky || {
             echo "错误：稀疏检出 luci-app-lucky 或 lucky 失败" >&2
-            popd > /dev/null
+            popd >/dev/null
             rm -rf "$tmp_dir"
             return 0
         }
@@ -1131,7 +1131,7 @@ update_lucky() {
         \cp -rf "$tmp_dir/luci-app-lucky/." "$luci_app_lucky_dir/"
         \cp -rf "$tmp_dir/lucky/." "$lucky_dir/"
 
-        popd > /dev/null
+        popd >/dev/null
         rm -rf "$tmp_dir"
         echo "luci-app-lucky 和 lucky 源代码更新完成。"
     fi
@@ -1575,6 +1575,7 @@ fix_libffi() {
         echo "Restoring original libffi Makefile from openwrt..."
         _curl -fsSL -o "$original_makefile" "https://raw.githubusercontent.com/openwrt/packages/refs/heads/openwrt-24.10/libs/libffi/Makefile"
     fi
+    update_package "libffi" "releases" "v3.5.2" || exit 1
 }
 
 tailscale_change_repo() {
@@ -1648,7 +1649,7 @@ fix_easytier_lua() {
 }
 
 fix_easytier_mk() {
-	local mk_path="$BUILD_DIR/feeds/small8/luci-app-easytier/easytier/Makefile"
+    local mk_path="$BUILD_DIR/feeds/small8/luci-app-easytier/easytier/Makefile"
     if [ -f "$mk_path" ]; then
         sed -i 's/!@(mips||mipsel)/!TARGET_mips \&\& !TARGET_mipsel/g' "$mk_path"
     fi
