@@ -32,4 +32,15 @@ client_body_in_file_only off;
 proxy_buffering off;
 EOF
 
+# 确保本地访问限制包含 100.64.0.0/10
+RESTRICT_FILE="/etc/nginx/restrict_locally"
+if [ -f "$RESTRICT_FILE" ] && ! grep -qE "^[[:space:]]*allow[[:space:]]+100\.64\.0\.0/10;" "$RESTRICT_FILE"; then
+    # 在 'deny all;' 之前插入允许规则
+    if grep -qE "^[[:space:]]*deny[[:space:]]+all;$" "$RESTRICT_FILE"; then
+        sed -i '/^[[:space:]]*deny[[:space:]]\+all;$/i\	allow 100.64.0.0/10;' "$RESTRICT_FILE"
+    else
+        printf '\tallow 100.64.0.0/10;\n' >>"$RESTRICT_FILE"
+    fi
+fi
+
 /etc/init.d/nginx restart
