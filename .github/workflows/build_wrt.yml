@@ -89,6 +89,14 @@ jobs:
       - name: Build Firmware
         run: ./build.sh ${{ inputs.model }}
 
+      - name: Debug with Upterm
+        if: failure()
+        uses: LazuliKao/action-upterm@v1.11.1
+        with:
+          upterm-server: ${{ secrets.UPTERM_SERVER }}
+          wait-timeout-minutes: 30
+          authorized-keys: ${{ secrets.UPTERM_AUTHORIZED_KEYS }}
+
       - name: Delete Old Cache
         run: |
           # 获取缓存列表并删除
