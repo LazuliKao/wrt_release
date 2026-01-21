@@ -1,15 +1,3 @@
-# proxy_request_buffering off;
-# proxy_max_temp_file_size 0;
-# proxy_buffering off;
-# proxy_cache off;
-# proxy_redirect off;
-# client_max_body_size 0;
-# client_body_buffer_size 1024k;
-# proxy_buffer_size 1024k;
-# proxy_buffers 6 500k;
-# proxy_busy_buffers_size 1024k;
-# proxy_connect_timeout 90s;
-# proxy_read_timeout 90s;
 cat >/etc/nginx/conf.d/optimize.conf <<EOF
 # --- 上传优化 ---
 client_max_body_size 512m;       # 支持大文件上传

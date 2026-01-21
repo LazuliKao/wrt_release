@@ -1404,7 +1404,7 @@ add_ohmyzsh() {
     fi
     cp "$base_files_path/root/.oh-my-zsh/templates/zshrc.zsh-template" "$base_files_path/root/.zshrc"
     # echo "source /etc/profile" >> "$base_files_path/root/.zshrc"
-    sed -i "1i source /etc/profile" "$base_files_path/root/.zshrc"
+    # sed -i "1i source /etc/profile" "$base_files_path/root/.zshrc"
     # sed -i "s:/bin/ash:/usr/bin/zsh:g" "base_files_path/etc/passwd"
 
     # add plugins
