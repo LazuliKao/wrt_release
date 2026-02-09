@@ -152,27 +152,13 @@ update_feeds() {
     sed -i '/^#/d' "$FEEDS_PATH"
     sed -i '/packages_ext/d' "$FEEDS_PATH"
 
-    add_feeds() {
-        local feed=$1
-        local url=$2
-        if ! grep -q "$feed" "$FEEDS_PATH"; then
-            # 确保文件以换行符结尾
-            [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
-            echo "src-git $feed $url" >>"$FEEDS_PATH"
-        fi
-    }
     # 检查并添加 small-package 源
-    add_feeds "small8" "https://github.com/kenzok8/small-package"
-    # 检查并添加 kwrt 源
-    add_feeds "kiddin9" "https://github.com/kiddin9/kwrt-packages.git"
-    # 检查并添加 AWG-OpenWRT 源
-    add_feeds "awg" "https://github.com/Slava-Shchipunov/awg-openwrt"
-    # 检查并添加 opentopd 源
-    # add_feeds "opentopd" "https://github.com/sirpdboy/sirpdboy-package"
-    # 检查并添加 node 源
-    # add_feeds "node" "https://github.com/nxhack/openwrt-node-packages.git;openwrt-24.10"
-    # 检查并添加 libremesh 源
-    # add_feeds "libremesh" "https://github.com/libremesh/lime-packages"
+    if ! grep -q "small-package" "$FEEDS_PATH"; then
+        # 确保文件以换行符结尾
+        [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
+        echo "src-git small8 https://github.com/kenzok8/small-package" >>"$FEEDS_PATH"
+    fi
+
     # 添加bpf.mk解决更新报错
     if [ ! -f "$BUILD_DIR/include/bpf.mk" ]; then
         touch "$BUILD_DIR/include/bpf.mk"
@@ -195,7 +181,7 @@ remove_unwanted_packages() {
         "luci-app-passwall" "luci-app-ddns-go" "luci-app-rclone" "luci-app-ssr-plus"
         "luci-app-vssr" "luci-app-daed" "luci-app-dae" "luci-app-alist" "luci-app-homeproxy"
         "luci-app-haproxy-tcp" "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter"
-        "luci-app-msd_lite"
+        "luci-app-msd_lite" "luci-app-unblockneteasemusic"
     )
     local packages_net=(
         "haproxy" "xray-core" "xray-plugin" "dns2socks" "alist" "hysteria"
@@ -266,8 +252,20 @@ update_golang() {
 }
 
 install_small8() {
-    # string.Join(" ","""_""".Replace("\r", "").Split("\n"))
-    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata geoview v2ray-plugin tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev luci-app-passwall luci-app-passwall2 alist luci-app-alist v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart luci-app-quickstart luci-app-istorex netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki tailscale oaf open-app-filter luci-app-oaf luci-app-wan-mac easytier luci-app-easytier luci-app-control-timewol luci-app-guest-wifi luci-app-wolplus wrtbwmon luci-app-wrtbwmon luci-app-supervisord msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-cloudflarespeedtest
+    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
+        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata geoview v2ray-plugin \
+        tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
+        luci-app-passwall v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go \
+        luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
+        luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest netdata luci-app-netdata \
+        lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
+        tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf easytier luci-app-easytier \
+        msd_lite luci-app-msd_lite cups luci-app-cupsd
+}
+
+install_passwall() {
+    echo "正在从官方仓库安装 luci-app-passwall..."
+    ./scripts/feeds install -p passwall -f luci-app-passwall
 }
 
 install_fullconenat() {
@@ -329,12 +327,6 @@ install_feeds() {
             if [[ "$dir_name" == "small8" ]]; then
                 install_small8
                 install_fullconenat
-            # elif [[ "$dir_name" == "opentopd" ]]; then
-            #     install_opentopd
-            elif [[ "$dir_name" == "kiddin9" ]]; then
-                install_kiddin9
-            # elif [[ "$dir_name" == "node" ]]; then
-            #     install_node
             else
                 ./scripts/feeds install -f -ap $(basename "$dir")
             fi
@@ -377,6 +369,15 @@ fix_mk_def_depends() {
     sed -i 's/libustream-mbedtls/libustream-openssl/g' $BUILD_DIR/include/target.mk 2>/dev/null
     if [ -f $BUILD_DIR/target/linux/qualcommax/Makefile ]; then
         sed -i 's/wpad-openssl/wpad-mesh-openssl/g' $BUILD_DIR/target/linux/qualcommax/Makefile
+    fi
+}
+
+# 修复 Kconfig 递归依赖问题（package-metadata.pl 生成非法 "<" 条件）
+fix_kconfig_recursive_dependency() {
+    local file="$BUILD_DIR/scripts/package-metadata.pl"
+    if [ -f "$file" ]; then
+        sed -i 's/<PACKAGE_\$pkgname/!=y/g' "$file"
+        echo "已修复 package-metadata.pl 的 Kconfig 递归依赖生成逻辑。"
     fi
 }
 
@@ -542,7 +543,7 @@ change_cpuusage() {
 
 update_tcping() {
     local tcping_path="$BUILD_DIR/feeds/small8/tcping/Makefile"
-    local url="https://raw.githubusercontent.com/xiaorouji/openwrt-passwall-packages/refs/heads/main/tcping/Makefile"
+    local url="https://raw.githubusercontent.com/Openwrt-Passwall/openwrt-passwall-packages/refs/heads/main/tcping/Makefile"
 
     if [ -d "$(dirname "$tcping_path")" ]; then
         echo "正在更新 tcping Makefile..."
@@ -589,13 +590,13 @@ EOF
 # 应用 Passwall 相关调整
 apply_passwall_tweaks() {
     # 清理 Passwall 的 chnlist 规则文件
-    local chnlist_path="$BUILD_DIR/feeds/small8/luci-app-passwall/root/usr/share/passwall/rules/chnlist"
+    local chnlist_path="$BUILD_DIR/feeds/passwall/luci-app-passwall/root/usr/share/passwall/rules/chnlist"
     if [ -f "$chnlist_path" ]; then
         >"$chnlist_path"
     fi
 
     # 调整 Xray 最大 RTT 和 保留记录数量
-    local xray_util_path="$BUILD_DIR/feeds/small8/luci-app-passwall/luasrc/passwall/util_xray.lua"
+    local xray_util_path="$BUILD_DIR/feeds/passwall/luci-app-passwall/luasrc/passwall/util_xray.lua"
     if [ -f "$xray_util_path" ]; then
         sed -i 's/maxRTT = "1s"/maxRTT = "2s"/g' "$xray_util_path"
         sed -i 's/sampling = 3/sampling = 5/g' "$xray_util_path"
@@ -770,15 +771,8 @@ update_package() {
             fi
         fi
         local COMMIT_SHA
-        local REF_DETAIL=$(_curl -fsSL "https://api.github.com/repos/$PKG_REPO/git/ref/tags/$PKG_VER")
-        local REF_SHA_TYPE=$(echo "$REF_DETAIL" | jq -r '.object.type')
-        local COMMIT_SHA_RAW=$(echo "$REF_DETAIL" | jq -r '.object.sha')
-        if [ "$REF_SHA_TYPE" = "tag" ]; then
-            COMMIT_SHA_RAW=$(_curl -fsSL "https://api.github.com/repos/$PKG_REPO/git/tags/$COMMIT_SHA_RAW" |
-                jq -r '.object.sha')
-        fi
-        if ! COMMIT_SHA=$(echo "$COMMIT_SHA_RAW" | cut -c1-7); then
-            echo "错误：从 GitHub 获取提交哈希失败" >&2
+        if ! COMMIT_SHA=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/tags" | jq -r '.[] | select(.name=="'$PKG_VER'") | .commit.sha' | cut -c1-7); then
+            echo "错误：从 https://api.github.com/repos/$PKG_REPO/tags 获取提交哈希失败" >&2
             return 1
         fi
         if [ -n "$COMMIT_SHA" ]; then
@@ -1256,9 +1250,9 @@ set_nginx_default_config() {
     local nginx_config_path="$BUILD_DIR/feeds/packages/net/nginx-util/files/nginx.config"
     if [ -f "$nginx_config_path" ]; then
         # 使用 cat 和 heredoc 覆盖写入 nginx.config 文件
-        cat >"$nginx_config_path" <<EOF
-config main global
-	option uci_enable 'true'
+        cat > "$nginx_config_path" <<EOF
+config main 'global'
+        option uci_enable 'true'
 
 config server '_lan'
 	list listen '80 default_server'
@@ -1697,6 +1691,81 @@ fix_opkg_check() {
     fi
 }
 
+install_pbr_cmcc() {
+    local pbr_pkg_dir="$BUILD_DIR/package/feeds/packages/pbr"
+    local pbr_dir="$pbr_pkg_dir/files/usr/share/pbr"
+    local pbr_conf="$pbr_pkg_dir/files/etc/config/pbr"
+    local pbr_makefile="$pbr_pkg_dir/Makefile"
+
+    # 检查 pbr 包目录是否存在
+    if [ -d "$pbr_pkg_dir" ]; then
+        echo "正在安装 PBR CMCC 配置文件..."
+        install -Dm644 "$BASE_PATH/patches/pbr.user.cmcc" "$pbr_dir/pbr.user.cmcc"
+        install -Dm644 "$BASE_PATH/patches/pbr.user.cmcc6" "$pbr_dir/pbr.user.cmcc6"
+
+        # 在 Makefile 中添加安装规则（在 netflix 行后添加）
+        if [ -f "$pbr_makefile" ]; then
+            if ! grep -q "pbr.user.cmcc" "$pbr_makefile"; then
+                echo "正在修改 PBR Makefile 添加安装规则..."
+                sed -i '/pbr.user.netflix.*\$(1)/a\
+	$(INSTALL_DATA) ./files/usr/share/pbr/pbr.user.cmcc $(1)/usr/share/pbr/pbr.user.cmcc\
+	$(INSTALL_DATA) ./files/usr/share/pbr/pbr.user.cmcc6 $(1)/usr/share/pbr/pbr.user.cmcc6' "$pbr_makefile"
+            fi
+        fi
+    fi
+
+    # 在 PBR 默认配置文件中添加 CMCC include 条目
+    if [ -f "$pbr_conf" ]; then
+        if ! grep -q "pbr.user.cmcc" "$pbr_conf"; then
+            echo "正在添加 PBR CMCC 配置条目..."
+            sed -i "/option path '\/usr\/share\/pbr\/pbr.user.netflix'/,/option enabled '0'/{
+                /option enabled '0'/a\\
+\\
+config include\\
+	option path '/usr/share/pbr/pbr.user.cmcc'\\
+	option enabled '0'\\
+\\
+config include\\
+	option path '/usr/share/pbr/pbr.user.cmcc6'\\
+	option enabled '0'
+            }" "$pbr_conf"
+        fi
+    fi
+}
+
+fix_quectel_cm() {
+    local makefile_path="$BUILD_DIR/package/feeds/packages/quectel-cm/Makefile"
+    local cmake_patch_path="$BUILD_DIR/package/feeds/packages/quectel-cm/patches/020-cmake.patch"
+
+    if [ -f "$makefile_path" ]; then
+        echo "正在修复 quectel-cm Makefile..."
+
+        # 删除旧的下载相关行
+        sed -i '/^PKG_SOURCE:=/d' "$makefile_path"
+        sed -i '/^PKG_SOURCE_URL:=@IMMORTALWRT/d' "$makefile_path"
+        sed -i '/^PKG_HASH:=/d' "$makefile_path"
+
+        # 在 PKG_RELEASE 行后添加新的 git 下载配置
+        sed -i '/^PKG_RELEASE:=/a\
+\
+PKG_SOURCE_PROTO:=git\
+PKG_SOURCE_URL:=https://github.com/Carton32/quectel-CM.git\
+PKG_SOURCE_VERSION:=$(PKG_VERSION)\
+PKG_MIRROR_HASH:=skip' "$makefile_path"
+
+        # 更新 PKG_RELEASE 版本号
+        sed -i 's/^PKG_RELEASE:=2$/PKG_RELEASE:=3/' "$makefile_path"
+
+        echo "quectel-cm Makefile 修复完成。"
+    fi
+
+    if [ -f "$cmake_patch_path" ]; then
+        # 为补丁文件中的两行末尾添加空格，以适配 git 下载的源码
+        sed -i 's/-cmake_minimum_required(VERSION 2\.4)$/-cmake_minimum_required(VERSION 2.4) /' "$cmake_patch_path"
+        sed -i 's/project(quectel-CM)$/project(quectel-CM) /' "$cmake_patch_path"
+    fi
+}
+
 main() {
     cat <<EOF | _foreach_function
 
@@ -1749,6 +1818,7 @@ main() {
     install_opkg_distfeeds
     fix_easytier_mk
     remove_attendedsysupgrade
+    fix_kconfig_recursive_dependency
     install_feeds
     fix_easytier_lua
     update_adguardhome
@@ -1771,6 +1841,10 @@ main() {
     # update_mt76
     fix_openssl_ktls
     fix_opkg_check
+    update_package "runc" "releases" "v1.2.6"
+    update_package "containerd" "releases" "v1.7.27"
+    update_package "docker" "tags" "v28.2.2"
+    update_package "dockerd" "releases" "v28.2.2"
     # apply_hash_fixes # 调用哈希修正函数
 EOF
 }

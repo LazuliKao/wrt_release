@@ -88,8 +88,14 @@ apply_config() {
         cat "$BASE_PATH/deconfig/nss.config" >> "$BASE_PATH/$BUILD_DIR/.config"
     fi
 
-    # 应用 PACKAGES_CONFIG 中指定的包配置
-    apply_packages_config
+    # 追加基础配置
+    cat "$BASE_PATH/deconfig/compile_base.config" >> "$BASE_PATH/$BUILD_DIR/.config"
+
+    # 追加 docker 依赖
+    cat "$BASE_PATH/deconfig/docker_deps.config" >> "$BASE_PATH/$BUILD_DIR/.config"
+
+    # 追加代理配置
+    cat "$BASE_PATH/deconfig/proxy.config" >> "$BASE_PATH/$BUILD_DIR/.config"
 }
 
 REPO_URL=$(read_ini_by_key "REPO_URL")

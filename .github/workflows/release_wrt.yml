@@ -18,6 +18,7 @@ on:
           - jdcloud_ax6000_immwrt
           - jdcloud_ipq60xx_immwrt
           - jdcloud_ipq60xx_libwrt
+          - link_nn6000v2_immwrt
           - linksys_mx4x00_immwrt
           - n1_immwrt
           - qihoo_360v6_immwrt
@@ -63,7 +64,7 @@ jobs:
           sudo -E systemctl daemon-reload
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
 
       - name: Set Build Date and Timezone
         run: |
@@ -77,7 +78,7 @@ jobs:
         run: ./pre_clone_action.sh ${{ inputs.model }}
 
       - name: Cache Dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5.0.2
         with:
           path: |
             ./action_build/.ccache
@@ -155,7 +156,7 @@ jobs:
             rm -f ./${baseimg}.img
           done
       - name: Release Firmware
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.5.0
         with:
           tag_name: ${{ env.BUILD_DATE }}_${{ inputs.model }}
           files: ${{ inputs.model == 'n1_immwrt' && env.PACKAGED_OUTPUTPATH || './firmware' }}/*.*
