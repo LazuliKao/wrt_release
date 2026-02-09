@@ -873,17 +873,17 @@ fix_update_docker_compose() {
 update_packages() {
     # update_socat || exit 1
     # https://github.com/opencontainers/runc
-    # https://github.com/moby/moby/blob/docker-v29.1.3/hack/dockerfile/install/runc.installer
+    # https://github.com/moby/moby/blob/docker-v29.2.1/Dockerfile#L241
     update_package "runc" "releases" "v1.3.4" || exit 1
     # https://github.com/containerd/containerd
-    # https://github.com/moby/moby/blob/docker-v29.1.3/hack/dockerfile/install/containerd.installer
-    update_package "containerd" "releases" "v2.2.0" || exit 1
+    # https://github.com/moby/moby/blob/docker-v29.2.1/Dockerfile#L150
+    update_package "containerd" "releases" "v2.2.1" || exit 1
     # https://github.com/docker/cli
-    update_package "docker" "tags" "v29.1.3" || exit 1
+    update_package "docker" "tags" "v29.2.1" || exit 1
     # https://github.com/moby/moby
-    update_package "dockerd" "tags" "docker-v29.1.3" || exit 1
+    update_package "dockerd" "tags" "docker-v29.2.1" || exit 1
     # https://github.com/docker/compose
-    update_package "docker-compose" "releases" "v5.0.1" || exit 1
+    update_package "docker-compose" "releases" "v5.0.2" || exit 1
     fix_update_docker_compose || exit 1
 }
 
