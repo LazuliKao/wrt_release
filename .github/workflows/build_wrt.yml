@@ -42,7 +42,6 @@ jobs:
       matrix:
         os: [ubuntu-24.04]
     runs-on: ${{ matrix.os }}
-
     steps:
       - name: Free disk space
         uses: sbwml/actions@free-disk
