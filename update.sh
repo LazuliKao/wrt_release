@@ -152,12 +152,31 @@ update_feeds() {
     sed -i '/^#/d' "$FEEDS_PATH"
     sed -i '/packages_ext/d' "$FEEDS_PATH"
 
+    add_feeds() {
+        local feed=$1
+        local url=$2
+        if ! grep -q "$feed" "$FEEDS_PATH"; then
+            # 确保文件以换行符结尾
+            [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
+            echo "src-git $feed $url" >>"$FEEDS_PATH"
+        fi
+    }
     # 检查并添加 small-package 源
-    if ! grep -q "small-package" "$FEEDS_PATH"; then
-        # 确保文件以换行符结尾
-        [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
-        echo "src-git small8 https://github.com/kenzok8/small-package" >>"$FEEDS_PATH"
-    fi
+    add_feeds "small8" "https://github.com/kenzok8/small-package"
+    # 检查并添加 kwrt 源
+    add_feeds "kiddin9" "https://github.com/kiddin9/kwrt-packages.git"
+    # 检查并添加 AWG-OpenWRT 源
+    add_feeds "awg" "https://github.com/Slava-Shchipunov/awg-openwrt"
+    # 检查并添加 opentopd 源
+    # add_feeds "opentopd" "https://github.com/sirpdboy/sirpdboy-package"
+    # 检查并添加 node 源
+    # add_feeds "node" "https://github.com/nxhack/openwrt-node-packages.git;openwrt-24.10"
+    # 检查并添加 libremesh 源
+    # add_feeds "libremesh" "https://github.com/libremesh/lime-packages"
+
+    add_feeds "passwall" "https://github.com/Openwrt-Passwall/openwrt-passwall;main" 
+    # add_feeds "openwrt_bandix" "https://github.com/timsaya/openwrt-bandix.git;main"
+    # add_feeds "luci_app_bandix" "https://github.com/timsaya/luci-app-bandix.git;main"
 
     # 添加bpf.mk解决更新报错
     if [ ! -f "$BUILD_DIR/include/bpf.mk" ]; then
@@ -255,7 +274,7 @@ install_small8() {
     ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
         naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata geoview v2ray-plugin \
         tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
-        luci-app-passwall v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go \
+        v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go \
         luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
         luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest netdata luci-app-netdata \
         lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
@@ -771,8 +790,15 @@ update_package() {
             fi
         fi
         local COMMIT_SHA
-        if ! COMMIT_SHA=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/tags" | jq -r '.[] | select(.name=="'$PKG_VER'") | .commit.sha' | cut -c1-7); then
-            echo "错误：从 https://api.github.com/repos/$PKG_REPO/tags 获取提交哈希失败" >&2
+        local REF_DETAIL=$(_curl -fsSL "https://api.github.com/repos/$PKG_REPO/git/ref/tags/$PKG_VER")
+        local REF_SHA_TYPE=$(echo "$REF_DETAIL" | jq -r '.object.type')
+        local COMMIT_SHA_RAW=$(echo "$REF_DETAIL" | jq -r '.object.sha')
+        if [ "$REF_SHA_TYPE" = "tag" ]; then
+            COMMIT_SHA_RAW=$(_curl -fsSL "https://api.github.com/repos/$PKG_REPO/git/tags/$COMMIT_SHA_RAW" |
+                jq -r '.object.sha')
+        fi
+        if ! COMMIT_SHA=$(echo "$COMMIT_SHA_RAW" | cut -c1-7); then
+            echo "错误：从 GitHub 获取提交哈希失败" >&2
             return 1
         fi
         if [ -n "$COMMIT_SHA" ]; then
@@ -1250,7 +1276,7 @@ set_nginx_default_config() {
     local nginx_config_path="$BUILD_DIR/feeds/packages/net/nginx-util/files/nginx.config"
     if [ -f "$nginx_config_path" ]; then
         # 使用 cat 和 heredoc 覆盖写入 nginx.config 文件
-        cat > "$nginx_config_path" <<EOF
+        cat >"$nginx_config_path" <<EOF
 config main 'global'
         option uci_enable 'true'
 
@@ -1841,10 +1867,8 @@ main() {
     # update_mt76
     fix_openssl_ktls
     fix_opkg_check
-    update_package "runc" "releases" "v1.2.6"
-    update_package "containerd" "releases" "v1.7.27"
-    update_package "docker" "tags" "v28.2.2"
-    update_package "dockerd" "releases" "v28.2.2"
+    fix_quectel_cm
+    install_pbr_cmcc
     # apply_hash_fixes # 调用哈希修正函数
 EOF
 }
