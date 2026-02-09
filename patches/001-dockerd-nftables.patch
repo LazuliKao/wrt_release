@@ -1,48 +1,6 @@
 diff --git a/files/dockerd.init b/files/dockerd.init
 --- a/files/dockerd.init
 +++ b/files/dockerd.init
-@@ -44,6 +44,32 @@ boot() {
- 	rc_procd start_service
- }
- 
-+uciadd_forward() {
-+	# Variables
-+	src_zone="docker"
-+	dest_zone="wan"
-+
-+	exists=0
-+
-+	# Loop over all forwarding entries
-+	for i in $(seq 0 $(($(uci show firewall | grep -c '^firewall.@forwarding') - 1))); do
-+		if [ "$(uci get firewall.@forwarding[$i].src 2>/dev/null)" = "$src_zone" ] &&
-+			[ "$(uci get firewall.@forwarding[$i].dest 2>/dev/null)" = "$dest_zone" ]; then
-+			exists=1
-+			break
-+		fi
-+	done
-+
-+	if [ $exists -eq 0 ]; then
-+		logger -t "dockerd-init" -p notice "Adding firewall forwarding from '${src_zone}' to '${dest_zone}'"
-+		uci add firewall forwarding
-+		uci set firewall.@forwarding[-1].src="${src_zone}"
-+		uci set firewall.@forwarding[-1].dest="${dest_zone}"
-+		uci commit firewall
-+	else
-+		logger -t "dockerd-init" -p notice "Firewall forwarding from '${src_zone}' to '${dest_zone}' already exists"
-+	fi
-+}
- uciadd() {
- 	local iface="${1}"
- 	local device="${2}"
-@@ -101,6 +127,8 @@ uciadd() {
- 		uci_quiet commit firewall
- 	fi
- 
-+	uciadd_forward
-+
- 	reload_config
- }
- 
 @@ -150,7 +178,7 @@ ucidel() {
  }
  
@@ -56,7 +14,7 @@ diff --git a/files/dockerd.init b/files/dockerd.init
  
  	config_get data_root globals data_root "/opt/docker/"
  	config_get log_level globals log_level "warn"
--	config_get_bool iptables globals iptables "1"
+-	config_get_bool iptables globals iptables "0"
 -	config_get_bool ip6tables globals ip6tables "0"
  
  	# Don't add these options by default

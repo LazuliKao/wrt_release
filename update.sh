@@ -201,6 +201,7 @@ remove_unwanted_packages() {
         "luci-app-vssr" "luci-app-daed" "luci-app-dae" "luci-app-alist" "luci-app-homeproxy"
         "luci-app-haproxy-tcp" "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter"
         "luci-app-msd_lite" "luci-app-unblockneteasemusic"
+        "luci-app-dockerman"
     )
     local packages_net=(
         "haproxy" "xray-core" "xray-plugin" "dns2socks" "alist" "hysteria"
@@ -210,7 +211,7 @@ remove_unwanted_packages() {
         "dae" "daed" "mihomo" "geoview" "tailscale" "open-app-filter" "msd_lite"
     )
     local packages_utils=(
-        "cups"
+        "cups" "dockerd"
     )
     local small8_packages=(
         "ppp" "firewall" "dae" "daed" "daed-next" "libnftnl" "nftables" "dnsmasq" "luci-theme-argon" "luci-app-argon-config"
@@ -303,7 +304,7 @@ install_fullconenat() {
 # }
 
 install_kiddin9() {
-    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest qosmate luci-app-qosmate luci-app-unishare unishare luci-app-bandix openwrt-bandix luci-app-tailscale-community
+    ./scripts/feeds install -p kiddin9 -f luci-app-advancedplus luci-app-change-mac cdnspeedtest luci-app-cloudflarespeedtest qosmate luci-app-qosmate luci-app-unishare unishare luci-app-bandix openwrt-bandix luci-app-tailscale-community dockerd luci-app-dockerman
 }
 
 # install_node() {
@@ -1589,21 +1590,29 @@ fix_docker_build() {
 
     fi
 
-    local docker_makefile="$BUILD_DIR/package/feeds/packages/dockerd/Makefile"
-    if [ -f "$docker_makefile" ]; then
-        # PKG_GIT_REF:=v$(PKG_VERSION)
-        # PKG_GIT_REF:=docker-v$(PKG_VERSION)
-        sed -i 's|^PKG_GIT_REF:=v$(PKG_VERSION)|PKG_GIT_REF:=docker-v$(PKG_VERSION)|g' "$docker_makefile"
+    local dockerd_dir=$(find "$BUILD_DIR/package/feeds" \( -type d -o -type l \) -name "dockerd")
+    if [ -n "$dockerd_dir" ]; then
+        local docker_makefile="$dockerd_dir/Makefile"
+        if [ -f "$docker_makefile" ]; then
+            # PKG_GIT_REF:=v$(PKG_VERSION)
+            # PKG_GIT_REF:=docker-v$(PKG_VERSION)
+            sed -i 's|^PKG_GIT_REF:=v$(PKG_VERSION)|PKG_GIT_REF:=docker-v$(PKG_VERSION)|g' "$docker_makefile"
+        fi
     fi
 }
 
 patch_docker_nftables() {
+    local dockerd_dir=$(find "$BUILD_DIR/package/feeds" \( -type d -o -type l \) -name "dockerd")
+    if [ -z "$dockerd_dir" ]; then
+        echo "Error: dockerd directory not found in feeds" >&2
+        exit 1
+    fi
+    pushd "$dockerd_dir"
+    patch -p1 <"$BASE_PATH/patches/001-dockerd-nftables.patch"
+    popd
     # pushd "$BUILD_DIR/package/feeds/luci/luci-app-dockerman"
     # patch -p1 <"$BASE_PATH/patches/001-docerman-nftables.patch"
     # popd
-    pushd "$BUILD_DIR/package/feeds/packages/dockerd"
-    patch -p1 <"$BASE_PATH/patches/001-dockerd-nftables.patch"
-    popd
 }
 
 fix_libffi() {
