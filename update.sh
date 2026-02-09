@@ -1560,9 +1560,9 @@ fix_docker_build() {
 }
 
 patch_docker_nftables() {
-    pushd "$BUILD_DIR/package/feeds/luci/luci-app-dockerman"
-    patch -p1 <"$BASE_PATH/patches/001-docerman-nftables.patch"
-    popd
+    # pushd "$BUILD_DIR/package/feeds/luci/luci-app-dockerman"
+    # patch -p1 <"$BASE_PATH/patches/001-docerman-nftables.patch"
+    # popd
     pushd "$BUILD_DIR/package/feeds/packages/dockerd"
     patch -p1 <"$BASE_PATH/patches/001-dockerd-nftables.patch"
     popd
