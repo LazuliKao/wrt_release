@@ -174,7 +174,7 @@ update_feeds() {
     # 检查并添加 libremesh 源
     # add_feeds "libremesh" "https://github.com/libremesh/lime-packages"
 
-    add_feeds "passwall" "https://github.com/Openwrt-Passwall/openwrt-passwall;main" 
+    add_feeds "passwall" "https://github.com/Openwrt-Passwall/openwrt-passwall;main"
     # add_feeds "openwrt_bandix" "https://github.com/timsaya/openwrt-bandix.git;main"
     # add_feeds "luci_app_bandix" "https://github.com/timsaya/luci-app-bandix.git;main"
 
@@ -874,6 +874,23 @@ update_package() {
 #     sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
 # }
 
+fix_update_dockerd() {
+    local dir=$(find "$BUILD_DIR/package/feeds" \( -type d -o -type l \) -name "dockerd")
+    if [ -z "$dir" ]; then
+        return 0
+    fi
+    local mk_path="$dir/Makefile"
+
+    if [ -f "$mk_path" ]; then
+        echo "找到 dockerd 目录 $dir 的 Makefile"
+    else
+        echo "错误：未找到 dockerd 的 Makefile" >&2
+        return 1
+    fi
+
+    sed -i '/EnsureVendoredVersion.*\(containerd\|runc\)/d' "$mk_path"
+}
+
 fix_update_docker_compose() {
     #replace github.com/docker/compose/v2 -> v5
     local dir=$(find "$BUILD_DIR/package/feeds" \( -type d -o -type l \) -name "docker-compose")
@@ -905,6 +922,7 @@ update_packages() {
     # https://github.com/docker/compose
     update_package "docker-compose" "releases" "v5.0.2" || exit 1
     fix_update_docker_compose || exit 1
+    fix_update_dockerd || exit 1
 }
 
 # 添加系统升级时的备份信息
