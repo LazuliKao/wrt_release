@@ -347,6 +347,14 @@ install_feeds() {
             if [[ "$dir_name" == "small8" ]]; then
                 install_small8
                 install_fullconenat
+            # elif [[ "$dir_name" == "opentopd" ]]; then
+            #     install_opentopd
+            elif [[ "$dir_name" == "kiddin9" ]]; then
+                install_kiddin9
+            # elif [[ "$dir_name" == "node" ]]; then
+            #     install_node
+            elif [[ $(basename "$dir") == "passwall" ]]; then
+                install_passwall
             else
                 ./scripts/feeds install -f -ap $(basename "$dir")
             fi
