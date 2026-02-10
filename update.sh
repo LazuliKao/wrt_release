@@ -898,6 +898,17 @@ fix_update_dockerd() {
     fi
 
     sed -i '/EnsureVendoredVersion.*\(containerd\|runc\)/d' "$mk_path"
+
+    local docker_dir="$BUILD_DIR/feeds/packages/utils/docker"
+    local dockerd_script="$dir/git-short-commit.sh"
+    local target_dockerd_dir="$docker_dir/../dockerd"
+    
+    if [ -f "$dockerd_script" ] && [ -d "$docker_dir" ]; then
+        mkdir -p "$target_dockerd_dir"
+        cp -f "$dockerd_script" "$target_dockerd_dir/git-short-commit.sh"
+        chmod +x "$target_dockerd_dir/git-short-commit.sh"
+        echo "已复制 git-short-commit.sh 到官方源 docker 目录"
+    fi
 }
 
 fix_update_docker_compose() {
