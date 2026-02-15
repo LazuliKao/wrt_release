@@ -14,6 +14,7 @@ on:
           - cmcc_rax3000m_immwrt
           - cudy_tr3000-mt798x
           - cudy_tr3000
+          - ct3003
           - gemtek_w1701k_openwrt
           - jdcloud_ax6000_immwrt
           - jdcloud_ipq60xx_immwrt
