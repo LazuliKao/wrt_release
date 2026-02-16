@@ -1896,7 +1896,7 @@ main() {
     update_script_priority
     update_base_files
     add_ohmyzsh
-    add_nbtverify
+    # add_nbtverify
     # add_turboacc
     # fix_cudy_tr3000_114m
     update_geoip
