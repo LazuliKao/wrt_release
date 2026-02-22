@@ -1876,7 +1876,7 @@ main() {
     add_timecontrol
     add_gecoosac
     add_awg
-    add_portweaver
+    # add_portweaver
     # update_lucky
     add_quickfile
     fix_rust_compile_error
