@@ -89,6 +89,8 @@ jobs:
 
       - name: Build Firmware
         run: ./build.sh ${{ inputs.model }}
+        env:
+          V: ${{ runner.debug == '1' && 's' || '' }}
 
       - name: Debug with Upterm
         if: failure()

@@ -132,7 +132,12 @@ if [[ -d $TARGET_DIR ]]; then
 fi
 
 make download -j$(($(nproc) * 2)) || make download -j$(nproc) || make download -j1 || make download -j1 V=1 || make download -j1 V=s || exit 1
-make -j$(($(nproc) + 1)) || make -j$(nproc) || make -j$(nproc) V=1 || make -j1 V=1 || make -j1 V=s || exit 1
+
+if [ -n "$V" ]; then
+    make -j1 V="$V" || exit 1
+else
+    make -j$(($(nproc) + 1)) || make -j$(nproc) || make -j$(nproc) V=1 || make -j1 V=1 || make -j1 V=s || exit 1
+fi
 
 FIRMWARE_DIR="$BASE_PATH/firmware/$BUILD_DIR"
 if [[ -d $BASE_PATH/action_build ]]; then
