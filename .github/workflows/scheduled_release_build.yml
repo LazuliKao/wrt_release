@@ -1,6 +1,7 @@
 name: Scheduled Release Build
 
 on:
+  push:
   schedule:
     - cron: '0 2 * * 5'
   workflow_dispatch:
