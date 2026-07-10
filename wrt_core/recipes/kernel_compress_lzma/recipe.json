@@ -1,0 +1,30 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "kernel_compress_lzma",
+  "description": "修改默认的 Device/FitImage 打包定义，将内核压缩算法改为 lzma 以减少内核体积",
+  "enabled": false,
+  "phase": "post_clone",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "kernel",
+    "compression",
+    "target"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}
