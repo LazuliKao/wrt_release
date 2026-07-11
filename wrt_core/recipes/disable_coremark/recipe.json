@@ -1,0 +1,31 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_coremark",
+  "description": "禁用 coremark 基准测试程序编译",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "coremark"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_coremark.config"
+    ],
+    "script": null
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_pbr",
+  "description": "禁用策略路由 (PBR) 集成，移除相关软件包并关闭相关编译配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "pbr"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [
+      "package/feeds/packages/pbr"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_pbr.config"
+    ],
+    "script": null
+  }
+}

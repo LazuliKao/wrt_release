@@ -1,0 +1,36 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_adguardhome",
+  "description": "禁用 AdGuardHome 集成，移除相关软件包并关闭相关编译配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "adguardhome"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [
+      "custom_feed/adguardhome",
+      "custom_feed/luci-app-adguardhome",
+      "package/feeds/custom_feed/adguardhome",
+      "package/feeds/custom_feed/luci-app-adguardhome"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_adguardhome.config"
+    ],
+    "script": null
+  }
+}

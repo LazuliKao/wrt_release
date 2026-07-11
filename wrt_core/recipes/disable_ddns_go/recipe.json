@@ -1,0 +1,36 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_ddns_go",
+  "description": "禁用 ddns-go 集成，移除相关软件包并关闭相关编译配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "ddns-go"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [
+      "custom_feed/ddns-go",
+      "custom_feed/luci-app-ddns-go",
+      "package/feeds/custom_feed/ddns-go",
+      "package/feeds/custom_feed/luci-app-ddns-go"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_ddns_go.config"
+    ],
+    "script": null
+  }
+}

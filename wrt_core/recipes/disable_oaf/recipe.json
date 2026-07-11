@@ -1,0 +1,38 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_oaf",
+  "description": "禁用 Open App Filter (OAF) 集成，移除相关软件包并关闭相关编译配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "oaf"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [
+      "custom_feed/oaf",
+      "custom_feed/open-app-filter",
+      "custom_feed/luci-app-oaf",
+      "package/feeds/custom_feed/oaf",
+      "package/feeds/custom_feed/open-app-filter",
+      "package/feeds/custom_feed/luci-app-oaf"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_oaf.config"
+    ],
+    "script": null
+  }
+}

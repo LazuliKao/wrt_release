@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "qosmate",
-  "description": "QoSmate - Quality of Service management tool and LuCI app",
+  "description": "预装 QoSmate QoS 流量管理工具及其 LuCI 控制界面",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],

@@ -1,0 +1,31 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_docker_deps",
+  "description": "关闭为 Docker 预留的内核模块及依赖（如 btrfs、nf-ipvs、veth、br-netfilter 等），以精简内核",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "docker"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_docker_deps.config"
+    ],
+    "script": null
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_mosdns",
+  "description": "禁用 mosdns 集成，移除相关软件包并关闭相关编译配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "mosdns"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [
+      "custom_feed/mosdns",
+      "custom_feed/luci-app-mosdns",
+      "package/feeds/custom_feed/mosdns",
+      "package/feeds/custom_feed/luci-app-mosdns"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_mosdns.config"
+    ],
+    "script": null
+  }
+}

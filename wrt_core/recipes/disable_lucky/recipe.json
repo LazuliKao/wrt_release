@@ -1,0 +1,36 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_lucky",
+  "description": "禁用 lucky 集成，移除由主脚本导入的 lucky 包并关闭相关编译配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "lucky"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [
+      "custom_feed/lucky",
+      "custom_feed/luci-app-lucky",
+      "package/feeds/custom_feed/lucky",
+      "package/feeds/custom_feed/luci-app-lucky"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_lucky.config"
+    ],
+    "script": null
+  }
+}

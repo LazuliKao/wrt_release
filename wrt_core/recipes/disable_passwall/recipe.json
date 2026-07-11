@@ -1,0 +1,34 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_passwall",
+  "description": "禁用 PassWall 集成，移除相关软件包并关闭相关编译配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "passwall"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [
+      "custom_feed/luci-app-passwall",
+      "package/feeds/custom_feed/luci-app-passwall"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_passwall.config"
+    ],
+    "script": null
+  }
+}

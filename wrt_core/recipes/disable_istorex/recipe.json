@@ -1,0 +1,46 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_istorex",
+  "description": "禁用 iStoreX 及应用商店集成，移除相关软件包并关闭相关编译配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "istorex"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [
+      "custom_feed/luci-app-istorex",
+      "custom_feed/luci-app-store",
+      "custom_feed/luci-app-quickstart",
+      "custom_feed/quickstart",
+      "custom_feed/taskd",
+      "custom_feed/luci-lib-taskd",
+      "custom_feed/luci-lib-xterm",
+      "package/feeds/custom_feed/luci-app-istorex",
+      "package/feeds/custom_feed/luci-app-store",
+      "package/feeds/custom_feed/luci-app-quickstart",
+      "package/feeds/custom_feed/quickstart",
+      "package/feeds/custom_feed/taskd",
+      "package/feeds/custom_feed/luci-lib-taskd",
+      "package/feeds/custom_feed/luci-lib-xterm"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_istorex.config"
+    ],
+    "script": null
+  }
+}

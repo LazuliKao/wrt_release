@@ -1,0 +1,36 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_smartdns",
+  "description": "禁用 smartdns 集成，移除相关软件包并关闭相关编译配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "smartdns"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [
+      "feeds/packages/net/smartdns",
+      "feeds/luci/applications/luci-app-smartdns",
+      "package/feeds/packages/smartdns",
+      "package/feeds/luci/luci-app-smartdns"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_smartdns.config"
+    ],
+    "script": null
+  }
+}
