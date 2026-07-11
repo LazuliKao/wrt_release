@@ -4,6 +4,7 @@
   "description": "禁用策略路由 (PBR) 集成，移除相关软件包并关闭相关编译配置",
   "enabled": false,
   "phase": "pre_defconfig",
+  "priority": 100,
   "depends": [],
   "conflicts": [],
   "tags": [

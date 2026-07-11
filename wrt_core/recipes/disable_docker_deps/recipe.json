@@ -4,6 +4,7 @@
   "description": "关闭为 Docker 预留的内核模块及依赖（如 btrfs、nf-ipvs、veth、br-netfilter 等），以精简内核",
   "enabled": false,
   "phase": "pre_defconfig",
+  "priority": 100,
   "depends": [],
   "conflicts": [],
   "tags": [

@@ -4,6 +4,7 @@
   "description": "禁用 coremark 基准测试程序编译",
   "enabled": false,
   "phase": "pre_defconfig",
+  "priority": 100,
   "depends": [],
   "conflicts": [],
   "tags": [

@@ -4,6 +4,7 @@
   "description": "禁用 lucky 集成，移除由主脚本导入的 lucky 包并关闭相关编译配置",
   "enabled": false,
   "phase": "pre_defconfig",
+  "priority": 100,
   "depends": [],
   "conflicts": [],
   "tags": [
