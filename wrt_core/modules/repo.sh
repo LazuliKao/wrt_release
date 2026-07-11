@@ -37,9 +37,16 @@ clean_up() {
 
 reset_feeds_conf() {
     # 所有源码修正都基于远端分支或指定提交的干净状态。
-    git_retry reset --hard "origin/$REPO_BRANCH"
+    if git show-ref --verify --quiet "refs/remotes/origin/$REPO_BRANCH"; then
+        git_retry reset --hard "origin/$REPO_BRANCH"
+        git_retry pull
+    elif git show-ref --verify --quiet "refs/tags/$REPO_BRANCH"; then
+        git_retry reset --hard "refs/tags/$REPO_BRANCH"
+    else
+        echo "错误：未找到分支或 tag $REPO_BRANCH" >&2
+        return 1
+    fi
     git_retry clean -f -d
-    git_retry pull
     if [[ $COMMIT_HASH != "none" ]]; then
         git_retry checkout "$COMMIT_HASH"
     fi
