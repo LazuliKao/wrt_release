@@ -1,0 +1,55 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "nikki",
+  "description": "从 nikkinikki-org/OpenWrt-nikki 导入并预装 nikki 核心服务、mihomo-meta 核心以及 luci-app-nikki 网页管理界面",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "network",
+    "proxy",
+    "nikki"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "openwrt-nikki": {
+        "gitUrl": "https://github.com/nikkinikki-org/OpenWrt-nikki.git",
+        "branch": "main",
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "openwrt-nikki",
+        "path": "nikki",
+        "packageName": "nikki"
+      },
+      {
+        "source": "openwrt-nikki",
+        "path": "luci-app-nikki",
+        "packageName": "luci-app-nikki"
+      },
+      {
+        "source": "openwrt-nikki",
+        "path": "mihomo-meta",
+        "packageName": "mihomo-meta"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/nikki.config"
+    ],
+    "script": null
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "core_enhancements",
+  "description": "配置系统核心组件及实用工具增强，包括系统诊断、虚拟网络设备、分区磁盘工具以及常用内核模块",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "system",
+    "utility",
+    "kernel",
+    "network"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/core_enhancements.config"
+    ],
+    "script": null
+  }
+}

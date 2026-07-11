@@ -1,0 +1,45 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "portweaver",
+  "description": "从 LazuliKao/luci-app-portweaver 仓库导入并预装 portweaver 端口管理应用",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "network",
+    "portweaver",
+    "utility"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "luci-app-portweaver": {
+        "gitUrl": "https://github.com/LazuliKao/luci-app-portweaver.git",
+        "branch": null,
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "luci-app-portweaver",
+        "path": ".",
+        "packageName": "portweaver"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/portweaver.config"
+    ],
+    "script": null
+  }
+}

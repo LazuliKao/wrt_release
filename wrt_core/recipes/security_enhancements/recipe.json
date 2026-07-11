@@ -1,0 +1,33 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "security_enhancements",
+  "description": "配置防火墙安全联动组件与网络篡改防护 (BanIP, Crowdsec 联动, Fwknopd 敲门服务, TTL 修改)",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "security",
+    "firewall",
+    "banip",
+    "crowdsec"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/security_enhancements.config"
+    ],
+    "script": null
+  }
+}

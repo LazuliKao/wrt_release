@@ -1,0 +1,56 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "luci_app_unishare",
+  "description": "从 LinkEase 导入 unishare 核心包及 luci-app-unishare LuCI 界面以实现统一文件共享",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "nas",
+    "share",
+    "linkease",
+    "istore"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "nas-packages": {
+        "gitUrl": "https://github.com/linkease/nas-packages.git",
+        "branch": "master",
+        "sparseRoot": null
+      },
+      "nas-packages-luci": {
+        "gitUrl": "https://github.com/linkease/nas-packages-luci.git",
+        "branch": "main",
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "nas-packages",
+        "path": "unishare",
+        "packageName": "unishare"
+      },
+      {
+        "source": "nas-packages-luci",
+        "path": "luci/luci-app-unishare",
+        "packageName": "luci-app-unishare"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/unishare.config"
+    ],
+    "script": null
+  }
+}

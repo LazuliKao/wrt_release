@@ -1,0 +1,30 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "kernel_size_expand",
+  "description": "修改 target/linux/qualcommax/image/ipq60xx.mk 以扩容京东云亚瑟/雅典娜/百里等设备的 KERNEL_SIZE 限制至 12M/8M",
+  "enabled": false,
+  "phase": "post_clone",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "kernel",
+    "partition",
+    "size"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}

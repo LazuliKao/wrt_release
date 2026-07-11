@@ -1,0 +1,33 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "cli_enhancements",
+  "description": "配置命令行终端实用工具与版本控制组件 (Zsh, Git, Vim-fuller, Screen, Bash)",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "cli",
+    "utility",
+    "shell",
+    "git"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/cli_enhancements.config"
+    ],
+    "script": null
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "storage_fs",
+  "description": "配置现代文件系统驱动与存储管理工具 (Btrfs, F2fs, fstrim, filebrowser-go)",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "storage",
+    "fs",
+    "btrfs",
+    "f2fs"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/storage_fs.config"
+    ],
+    "script": null
+  }
+}

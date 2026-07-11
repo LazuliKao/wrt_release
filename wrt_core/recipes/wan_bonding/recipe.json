@@ -1,0 +1,33 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "wan_bonding",
+  "description": "配置多网卡虚拟接口与宽带拨号增强协议 (Macvlan, PPPoE-discovery, PPP 协议族, IPv6 支持)",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "network",
+    "wan",
+    "macvlan",
+    "pppoe"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/wan_bonding.config"
+    ],
+    "script": null
+  }
+}

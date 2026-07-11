@@ -1,0 +1,32 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "wifi_ap_drivers",
+  "description": "配置 Realtek (rtw89/rtlwifi) 和 MediaTek (mt76/mt7921/mt7922/mt7925) 无线网卡驱动，以支持无线 AP 功能",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "wifi",
+    "driver",
+    "ap"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/wifi_ap_drivers.config"
+    ],
+    "script": null
+  }
+}
