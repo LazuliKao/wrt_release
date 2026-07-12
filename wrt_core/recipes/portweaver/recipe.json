@@ -30,8 +30,13 @@
     "importPackages": [
       {
         "source": "luci-app-portweaver",
-        "path": ".",
+        "path": "portweaver",
         "packageName": "portweaver"
+      },
+      {
+        "source": "luci-app-portweaver",
+        "path": "luci-app-portweaver",
+        "packageName": "luci-app-portweaver"
       }
     ],
     "removePackageDirs": [],

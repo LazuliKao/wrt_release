@@ -36,8 +36,13 @@
     "importPackages": [
       {
         "source": "nas-packages",
-        "path": "unishare",
+        "path": "network/services/unishare",
         "packageName": "unishare"
+      },
+      {
+        "source": "nas-packages",
+        "path": "network/services/webdav2",
+        "packageName": "webdav2"
       },
       {
         "source": "nas-packages-luci",
