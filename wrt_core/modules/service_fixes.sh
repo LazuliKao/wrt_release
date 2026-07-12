@@ -196,6 +196,11 @@ fix_netfilter_kmod_clash() {
         return 0
     fi
 
+    if ! grep -q 'kmod-iptables' "$netfilter_mk"; then
+        echo "Netfilter kmod dependency rewrite is not required by this upstream"
+        return 0
+    fi
+
     echo "Netfilter kmod clash workaround target not found in $netfilter_mk" >&2
     return 1
 }

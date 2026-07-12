@@ -111,11 +111,11 @@ _docker_stack_update_dockerd_depends_block() {
             in_depends = 0
             replaced = 0
         }
-        /^  DEPENDS:=\$\(ARCH_DEPENDS\) \\$/ {
+        /^  DEPENDS:=\$\([A-Z_]*ARCH_DEPENDS\) \\$/ {
             in_depends = 1
             replaced = 1
 
-            print "  DEPENDS:=$(ARCH_DEPENDS) \\" 
+            print
             print "    +ca-certificates \\" 
             print "    +containerd \\" 
             print "    +fuse-overlayfs \\" 
