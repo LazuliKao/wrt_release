@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "homeproxy",
-  "description": "预装 HomeProxy (基于 Sing-Box 核心的透明代理 LuCI 应用)",
+  "description": "预装 Re:HomeProxy LuCI 应用",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
@@ -20,9 +20,32 @@
   "actions": {
     "addFeeds": [],
     "removeFeeds": [],
-    "importPackages": [],
+    "importPackagesRegistry": {
+      "homeproxy-hiddify": {
+        "gitUrl": "https://github.com/1andrevich/homeproxy-hiddify.git",
+        "branch": "master",
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "homeproxy-hiddify",
+        "path": ".",
+        "packageName": "luci-app-re-homeproxy"
+      }
+    ],
     "removePackageDirs": [],
-    "patches": [],
+    "patches": [
+      {
+        "source": "patches/fix-vless-share-link-import.patch",
+        "target": "custom_feed/luci-app-re-homeproxy",
+        "strip": 1,
+        "forward": true,
+        "backup": false,
+        "rejectFile": false,
+        "fuzz": 0
+      }
+    ],
     "files": [],
     "configs": [
       "configs/homeproxy.config"

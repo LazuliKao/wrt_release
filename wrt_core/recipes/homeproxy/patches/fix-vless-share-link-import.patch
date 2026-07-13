@@ -1,0 +1,42 @@
+diff --git a/htdocs/luci-static/resources/view/homeproxy/node.js b/htdocs/luci-static/resources/view/homeproxy/node.js
+index 342a4fb..1e633b2 100644
+--- a/htdocs/luci-static/resources/view/homeproxy/node.js
++++ b/htdocs/luci-static/resources/view/homeproxy/node.js
+@@ -40,9 +40,14 @@ function parseShareLink(uri, features) {
+ 				address: url.hostname,
+ 				port: url.port || '80',
+ 				password: url.username ? decodeURIComponent(url.username) : null,
+-				tls: '1',
++				tls: ['tls', 'xtls', 'reality'].includes(params.get('security')) ? '1' : '0',
+ 				tls_sni: params.get('sni'),
+-				tls_insecure: (params.get('insecure') === '1') ? '1' : '0'
++				tls_alpn: params.get('alpn') ? decodeURIComponent(params.get('alpn')).split(',') : null,
++				tls_reality: (params.get('security') === 'reality') ? '1' : '0',
++				tls_reality_public_key: params.get('pbk') ? decodeURIComponent(params.get('pbk')) : null,
++				tls_reality_short_id: params.get('sid'),
++				tls_utls: features.with_utls ? params.get('fp') : null,
++				vless_flow: ['tls', 'reality'].includes(params.get('security')) ? params.get('flow') : null
+ 			};
+ 
+ 			break;
+diff --git a/root/etc/homeproxy/scripts/update_subscriptions.uc b/root/etc/homeproxy/scripts/update_subscriptions.uc
+index bfb902f..67ca624 100755
+--- a/root/etc/homeproxy/scripts/update_subscriptions.uc
++++ b/root/etc/homeproxy/scripts/update_subscriptions.uc
+@@ -112,9 +112,14 @@ function parse_uri(uri) {
+ 				address: url.hostname,
+ 				port: url.port,
+ 				password: urldecode(url.username),
+-				tls: '1',
++				tls: (params.security in ['tls', 'xtls', 'reality']) ? '1' : '0',
+ 				tls_sni: params.sni,
+-				tls_insecure: (params.insecure === '1') ? '1' : '0'
++				tls_alpn: params.alpn ? split(urldecode(params.alpn), ',') : null,
++				tls_reality: (params.security === 'reality') ? '1' : '0',
++				tls_reality_public_key: params.pbk ? urldecode(params.pbk) : null,
++				tls_reality_short_id: params.sid,
++				tls_utls: sing_features.with_utls ? params.fp : null,
++				vless_flow: (params.security in ['tls', 'reality']) ? params.flow : null
+ 			};
+ 
+ 			break;
