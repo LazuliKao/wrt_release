@@ -45,7 +45,17 @@
       }
     ],
     "removePackageDirs": [],
-    "patches": [],
+    "patches": [
+      {
+        "source": "patches/001-version-1.8.0.patch",
+        "target": "custom_feed/luci-app-qosmate",
+        "strip": 1,
+        "forward": true,
+        "backup": false,
+        "rejectFile": false,
+        "fuzz": 0
+      }
+    ],
     "files": [],
     "configs": [
       "configs/qosmate.config"
