@@ -1,0 +1,29 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "build_signature",
+  "description": "将 LuCI 系统状态页增加签名和当前构建 UTC 时间",
+  "enabled": true,
+  "phase": "finalize",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "luci",
+    "signature"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}
