@@ -414,11 +414,15 @@ fi
 make download -j$(($(nproc) * 2))
 make -j$(($(nproc) + 1)) || make -j1 V=s
 
-FIRMWARE_DIR="$BASE_PATH/../firmware"
+if [[ "$BUILD_DIR" == "action_build" ]]; then
+    FIRMWARE_DIR="$BASE_PATH/../firmware"
+else
+    FIRMWARE_DIR="$BASE_PATH/../firmware/$BUILD_DIR"
+fi
 \rm -rf "$FIRMWARE_DIR"
 mkdir -p "$FIRMWARE_DIR"
 find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*efi.img.gz" -o -name "*.itb" -o -name "*.fip" -o -name "*.ubi" -o -name "*rootfs.tar.gz" -o -name "*.vmdk" -o -name "*.vhdx.gz" -o -name "*.qcow2.gz" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
-\rm -f "$BASE_PATH/../firmware/Packages.manifest" 2>/dev/null
+\rm -f "$FIRMWARE_DIR/Packages.manifest" 2>/dev/null
 
 if [[ -d action_build ]]; then
     make clean
