@@ -1,0 +1,62 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "mwan3",
+  "description": "使用 dl12345 的 OpenWrt 25.12 mwan3 与 luci-app-mwan3",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "network",
+    "mwan3",
+    "luci"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "mwan3": {
+        "gitUrl": "https://github.com/dl12345/mwan3.git",
+        "branch": "openwrt-25.12",
+        "depth": 1,
+        "sparseRoot": null
+      },
+      "luci-app-mwan3": {
+        "gitUrl": "https://github.com/dl12345/luci-app-mwan3.git",
+        "branch": "openwrt-25.12",
+        "depth": 1,
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "mwan3",
+        "path": ".",
+        "packageName": "mwan3"
+      },
+      {
+        "source": "luci-app-mwan3",
+        "path": ".",
+        "packageName": "luci-app-mwan3"
+      }
+    ],
+    "removePackageDirs": [
+      "feeds/packages/net/mwan3",
+      "feeds/luci/applications/luci-app-mwan3",
+      "package/feeds/packages/mwan3",
+      "package/feeds/luci/luci-app-mwan3"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/mwan3.config"
+    ],
+    "script": null
+  }
+}
