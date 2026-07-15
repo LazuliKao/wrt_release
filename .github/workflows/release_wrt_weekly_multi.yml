@@ -2,9 +2,9 @@ name: Weekly Release WRT
 run-name: Weekly Release WRT
 
 on:
-  schedule:
-    - cron: '0 4 * * 5'
-  workflow_dispatch:
+  # schedule:
+  #   - cron: "0 4 * * 5"
+  workflow_dispatch: {}
 
 permissions:
   contents: write
