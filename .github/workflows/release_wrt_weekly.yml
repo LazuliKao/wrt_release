@@ -1,0 +1,27 @@
+name: Weekly Release WRT
+run-name: Weekly Release WRT
+
+on:
+  schedule:
+    - cron: '0 4 * * 5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        model:
+          - x64_immwrt
+          - ct3003_6.6
+          - ct3003
+          - jdcloud_ax6000_immwrt
+          - jdcloud_ipq60xx_immwrt
+          - jdcloud_ipq60xx_libwrt
+    uses: ./.github/workflows/release_wrt.yml
+    with:
+      model: ${{ matrix.model }}
+    secrets: inherit
