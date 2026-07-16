@@ -121,6 +121,7 @@ stage_pre_install_source_fixes() {
     update_lucky
     fix_rust_compile_error
     update_smartdns
+    update_mwan3_fw4
     update_diskman
     update_dockerman
     set_nginx_default_config

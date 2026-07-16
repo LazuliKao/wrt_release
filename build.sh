@@ -46,7 +46,7 @@ collect_supported_devs() {
 }
 
 print_usage() {
-    echo "Usage: $0 <device> [debug|container|container_debug|recipe_preview|recipe_config]"
+    echo "Usage: $0 <device> [debug|container|container_debug|recipe_preview|recipe_config|config_preview]"
     echo "       ./start.sh"
 }
 
@@ -101,7 +101,8 @@ prompt_select_build_mode() {
         echo "  4) container_debug"
         echo "  5) recipe_config"
         echo "  6) recipe_preview"
-        printf "Select build mode (1-6, q to quit): "
+        echo "  7) config_preview"
+        printf "Select build mode (1-7, q to quit): "
 
         if ! read -r input; then
             echo
@@ -144,12 +145,30 @@ prompt_select_build_mode() {
             return
         fi
 
-        echo "Invalid selection. Please enter 1, 2, 3, 4, 5, or 6."
+        if [[ "$input" =~ ^[[:space:]]*7[[:space:]]*$ ]]; then
+            Build_Mod="config_preview"
+            return
+        fi
+
+        echo "Invalid selection. Please enter 1, 2, 3, 4, 5, 6, or 7."
     done
 }
 
 is_interactive_terminal() {
     [[ -t 0 && -t 1 ]]
+}
+
+validate_build_mode() {
+    case "$Build_Mod" in
+        ""|debug|container|container_debug|config_preview)
+            return 0
+            ;;
+        *)
+            echo "Error: unsupported build mode: $Build_Mod" >&2
+            print_usage >&2
+            exit 1
+            ;;
+    esac
 }
 
 if [[ $# -eq 0 ]]; then
@@ -181,6 +200,8 @@ if [[ ! -f $INI_FILE ]]; then
     echo "INI file not found: $INI_FILE"
     exit 1
 fi
+
+validate_build_mode
 
 read_ini_by_key() {
     local key=$1
@@ -256,6 +277,126 @@ run_build_recipe_phase() {
     recipe_init "$Dev" "$INI_FILE" "$BASE_PATH/../$BUILD_DIR" "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH"
     recipe_run_phase "$phase"
 }
+CONFIG_FRAGMENT_DIR="$BASE_PATH/deconfig/fragments"
+DEFAULT_CONFIG_FRAGMENTS=()
+ADD_CONFIG_FRAGMENT_LIST=()
+REMOVE_CONFIG_FRAGMENT_LIST=()
+EFFECTIVE_CONFIG_FRAGMENTS=()
+
+parse_fragment_csv() {
+    local csv=$1
+    local output_array=$2
+    local item
+    local -n target_array="$output_array"
+
+    target_array=()
+    csv=${csv//[[:space:]]/}
+    [[ -n $csv ]] || return 0
+
+    IFS=',' read -r -a target_array <<< "$csv"
+    for item in "${target_array[@]}"; do
+        if [[ -z $item ]]; then
+            echo "Error: empty config fragment name in '$csv'." >&2
+            exit 1
+        fi
+
+        if [[ ! $item =~ ^[a-z0-9][a-z0-9_-]*$ ]]; then
+            echo "Error: invalid config fragment name '$item'." >&2
+            exit 1
+        fi
+    done
+}
+
+fragment_in_list() {
+    local fragment=$1
+    shift
+    local item
+
+    for item in "$@"; do
+        [[ $item == "$fragment" ]] && return 0
+    done
+
+    return 1
+}
+
+append_unique_fragment() {
+    local fragment=$1
+    local output_array=$2
+    local -n target_array="$output_array"
+
+    fragment_in_list "$fragment" "${target_array[@]}" && return 0
+    target_array+=("$fragment")
+}
+
+validate_enable_fragment() {
+    local fragment=$1
+    local fragment_path="$CONFIG_FRAGMENT_DIR/$fragment.config"
+
+    if [[ ! -f $fragment_path ]]; then
+        echo "Error: config fragment not found: $fragment_path" >&2
+        exit 1
+    fi
+}
+
+join_fragments() {
+    local IFS=','
+    echo "$*"
+}
+
+resolve_config_fragments() {
+    local fragment
+    local candidate_fragments=()
+
+    parse_fragment_csv "$(read_ini_by_key "CONFIG_FRAGMENTS")" DEFAULT_CONFIG_FRAGMENTS
+    parse_fragment_csv "${ADD_CONFIG_FRAGMENTS:-}" ADD_CONFIG_FRAGMENT_LIST
+    parse_fragment_csv "${REMOVE_CONFIG_FRAGMENTS:-}" REMOVE_CONFIG_FRAGMENT_LIST
+
+    for fragment in "${DEFAULT_CONFIG_FRAGMENTS[@]}" "${ADD_CONFIG_FRAGMENT_LIST[@]}" "${REMOVE_CONFIG_FRAGMENT_LIST[@]}"; do
+        validate_enable_fragment "$fragment"
+    done
+
+    for fragment in "${DEFAULT_CONFIG_FRAGMENTS[@]}" "${ADD_CONFIG_FRAGMENT_LIST[@]}"; do
+        append_unique_fragment "$fragment" candidate_fragments
+    done
+
+    EFFECTIVE_CONFIG_FRAGMENTS=()
+    for fragment in "${candidate_fragments[@]}"; do
+        if ! fragment_in_list "$fragment" "${REMOVE_CONFIG_FRAGMENT_LIST[@]}"; then
+            EFFECTIVE_CONFIG_FRAGMENTS+=("$fragment")
+        fi
+    done
+
+    for fragment in "${REMOVE_CONFIG_FRAGMENT_LIST[@]}"; do
+        if [[ $fragment == "nss" ]]; then
+            echo "Warning: removing platform fragment 'nss' is high risk." >&2
+        fi
+    done
+}
+
+print_config_fragment_summary() {
+    echo "Config fragments:"
+    echo "  Device: $Dev"
+    echo "  Default fragments: $(join_fragments "${DEFAULT_CONFIG_FRAGMENTS[@]}")"
+    echo "  Add fragments: $(join_fragments "${ADD_CONFIG_FRAGMENT_LIST[@]}")"
+    echo "  Remove fragments: $(join_fragments "${REMOVE_CONFIG_FRAGMENT_LIST[@]}")"
+    echo "  Effective fragments: $(join_fragments "${EFFECTIVE_CONFIG_FRAGMENTS[@]}")"
+}
+
+print_config_preview() {
+    print_config_fragment_summary
+    echo "Config assembly order:"
+    echo "  1) $CONFIG_FILE"
+    echo "  2) $BASE_PATH/deconfig/compile_base.config"
+
+    local order=3
+    local fragment
+    for fragment in "${EFFECTIVE_CONFIG_FRAGMENTS[@]}"; do
+        echo "  $order) $CONFIG_FRAGMENT_DIR/$fragment.config"
+        order=$((order + 1))
+    done
+
+}
+
 prepare_container_image() {
     local base_image=$1
     local image_name=$2
@@ -308,6 +449,8 @@ run_container_build() {
     docker run --rm -it \
         -v "$REPO_ROOT":/build \
         -w /build \
+        -e ADD_CONFIG_FRAGMENTS \
+        -e REMOVE_CONFIG_FRAGMENTS \
         --shm-size=8g \
         --ipc=shareable \
         --ulimit nofile=65535:65535 \
@@ -338,21 +481,16 @@ if [[ $Build_Mod == "container_debug" ]]; then
 fi
 
 apply_config() {
-    resolve_config_file
-    \cp -f "$CONFIG_FILE" "$BASE_PATH/../$BUILD_DIR/.config"
+    local fragment
 
-    if grep -qE "(ipq60xx|ipq807x)" "$BASE_PATH/../$BUILD_DIR/.config" &&
-        ! grep -q "CONFIG_GIT_MIRROR" "$BASE_PATH/../$BUILD_DIR/.config"; then
-        cat "$BASE_PATH/deconfig/nss.config" >> "$BASE_PATH/../$BUILD_DIR/.config"
-    fi
+    \cp -f "$CONFIG_FILE" "$BASE_PATH/../$BUILD_DIR/.config"
 
     cat "$BASE_PATH/deconfig/compile_base.config" >> "$BASE_PATH/../$BUILD_DIR/.config"
 
-    cat "$BASE_PATH/deconfig/docker_deps.config" >> "$BASE_PATH/../$BUILD_DIR/.config"
+    for fragment in "${EFFECTIVE_CONFIG_FRAGMENTS[@]}"; do
+        cat "$CONFIG_FRAGMENT_DIR/$fragment.config" >> "$BASE_PATH/../$BUILD_DIR/.config"
+    done
 
-    cat "$BASE_PATH/deconfig/proxy.config" >> "$BASE_PATH/../$BUILD_DIR/.config"
-
-    apply_target_config_fragments
 }
 
 # 读取设备元信息，确定上游源码和构建目录。
@@ -362,6 +500,13 @@ REPO_BRANCH=${REPO_BRANCH:-main}
 BUILD_DIR=$(read_ini_by_key "BUILD_DIR")
 COMMIT_HASH=$(read_ini_by_key "COMMIT_HASH")
 COMMIT_HASH=${COMMIT_HASH:-none}
+
+resolve_config_fragments
+
+if [[ $Build_Mod == "config_preview" ]]; then
+    print_config_preview
+    exit 0
+fi
 
 if [[ -d action_build ]]; then
     # GitHub Actions 使用 action_build 作为固定构建目录。
@@ -388,6 +533,7 @@ fi
 
 apply_config
 run_build_recipe_phase pre_defconfig
+print_config_fragment_summary
 remove_uhttpd_dependency
 
 cd "$BASE_PATH/../$BUILD_DIR"

@@ -7,8 +7,9 @@ imm-mt798x/
 imm-nss/
 imm-x64/
 lede/
-libwrt-k612/
+libwrt/
 immortalwrt/
+airoha-wrt/
 compilecfg/test.ini
 deconfig/test.config
 *.swp

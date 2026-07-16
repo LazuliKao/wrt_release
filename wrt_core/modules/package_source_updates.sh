@@ -95,6 +95,30 @@ update_smartdns() {
 }
 
 
+update_mwan3_fw4() {
+    local mwan3_repo="https://github.com/dl12345/mwan3.git"
+    local luci_app_mwan3_repo="https://github.com/dl12345/luci-app-mwan3.git"
+    local mwan3_branch="openwrt-25.12"
+    local mwan3_dir="$BUILD_DIR/feeds/packages/net/mwan3"
+    local luci_app_mwan3_dir="$BUILD_DIR/feeds/luci/applications/luci-app-mwan3"
+
+    echo "正在更新 mwan3 fw4 适配版本..."
+    mkdir -p "$(dirname "$mwan3_dir")" "$(dirname "$luci_app_mwan3_dir")"
+    rm -rf "$mwan3_dir" "$luci_app_mwan3_dir"
+
+    if ! git_retry clone --depth 1 -b "$mwan3_branch" "$mwan3_repo" "$mwan3_dir"; then
+        echo "错误：从 $mwan3_repo 克隆 mwan3 仓库失败" >&2
+        exit 1
+    fi
+
+    echo "正在更新 luci-app-mwan3 fw4 适配版本..."
+    if ! git_retry clone --depth 1 -b "$mwan3_branch" "$luci_app_mwan3_repo" "$luci_app_mwan3_dir"; then
+        echo "错误：从 $luci_app_mwan3_repo 克隆 luci-app-mwan3 仓库失败" >&2
+        exit 1
+    fi
+}
+
+
 update_diskman() {
     local path="$BUILD_DIR/feeds/luci/applications/luci-app-diskman"
     local repo_url="https://github.com/lisaac/luci-app-diskman.git"

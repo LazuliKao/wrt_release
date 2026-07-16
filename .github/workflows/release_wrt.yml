@@ -30,12 +30,30 @@ on:
           - zn_m2_immwrt
           - zn_m2_libwrt
           - x64_immwrt
+      add_fragments:
+        required: false
+        description: Add config fragments, comma separated
+        default: ""
+      remove_fragments:
+        required: false
+        description: Remove default config fragments, comma separated
+        default: ""
   workflow_call:
     inputs:
       model:
         required: true
         description: Device Model
         type: string
+      add_fragments:
+        type: string
+        required: false
+        description: Add config fragments, comma separated
+        default: ""
+      remove_fragments:
+        type: string
+        required: false
+        description: Remove default config fragments, comma separated
+        default: ""
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -75,10 +93,16 @@ jobs:
         uses: actions/checkout@v7.0.0
 
       - name: Set Build Date and Timezone
+        env:
+          RAW_ADD_CONFIG_FRAGMENTS: ${{ inputs.add_fragments }}
+          RAW_REMOVE_CONFIG_FRAGMENTS: ${{ inputs.remove_fragments }}
         run: |
           sudo -E timedatectl set-timezone "Asia/Shanghai"
           export BUILD_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
           echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
+          sanitize_cache_key_part() { printf '%s' "$1" | tr -c 'A-Za-z0-9_.-' '_'; }
+          echo "ADD_CONFIG_FRAGMENTS_KEY=$(sanitize_cache_key_part "$RAW_ADD_CONFIG_FRAGMENTS")" >> $GITHUB_ENV
+          echo "REMOVE_CONFIG_FRAGMENTS_KEY=$(sanitize_cache_key_part "$RAW_REMOVE_CONFIG_FRAGMENTS")" >> $GITHUB_ENV
           export BUILD_SRC=$(awk -F"=" '/REPO_URL/ {print $NF}' "./wrt_core/compilecfg/${{ inputs.model }}.ini")
           echo "BUILD_SRC=$BUILD_SRC" >> $GITHUB_ENV
 
@@ -91,9 +115,10 @@ jobs:
           path: |
             ./action_build/.ccache
             ./action_build/staging_dir
-          key: ${{ matrix.os }}-${{ hashFiles('**/repo_flag') }}-${{ env.BUILD_DATE }}
+          key: ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}-${{ env.ADD_CONFIG_FRAGMENTS_KEY }}-${{ env.REMOVE_CONFIG_FRAGMENTS_KEY }}-${{ env.BUILD_DATE }}
           restore-keys: |
-            ${{ matrix.os }}-${{ hashFiles('**/repo_flag') }}-
+            ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}-${{ env.ADD_CONFIG_FRAGMENTS_KEY }}-${{ env.REMOVE_CONFIG_FRAGMENTS_KEY }}-
+            ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}-
 
       - name: Refresh the cache
         run: |
@@ -131,6 +156,9 @@ jobs:
           echo "=================================================="
 
       - name: Build Firmware
+        env:
+          ADD_CONFIG_FRAGMENTS: ${{ inputs.add_fragments }}
+          REMOVE_CONFIG_FRAGMENTS: ${{ inputs.remove_fragments }}
         run: ./build.sh ${{ inputs.model }}
 
       - name: Get Kernel Verion
@@ -141,7 +169,7 @@ jobs:
       - name: Delete Old Cache
         run: |
           # 获取缓存列表并删除
-          gh cache list --key ${{ matrix.os }}-${{ hashFiles('**/repo_flag') }}- --json key --jq '.[] | .key' | while read -r key; do
+          gh cache list --key ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}- --json key --jq '.[] | .key' | while read -r key; do
             gh cache delete "$key"
           done
           # 输出缓存状态
@@ -175,6 +203,33 @@ jobs:
           echo "Firmware file count: $(ls -1 ./firmware 2>/dev/null | wc -l)"
           echo "===================================================="
 
+      - name: Package Kmods
+        run: |
+          if [ ! -d "./action_build/bin" ]; then
+            echo "kmod source directory not found: ./action_build/bin" >&2
+            exit 1
+          fi
+
+          KMOD_LIST=$(mktemp)
+          trap 'rm -f "$KMOD_LIST"' EXIT
+
+          (
+            cd ./action_build/bin
+            find . -type f \( -name "kmod*.ipk" -o -name "kmod*.apk" \) -print | sort > "$KMOD_LIST"
+          )
+
+          if [ ! -s "$KMOD_LIST" ]; then
+            echo "No kmod packages found under ./action_build/bin" >&2
+            exit 1
+          fi
+
+          kmod_count=$(wc -l < "$KMOD_LIST" | tr -d '[:space:]')
+          archive_name="kmods_${{ inputs.model }}_${KVER:-unknown-kernel}_${BUILD_DATE}.tar.gz"
+          tar -C ./action_build/bin -czf "$archive_name" -T "$KMOD_LIST"
+
+          echo "KMOD_ARCHIVE=$archive_name" >> "$GITHUB_ENV"
+          echo "Packaged $kmod_count kmod packages into $archive_name"
+
       - name: Package OpenWrt Firmware
         if: ${{ inputs.model == 'n1_immwrt' }}
         uses: unifreq/openwrt_packit@8007d3efd49bb42aa20c5755a50af21dc7a438e1
@@ -191,6 +246,7 @@ jobs:
           echo "Kernel: ${{ env.KVER }}" >> release_body.txt
           echo "WIFI密码: 12345678" >> release_body.txt
           echo "LAN地址: 192.168.1.1" >> release_body.txt
+          echo "KMOD归档: ${KMOD_ARCHIVE}" >> release_body.txt
           echo "插件：" >> release_body.txt
           echo "$(grep -oP "luci-app(-[a-zA-Z0-9]{1,}){1,}" ./firmware/*.manifest | awk -F":" '{print $NF}')"  >> release_body.txt
 
@@ -198,5 +254,8 @@ jobs:
         uses: softprops/action-gh-release@v3.0.1
         with:
           tag_name: ${{ env.BUILD_DATE }}_${{ inputs.model }}
-          files: ${{ inputs.model == 'n1_immwrt' && env.PACKAGED_OUTPUTPATH || './firmware' }}/*.*
+          files: |
+            ${{ inputs.model == 'n1_immwrt' && env.PACKAGED_OUTPUTPATH || './firmware' }}/*.*
+            ./kmods_*.tar.gz
+          fail_on_unmatched_files: true
           body_path: ./release_body.txt
