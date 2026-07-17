@@ -160,7 +160,7 @@ is_interactive_terminal() {
 
 validate_build_mode() {
     case "$Build_Mod" in
-        ""|debug|container|container_debug|config_preview)
+        ""|debug|container|container_debug|recipe_preview|recipe_config|config_preview)
             return 0
             ;;
         *)
