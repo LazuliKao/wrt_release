@@ -15,12 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         model:
-          - x64_immwrt
-          - ct3003_6.6
-          - ct3003
-          - jdcloud_ax6000_immwrt
-          - jdcloud_ipq60xx_immwrt
-          - jdcloud_ipq60xx_libwrt
+          - lk_x64_immwrt
+          # - ct3003_6.6
+          # - ct3003
+          - lk_jdcloud_ax6000_immwrt
+          - lk_jdcloud_ipq60xx_immwrt
+          - lk_jdcloud_ipq60xx_libwrt
     uses: ./.github/workflows/release_wrt.yml
     with:
       model: ${{ matrix.model }}
