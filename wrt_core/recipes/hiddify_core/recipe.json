@@ -1,0 +1,45 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "hiddify_core",
+  "description": "从 1andrevich/hiddify-core 的 main 分支导入并构建 Hiddify Core",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "proxy",
+    "hiddify",
+    "network"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "hiddify-core": {
+        "gitUrl": "https://github.com/1andrevich/hiddify-core.git",
+        "branch": "main",
+        "sparseRoot": "platform"
+      }
+    },
+    "importPackages": [
+      {
+        "source": "hiddify-core",
+        "path": "wrt",
+        "packageName": "hiddify-core"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/hiddify_core.config"
+    ],
+    "script": "apply.sh"
+  }
+}
