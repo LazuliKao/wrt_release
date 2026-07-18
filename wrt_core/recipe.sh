@@ -373,13 +373,13 @@ recipe_filter_conditions() {
     local status
 
     for name in "${RECIPE_PLAN[@]}"; do
-        set +e
-        recipe_validate_one "$name"
-        status=$?
-        set -e
-        if [ "$status" -eq 0 ]; then
+        if recipe_validate_one "$name"; then
             next+=("$name")
-        elif [ "$status" -eq 2 ]; then
+            continue
+        fi
+
+        status=$?
+        if [ "$status" -eq 2 ]; then
             echo "recipe: skipping $name because when conditions do not match target"
         else
             return "$status"
