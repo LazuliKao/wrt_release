@@ -1,0 +1,31 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "docker_upgrade",
+  "description": "安全升级 Docker 守护进程 (dockerd v29) 及其核心运行时套件 (containerd v2.2+, runc v1.3+) 到官方最新 Master 分支",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [
+    "disable_docker_deps"
+  ],
+  "tags": [
+    "docker",
+    "upgrade"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}
