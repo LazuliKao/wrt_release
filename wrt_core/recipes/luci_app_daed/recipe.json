@@ -25,6 +25,11 @@
         "gitUrl": "https://github.com/QiuSimons/luci-app-daed.git",
         "branch": "kix",
         "sparseRoot": null
+      },
+      "vmlinux-btf": {
+        "gitUrl": "https://github.com/QiuSimons/vmlinux-btf.git",
+        "commit": "5c71dac6d65044cfae64233a4125bed66793059c",
+        "sparseRoot": null
       }
     },
     "importPackages": [
@@ -35,10 +40,25 @@
       {
         "source": "luci-app-daed-kix",
         "path": "luci-app-daed"
+      },
+      {
+        "source": "vmlinux-btf",
+        "path": ".",
+        "packageName": "vmlinux-btf"
       }
     ],
     "removePackageDirs": [],
-    "patches": [],
+    "patches": [
+      {
+        "source": "patches/001-fail-fast-web-assets.patch",
+        "target": "custom_feed/daed",
+        "strip": 1,
+        "forward": true,
+        "backup": false,
+        "rejectFile": false,
+        "fuzz": 0
+      }
+    ],
     "files": [],
     "configs": [
       "configs/luci_app_daed.config"

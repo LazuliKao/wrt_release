@@ -1,0 +1,43 @@
+diff --git a/Makefile b/Makefile
+--- a/Makefile
++++ b/Makefile
+@@ -97,9 +97,12 @@ endef
+ NODE_VERSION:=v24.12.0
+ NODE_DIST:=node-$(NODE_VERSION)-linux-x64
+ NODE_URL:=https://nodejs.org/dist/$(NODE_VERSION)/$(NODE_DIST).tar.xz
++NODE_SHA256:=bdebee276e58d0ef5448f3d5ac12c67daa963dd5e0a9bb621a53d1cefbc852fd
++PNPM_VERSION:=10.24.0
+ 
+ define Build/Prepare
+ 	( \
++		set -e ; \
+ 		rm -rf $(DAED_BUILD_DIR) ; \
+ 		mkdir -p $(DAED_BUILD_DIR) ; \
+ 		$(TAR) --strip-components=1 -C $(DAED_BUILD_DIR) -xzf $(DL_DIR)/$(PKG_NAME)-$(PKG_VERSION).tar.gz ; \
+@@ -119,16 +122,23 @@ define Build/Prepare
+ 			wget -qO default.pgo "https://github.com/QiuSimons/luci-app-dae/raw/refs/heads/kix/dae/pprof/default.pgo" ; \
+ 		popd ; \
+ 		mkdir -p $(DAED_BUILD_DIR)/.node_tmp/config ; \
+-		wget -qO - "$(NODE_URL)" | tar -xJ -C $(DAED_BUILD_DIR)/.node_tmp --strip-components=1 ; \
++		wget -qO $(DAED_BUILD_DIR)/$(NODE_DIST).tar.xz "$(NODE_URL)" ; \
++		echo "$(NODE_SHA256)  $(DAED_BUILD_DIR)/$(NODE_DIST).tar.xz" | sha256sum -c - ; \
++		$(TAR) -xJf $(DAED_BUILD_DIR)/$(NODE_DIST).tar.xz -C $(DAED_BUILD_DIR)/.node_tmp --strip-components=1 ; \
++		rm -f $(DAED_BUILD_DIR)/$(NODE_DIST).tar.xz ; \
+ 		export PATH="$(DAED_BUILD_DIR)/.node_tmp/bin:$$$$PATH" ; \
+ 		export XDG_CONFIG_HOME="$(DAED_BUILD_DIR)/.node_tmp/config" ; \
+-		npm install -g pnpm ; \
++		corepack enable pnpm ; \
++		corepack prepare pnpm@$(PNPM_VERSION) --activate ; \
++		test "$$(pnpm --version)" = "$(PNPM_VERSION)" ; \
+ 		pushd $(DAED_BUILD_DIR) ; \
+-			pnpm install ; \
++			pnpm install --frozen-lockfile ; \
+ 			pnpm build --filter daed ; \
+ 		popd ; \
++		find $(DAED_BUILD_DIR)/apps/web/dist -type f -print -quit | grep -q . ; \
+ 		mkdir -p $(PKG_BUILD_DIR)/webrender/web ; \
+ 		cp -rf $(DAED_BUILD_DIR)/apps/web/dist/* $(PKG_BUILD_DIR)/webrender/web ; \
++		find $(PKG_BUILD_DIR)/webrender/web -type f -print -quit | grep -q . ; \
+ 		find $(PKG_BUILD_DIR)/webrender/web -name "*.map" -type f -delete ; \
+ 		find $(PKG_BUILD_DIR)/webrender/web -type f -size +4k ! -name "*.gz" ! -name "*.woff"  ! -name "*.woff2" -exec sh -c '\
+ 			gzip -9 -k "{}"; \
