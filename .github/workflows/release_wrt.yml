@@ -58,6 +58,10 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+permissions:
+  actions: write
+  contents: write
+
 jobs:
   build:
     strategy:
