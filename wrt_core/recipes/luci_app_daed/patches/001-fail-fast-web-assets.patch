@@ -14,7 +14,7 @@ diff --git a/Makefile b/Makefile
  		rm -rf $(DAED_BUILD_DIR) ; \
  		mkdir -p $(DAED_BUILD_DIR) ; \
  		$(TAR) --strip-components=1 -C $(DAED_BUILD_DIR) -xzf $(DL_DIR)/$(PKG_NAME)-$(PKG_VERSION).tar.gz ; \
-@@ -119,16 +122,23 @@ define Build/Prepare
+@@ -119,16 +122,22 @@ define Build/Prepare
  			wget -qO default.pgo "https://github.com/QiuSimons/luci-app-dae/raw/refs/heads/kix/dae/pprof/default.pgo" ; \
  		popd ; \
  		mkdir -p $(DAED_BUILD_DIR)/.node_tmp/config ; \
@@ -26,12 +26,11 @@ diff --git a/Makefile b/Makefile
  		export PATH="$(DAED_BUILD_DIR)/.node_tmp/bin:$$$$PATH" ; \
  		export XDG_CONFIG_HOME="$(DAED_BUILD_DIR)/.node_tmp/config" ; \
 -		npm install -g pnpm ; \
-+		corepack enable pnpm ; \
-+		corepack prepare pnpm@$(PNPM_VERSION) --activate ; \
++		npm install -g --force pnpm@$(PNPM_VERSION) ; \
 +		test "$$(pnpm --version)" = "$(PNPM_VERSION)" ; \
  		pushd $(DAED_BUILD_DIR) ; \
 -			pnpm install ; \
-+			pnpm install --frozen-lockfile ; \
++			pnpm install --no-frozen-lockfile ; \
  			pnpm build --filter daed ; \
  		popd ; \
 +		find $(DAED_BUILD_DIR)/apps/web/dist -type f -print -quit | grep -q . ; \
