@@ -2,10 +2,10 @@
 set -euo pipefail
 
 # 打印执行日志
-echo "docker_upgrade: [开始] 正在执行容器底层套件越级覆盖方案 (v29.x)..."
+echo "docker_upgrade: [开始] 正在执行容器底层套件与 CLI 客户端越级覆盖方案 (v29.x)..."
 
 # 1. 升级函数：通用下载组件 Makefile
-# 参数: $1=组件名称(dockerd/containerd/runc), $2=下载相对路径, $3=目标路径
+# 参数: $1=组件名称(dockerd/containerd/runc/docker), $2=下载相对路径, $3=目标路径
 _download_upstream_file() {
     local pkg_name="$1"
     local file_rel="$2"
@@ -21,8 +21,8 @@ _download_upstream_file() {
     fi
 }
 
-# 2. 依次遍历升级三大容器核心组件
-for pkg in dockerd containerd runc; do
+# 2. 依次遍历升级四大容器核心组件 (含命令行客户端 docker)
+for pkg in dockerd containerd runc docker; do
     echo "docker_upgrade: 正在检索本地 $pkg 路径..."
     
     # 查找本地 feed 缓存中的该包路径
@@ -34,6 +34,11 @@ for pkg in dockerd containerd runc; do
     fi
     
     for dir in $pkg_dirs; do
+        # 确保该目录下包含 Makefile，防止误触非软件包目录 (如 oh-my-zsh 插件等)
+        if [ ! -f "$dir/Makefile" ]; then
+            continue
+        fi
+        
         # 转换并解析物理真实路径
         real_dir=$(readlink -f "$dir" || echo "$dir")
         echo "docker_upgrade: 目标覆盖路径 -> $real_dir"
@@ -54,6 +59,10 @@ for pkg in dockerd containerd runc; do
             "runc")
                 _download_upstream_file "runc" "Makefile" "$real_dir"
                 ;;
+            "docker")
+                # 升级命令行客户端以通过 dockerd 的同版本校验
+                _download_upstream_file "docker" "Makefile" "$real_dir"
+                ;;
         esac
     done
 done
@@ -62,7 +71,7 @@ done
 echo "docker_upgrade: 重新在 OpenWrt 源码树中建立链接缓存..."
 (
     cd "$BUILD_DIR"
-    ./scripts/feeds install -f dockerd containerd runc
+    ./scripts/feeds install -f dockerd containerd runc docker
 )
 
-echo "docker_upgrade: [成功] 所有容器核心套件已越级覆写为最新版本！"
+echo "docker_upgrade: [成功] 所有容器核心套件与 CLI 客户端已越级覆写为最新版本！"
