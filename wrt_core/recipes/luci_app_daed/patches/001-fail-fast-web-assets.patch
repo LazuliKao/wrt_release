@@ -27,7 +27,7 @@ diff --git a/Makefile b/Makefile
  		export XDG_CONFIG_HOME="$(DAED_BUILD_DIR)/.node_tmp/config" ; \
 -		npm install -g pnpm ; \
 +		npm install -g --force pnpm@$(PNPM_VERSION) ; \
-+		test "$$(pnpm --version)" = "$(PNPM_VERSION)" ; \
++		test "$$$$(pnpm --version)" = "$(PNPM_VERSION)" ; \
  		pushd $(DAED_BUILD_DIR) ; \
 -			pnpm install ; \
 +			pnpm install --no-frozen-lockfile ; \

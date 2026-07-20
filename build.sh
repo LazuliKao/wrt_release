@@ -446,7 +446,11 @@ run_container_build() {
     container_name="$(echo "$Dev" | tr '[:upper:]' '[:lower:]' | tr '/:' '-_')-build-container"
 
     prepare_container_image "$build_target_sdk" "$container_name"
-    docker run --rm -it \
+    local docker_opts="-i"
+    if is_interactive_terminal; then
+        docker_opts="-it"
+    fi
+    docker run --rm $docker_opts \
         -v "$REPO_ROOT":/build \
         -w /build \
         -e ADD_CONFIG_FRAGMENTS \
