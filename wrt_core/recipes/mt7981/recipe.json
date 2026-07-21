@@ -1,0 +1,39 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "mt7981",
+  "description": "配置 MediaTek MT7981 芯片的 proprietary AP 无线网卡驱动参数",
+  "enabled": true,
+  "phase": "pre_defconfig",
+  "depends": [
+    "mt798x_hnat"
+  ],
+  "conflicts": [
+    "mt7986"
+  ],
+  "tags": [
+    "wifi",
+    "driver",
+    "mt7981",
+    "ap"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": [
+      "mt7981"
+    ]
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/mt7981.config"
+    ],
+    "script": null
+  }
+}
