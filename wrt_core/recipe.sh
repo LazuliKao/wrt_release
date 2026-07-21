@@ -373,8 +373,7 @@ recipe_filter_conditions() {
     local status
 
     for name in "${RECIPE_PLAN[@]}"; do
-        recipe_validate_one "$name"
-        status=$?
+        recipe_validate_one "$name" && status=0 || status=$?
         if [ "$status" -eq 0 ]; then
             next+=("$name")
         elif [ "$status" -eq 2 ]; then
