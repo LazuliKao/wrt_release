@@ -11,7 +11,7 @@
 ```bash
 sudo apt -y update
 sudo apt -y full-upgrade
-sudo apt install -y dos2unix libfuse-dev jq
+sudo apt install -y dos2unix libfuse-dev jq dwarves
 sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
 ```
 
