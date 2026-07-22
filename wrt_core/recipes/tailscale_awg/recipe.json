@@ -47,9 +47,15 @@
       }
     ],
     "removePackageDirs": [
+      "feeds/small8/tailscale",
       "feeds/packages/net/tailscale",
+      "feeds/luci/applications/luci-app-tailscale",
+      "feeds/luci/applications/luci-app-tailscale-community",
       "package/feeds/small8/tailscale",
-      "package/feeds/custom_feed/tailscale"
+      "package/feeds/custom_feed/tailscale",
+      "package/feeds/packages/tailscale",
+      "package/feeds/luci/luci-app-tailscale",
+      "package/feeds/luci/luci-app-tailscale-community"
     ],
     "patches": [
       {
