@@ -57,6 +57,6 @@
     "configs": [
       "configs/mwan3.config"
     ],
-    "script": null
+    "script": "apply.sh"
   }
 }
