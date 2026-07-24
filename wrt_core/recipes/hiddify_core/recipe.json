@@ -24,13 +24,14 @@
       "hiddify-core": {
         "gitUrl": "https://github.com/1andrevich/hiddify-core.git",
         "branch": "main",
-        "sparseRoot": "platform"
+        "sparseRoot": null,
+        "depth": 1
       }
     },
     "importPackages": [
       {
         "source": "hiddify-core",
-        "path": "wrt",
+        "path": ".",
         "packageName": "hiddify-core"
       }
     ],
