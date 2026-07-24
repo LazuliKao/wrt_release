@@ -1,0 +1,47 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "luci_app_trafficctl",
+  "description": "从 YusDyr/luci-app-trafficctl 导入单设备流量监控、限速、流量整形、网络禁用与 WiFi MAC 过滤控制面板",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "network",
+    "luci",
+    "trafficctl",
+    "qos",
+    "monitoring"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "luci-app-trafficctl": {
+        "gitUrl": "https://github.com/YusDyr/luci-app-trafficctl.git",
+        "branch": "main",
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "luci-app-trafficctl",
+        "path": "luci-app-trafficctl",
+        "packageName": "luci-app-trafficctl"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/luci_app_trafficctl.config"
+    ],
+    "script": null
+  }
+}
