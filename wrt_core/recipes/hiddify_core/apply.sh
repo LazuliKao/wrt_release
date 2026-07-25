@@ -17,3 +17,12 @@ rm -f "$BUILD_DIR/package/feeds/custom_feed/wrt"
 # Git automatically propagates this configuration override to all nested submodule child clones.
 echo "hiddify-core: pulling git submodules recursively..."
 git -c url.https://github.com/.insteadOf=git@github.com: -C "$BUILD_DIR/custom_feed/hiddify-core" submodule update --init --recursive
+
+# Re-update and re-install custom_feed after cleaning up platform/wrt and overwriting Makefile
+echo "hiddify-core: re-updating and re-installing custom_feed..."
+(
+    cd "$BUILD_DIR"
+    ./scripts/feeds update custom_feed
+    ./scripts/feeds install -p custom_feed -f hiddify-core
+)
+
