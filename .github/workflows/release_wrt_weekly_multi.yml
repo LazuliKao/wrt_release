@@ -26,6 +26,8 @@ jobs:
           - lk_mt798x_7981_rebase_mini
           - lk_mt798x_7981_k6.6_mini
           - lk_jdcloud_ipq60xx_libwrt
+          - lk_ipq807x_libwrt
+          - lk_ipq807x_libwrt_mini
           # - lk_jdcloud_ipq60xx_immwrt
     uses: ./.github/workflows/release_wrt.yml
     with:
