@@ -17,15 +17,16 @@ jobs:
       matrix:
         model:
           - lk_x64_immwrt
-          # - lk_ct3003_mt798x
-          # - lk_ct3003_mt798x_6.6
-          # - lk_jdcloud_ax6000_mt798x
-          # - lk_jdcloud_ax6000_mt798x-6.6
-          # - lk_jdcloud_ax6000_immwrt
-          - lk_mediatek
-          - lk_mediatek_mini
-          - lk_jdcloud_ipq60xx_immwrt
+          - lk_mediatek_immwrt
+          - lk_mediatek_immwrt_mini
+          - lk_mt798x_7986_rebase
+          - lk_mt798x_7986_k6.6
+          - lk_mt798x_7986_rebase_mini
+          - lk_mt798x_7986_k6.6_mini
+          - lk_mt798x_7981_rebase_mini
+          - lk_mt798x_7981_k6.6_mini
           - lk_jdcloud_ipq60xx_libwrt
+          # - lk_jdcloud_ipq60xx_immwrt
     uses: ./.github/workflows/release_wrt.yml
     with:
       model: ${{ matrix.model }}
