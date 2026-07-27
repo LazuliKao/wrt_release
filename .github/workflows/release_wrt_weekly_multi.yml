@@ -25,7 +25,10 @@ jobs:
           - lk_mt798x_7986_k6.6_mini
           - lk_mt798x_7981_rebase_mini
           - lk_mt798x_7981_k6.6_mini
-          - lk_jdcloud_ipq60xx_libwrt
+          - lk_ipq60xx_immwrt
+          - lk_ipq60xx_immwrt_mini
+          - lk_ipq60xx_libwrt
+          - lk_ipq60xx_libwrt_mini
           - lk_ipq807x_libwrt
           - lk_ipq807x_libwrt_mini
           # - lk_jdcloud_ipq60xx_immwrt
