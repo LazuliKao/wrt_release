@@ -31,14 +31,14 @@ git_clone_clean() {
     fi
 }
 
-mkdir -p "$base_files_path/root" "$base_files_path/etc"
+mkdir -p "$base_files_path/root" "$base_files_path/etc" "$base_files_path/bin"
 
 if [ -f "$passwd_path" ]; then
-    if grep -qx 'root:x:0:0:root:/root:/bin/ash' "$passwd_path"; then
-        sed -i 's#^root:x:0:0:root:/root:/bin/ash$#root:x:0:0:root:/root:/bin/zsh#' "$passwd_path"
-        echo "ohmyzsh: changed root shell from /bin/ash to /bin/zsh"
-    elif grep -qx 'root:x:0:0:root:/root:/bin/zsh' "$passwd_path"; then
-        echo "ohmyzsh: root shell already set to /bin/zsh"
+    if grep -E -q '^root:x:0:0:root:/root:/bin/(ash|zsh)$' "$passwd_path"; then
+        sed -i 's#^root:x:0:0:root:/root:/bin/\(ash\|zsh\)$#root:x:0:0:root:/root:/usr/bin/zsh#' "$passwd_path"
+        echo "ohmyzsh: changed root shell to /usr/bin/zsh"
+    elif grep -qx 'root:x:0:0:root:/root:/usr/bin/zsh' "$passwd_path"; then
+        echo "ohmyzsh: root shell already set to /usr/bin/zsh"
     else
         echo "ohmyzsh: Warning: unexpected root entry in $passwd_path, skipping shell change" >&2
     fi
