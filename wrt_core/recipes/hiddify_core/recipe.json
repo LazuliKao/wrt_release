@@ -32,7 +32,8 @@
       {
         "source": "hiddify-core",
         "path": ".",
-        "packageName": "hiddify-core"
+        "packageName": "hiddify-core",
+        "script": "hook.sh"
       }
     ],
     "removePackageDirs": [],
@@ -41,6 +42,6 @@
     "configs": [
       "configs/hiddify_core.config"
     ],
-    "script": "apply.sh"
+    "script": null
   }
 }

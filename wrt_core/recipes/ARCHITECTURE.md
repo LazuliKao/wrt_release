@@ -233,7 +233,7 @@ TARGET_TAGS=x86_64,immortalwrt,master
 - 作用：从 source 对应仓库导入目录到构建树，并将其以包名形式注册到本地 `custom_feed` 中，以防止编译到 `base` 目录。
 - 类型：对象数组
 - 必填字段：`source`、`path`
-- 可选字段：`packageName`
+- 可选字段：`packageName`、`script`
 
 示例：
 
@@ -244,9 +244,10 @@ TARGET_TAGS=x86_64,immortalwrt,master
     "path": "kmod-amneziawg"
   },
   {
-    "source": "luci-theme-argon-custom",
+    "source": "hiddify-core",
     "path": ".",
-    "packageName": "luci-theme-argon"
+    "packageName": "hiddify-core",
+    "script": "hook.sh"
   }
 ]
 ```
@@ -259,6 +260,7 @@ TARGET_TAGS=x86_64,immortalwrt,master
   * **显式指定**：如果设置了 `packageName`，则提取其 `basename` 作为最终的注册包名（如 `"packageName": "luci-theme-argon"` $\rightarrow$ 包名即为 `luci-theme-argon`）。
   * **隐式推导**：未配置 `packageName` 时，系统会自动提取 `path` 的最后一部分名称（`basename`）作为最终的注册包名（如 `"path": "kmod-amneziawg"` $\rightarrow$ 包名为 `kmod-amneziawg`；`"path": "package/tailscale"` $\rightarrow$ 包名为 `tailscale`）。
   * **强制限制**：若 `path` 为 `"."`（导入仓库根目录），默认推导出的包名为 `.` 导致校验失败。因此，当 `path` 设定为 `"."` 时，**必须显式提供 `packageName`**，否则 Recipe 前置校验阶段会直接报错退出。
+- **`script`（Hook 脚本）**：可选配置。在源码同步至 `custom_feed/<包名>` 后，执行 `feeds update/install` 之前运行该 bash 脚本。框架会向 Hook 脚本提供环境变量 `PACKAGE_DIR`（包解压/同步后的绝对路径）、`PACKAGE_NAME`、`RECIPE_DIR`、`BUILD_DIR`、`RECIPE_NAME`。
 - 导入的目标路径固定为 `custom_feed/<包名>`，且导入后会自动执行本地 `custom_feed` 的 update 和 install 动作
 - 若 source 定义了 `sparseRoot`，实际导入源路径会解析为 `<sparseRoot>/<path>`
 

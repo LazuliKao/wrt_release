@@ -206,7 +206,7 @@ recipe_validate_structure() {
         all(.actions.addFeeds[]?; type == "string") and
         all(.actions.removeFeeds[]?; type == "string") and
         all(.actions.importPackagesRegistry[]?; (.gitUrl | type == "string" and length > 0) and ((has("branch") | not) or (.branch == null) or (.branch | type == "string")) and ((has("tag") | not) or (.tag == null) or (.tag | type == "string")) and ((has("commit") | not) or (.commit == null) or (.commit | type == "string")) and ((has("depth") | not) or (.depth == null) or (.depth | type == "number")) and ((has("sparseRoot") | not) or (.sparseRoot == null) or (.sparseRoot | type == "string"))) and
-        all(.actions.importPackages[]?; type == "object" and (.source | type == "string" and length > 0) and (.path | type == "string" and length > 0) and ((has("target") | not) or (.target | type == "string" and length > 0))) and
+        all(.actions.importPackages[]?; type == "object" and (.source | type == "string" and length > 0) and (.path | type == "string" and length > 0) and ((has("target") | not) or (.target | type == "string" and length > 0)) and ((has("script") | not) or (.script | type == "string" and length > 0))) and
         all(.actions.removePackageDirs[]?; type == "string") and
         all(.actions.patches[]?; type == "object" and (.source | type == "string" and length > 0) and (.target | type == "string" and length > 0) and ((has("strip") | not) or (.strip | type == "number" and . >= 0 and floor == .)) and ((has("binary") | not) or (.binary | type == "boolean")) and ((has("ignoreWhitespace") | not) or (.ignoreWhitespace | type == "boolean")) and ((has("forward") | not) or (.forward | type == "boolean")) and ((has("backup") | not) or (.backup | type == "boolean")) and ((has("rejectFile") | not) or (.rejectFile | type == "boolean")) and ((has("fuzz") | not) or (.fuzz | type == "number" and . >= 0 and floor == .))) and
         all(.actions.files[]?; type == "object" and (.source | type == "string" and length > 0) and (.target | type == "string" and length > 0) and ((has("mode") | not) or (.mode | type == "string" and test("^[0-7]{3,4}$")))) and
@@ -495,6 +495,11 @@ recipe_validate_action_paths() {
             [ -n "$pkg_name" ] || continue
             recipe_is_safe_relative_path "$pkg_name" || recipe_die "recipe '$name' has unsafe importPackages packageName '$pkg_name'"
         done < <(recipe_json_lines "$file" '.actions.importPackages[]?.packageName // empty')
+
+        while IFS= read -r import_script; do
+            [ -n "$import_script" ] || continue
+            recipe_is_safe_relative_path "$import_script" || recipe_die "recipe '$name' has unsafe importPackages script '$import_script'"
+        done < <(recipe_json_lines "$file" '.actions.importPackages[]?.script // empty')
 
         while IFS= read -r config; do
             [ -n "$config" ] || continue
@@ -1082,10 +1087,12 @@ git_sync_repo() {
 }
 
 recipe_apply_import_package() {
-    local recipe_file="$1"
-    local source_label="$2"
-    local import_path="$3"
-    local package_name_override="$4"
+    local recipe_name="$1"
+    local recipe_file="$2"
+    local source_label="$3"
+    local import_path="$4"
+    local package_name_override="$5"
+    local import_script="$6"
     local repo_url
     local repo_branch
     local repo_tag
@@ -1147,6 +1154,19 @@ recipe_apply_import_package() {
         mv "$tmp_dir/$source_dir" "$target_dir"
         rm -rf "$tmp_dir"
         echo "recipe: imported $source_label:$import_path to $target_rel"
+    fi
+
+    if [ -n "$import_script" ]; then
+        local script_path
+        script_path="$(recipe_dir "$recipe_name")/$import_script"
+        [ -f "$script_path" ] || recipe_die "$recipe_name: importPackages script not found: $import_script"
+        echo "recipe: executing importPackages hook script '$import_script' for $package_name..."
+        PACKAGE_DIR="$target_dir" \
+        PACKAGE_NAME="$package_name" \
+        RECIPE_DIR="$(recipe_dir "$recipe_name")" \
+        BUILD_DIR="$RECIPE_BUILD_DIR" \
+        RECIPE_NAME="$recipe_name" \
+            bash "$script_path"
     fi
 
     # Register and install package in custom_feed
@@ -1255,6 +1275,7 @@ recipe_apply_one() {
     local source_label
     local import_path
     local import_target
+    local import_script
     local script
 
     file=$(recipe_json_path "$name")
@@ -1267,7 +1288,8 @@ recipe_apply_one() {
         source_label=$(recipe_json_object_get "$entry" '.source')
         import_path=$(recipe_json_object_get "$entry" '.path')
         import_target=$(recipe_json_object_get_optional "$entry" '.packageName // empty')
-        recipe_apply_import_package "$file" "$source_label" "$import_path" "$import_target"
+        import_script=$(recipe_json_object_get_optional "$entry" '.script // empty')
+        recipe_apply_import_package "$name" "$file" "$source_label" "$import_path" "$import_target" "$import_script"
     done < <(recipe_json_lines "$file" '.actions.importPackages[]? | @json')
 
     recipe_apply_patch_actions "$name" "$file"
