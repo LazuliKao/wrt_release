@@ -1,0 +1,29 @@
+{
+  "$schema": "./recipe_set.schema.json",
+  "name": "docker_only",
+  "description": "纯 Docker 运行环境预设（包含 Docker、存储扩展与基础优化，无代理工具）",
+  "recipes": [
+    "default_theme_fluent",
+    "luci_theme_fluent",
+    "fix_kernel_magic",
+    "cli_enhancements",
+    "core_enhancements",
+    "dockerman",
+    "docker_compose",
+    "docker_upgrade",
+    "net_optimize",
+    "ohmyzsh",
+    "security_enhancements",
+    "sqm",
+    "storage_fs",
+    "upx",
+    "wifi_ap_drivers",
+    "mwan3",
+    "disable_lucky",
+    "disable_easytier",
+    "disable_smartdns"
+  ],
+  "disable_recipes": [
+    "default_theme_argon"
+  ]
+}

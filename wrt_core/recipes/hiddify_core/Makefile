@@ -20,6 +20,8 @@ GO_PKG_LDFLAGS_X:= \
 	github.com/hiddify/hiddify-core/v2/hcommon/constants.Version=$(PKG_VERSION) \
 	github.com/sagernet/sing-box/constant.Version=$(PKG_VERSION)
 
+GO_PKG_VARS += GOTOOLCHAIN=go1.25.6
+
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 

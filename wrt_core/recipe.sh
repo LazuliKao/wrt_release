@@ -281,8 +281,12 @@ recipe_scan_initial_plan() {
     local recipe_json
     local name
     local enabled
+    local recipe_set
+    local set_file
     local target_recipes
+    local target_add_recipes
     local disabled
+    local set_disabled
 
     RECIPE_PLAN=()
 
@@ -296,13 +300,40 @@ recipe_scan_initial_plan() {
         fi
     done
 
+    recipe_set=$(recipe_target_ini_get "$RECIPE_TARGET_INI" RECIPE_SET)
+    if [ -n "$recipe_set" ]; then
+        set_file="$RECIPE_BASE_PATH/recipe_sets/${recipe_set}.json"
+        if [ -f "$set_file" ]; then
+            while IFS= read -r name; do
+                [ -n "$name" ] || continue
+                recipe_append_unique_name "$name"
+            done < <(recipe_json_lines "$set_file" '.recipes[]?')
+        fi
+    fi
+
     target_recipes=$(recipe_target_ini_get "$RECIPE_TARGET_INI" RECIPES)
     while IFS= read -r name; do
         [ -n "$name" ] || continue
         recipe_append_unique_name "$name"
     done < <(recipe_split_csv "$target_recipes")
 
+    target_add_recipes=$(recipe_target_ini_get "$RECIPE_TARGET_INI" ADD_RECIPES)
+    while IFS= read -r name; do
+        [ -n "$name" ] || continue
+        recipe_append_unique_name "$name"
+    done < <(recipe_split_csv "$target_add_recipes")
+
     disabled=$(recipe_target_ini_get "$RECIPE_TARGET_INI" DISABLE_RECIPES)
+    if [ -n "$recipe_set" ]; then
+        set_file="$RECIPE_BASE_PATH/recipe_sets/${recipe_set}.json"
+        if [ -f "$set_file" ]; then
+            set_disabled=$(recipe_json_lines "$set_file" '.disable_recipes[]?' | tr '\n' ',')
+            if [ -n "$set_disabled" ]; then
+                disabled="${disabled:+${disabled},}${set_disabled}"
+            fi
+        fi
+    fi
+
     if [ -n "$disabled" ]; then
         local next=()
         local current
@@ -699,6 +730,14 @@ recipe_is_default_enabled() {
 recipe_compute_target_enabled() {
     local name="$1"
     local current
+    local recipe_set
+    local set_file
+
+    recipe_set=$(recipe_target_ini_get "$RECIPE_TARGET_INI" RECIPE_SET)
+    set_file=""
+    if [ -n "$recipe_set" ] && [ -f "$RECIPE_BASE_PATH/recipe_sets/${recipe_set}.json" ]; then
+        set_file="$RECIPE_BASE_PATH/recipe_sets/${recipe_set}.json"
+    fi
 
     while IFS= read -r current; do
         [ -n "$current" ] || continue
@@ -707,12 +746,37 @@ recipe_compute_target_enabled() {
         fi
     done < <(recipe_collect_csv_set "$RECIPE_TARGET_INI" DISABLE_RECIPES)
 
+    if [ -n "$set_file" ]; then
+        while IFS= read -r current; do
+            [ -n "$current" ] || continue
+            if [ "$current" = "$name" ]; then
+                return 1
+            fi
+        done < <(recipe_json_lines "$set_file" '.disable_recipes[]?')
+    fi
+
     while IFS= read -r current; do
         [ -n "$current" ] || continue
         if [ "$current" = "$name" ]; then
             return 0
         fi
     done < <(recipe_collect_csv_set "$RECIPE_TARGET_INI" RECIPES)
+
+    while IFS= read -r current; do
+        [ -n "$current" ] || continue
+        if [ "$current" = "$name" ]; then
+            return 0
+        fi
+    done < <(recipe_collect_csv_set "$RECIPE_TARGET_INI" ADD_RECIPES)
+
+    if [ -n "$set_file" ]; then
+        while IFS= read -r current; do
+            [ -n "$current" ] || continue
+            if [ "$current" = "$name" ]; then
+                return 0
+            fi
+        done < <(recipe_json_lines "$set_file" '.recipes[]?')
+    fi
 
     recipe_is_default_enabled "$name"
 }
