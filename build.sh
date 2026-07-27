@@ -564,7 +564,7 @@ fi
 
 TARGET_DIR="$BASE_PATH/../$BUILD_DIR/bin/targets"
 if [[ -d $TARGET_DIR ]]; then
-    find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*efi.img.gz" -o -name "*.itb" -o -name "*.fip" -o -name "*.ubi" -o -name "*rootfs.tar.gz" -o -name "*.vmdk" -o -name "*.vhdx.gz" -o -name "*.qcow2.gz" \) -exec rm -f {} +
+    find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*.img.gz" -o -name "*.itb" -o -name "*.fip" -o -name "*.ubi" -o -name "*rootfs.tar.gz" -o -name "*.vmdk*" -o -name "*.vhdx*" -o -name "*.qcow2*" \) -exec rm -f {} +
 fi
 
 make download -j$(($(nproc) * 2)) || make download -j1 V=s
@@ -577,8 +577,9 @@ else
 fi
 \rm -rf "$FIRMWARE_DIR"
 mkdir -p "$FIRMWARE_DIR"
-find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*efi.img.gz" -o -name "*.itb" -o -name "*.fip" -o -name "*.ubi" -o -name "*rootfs.tar.gz" -o -name "*.vmdk" -o -name "*.vhdx.gz" -o -name "*.qcow2.gz" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
+find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*.img.gz" -o -name "*.itb" -o -name "*.fip" -o -name "*.ubi" -o -name "*rootfs.tar.gz" -o -name "*.vmdk*" -o -name "*.vhdx*" -o -name "*.qcow2*" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
 \rm -f "$FIRMWARE_DIR/Packages.manifest" 2>/dev/null
+\rm -f "$FIRMWARE_DIR"/mt798*-ram-*.bin 2>/dev/null
 
 if [[ -d action_build ]]; then
     make clean
