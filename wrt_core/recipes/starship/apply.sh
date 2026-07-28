@@ -34,7 +34,7 @@ else
             echo "starship: installed successfully to $dest_bin"
 
             # 2.5 Compress the installed binary using UPX
-            local upx_bin="$BUILD_DIR/upx/upx"
+            upx_bin="$BUILD_DIR/upx/upx"
             if [ -x "$upx_bin" ]; then
                 echo "starship: compressing binary with UPX..."
                 "$upx_bin" --lzma "$dest_bin" || echo "starship: Warning: UPX compression failed" >&2
