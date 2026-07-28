@@ -5,7 +5,9 @@
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
-  "conflicts": [],
+  "conflicts": [
+    "starship"
+  ],
   "tags": [
     "shell",
     "terminal",
@@ -27,6 +29,10 @@
       {
         "source": "files/root/.zshrc",
         "target": "package/base-files/files/root/.zshrc"
+      },
+      {
+        "source": "files/root/.profile",
+        "target": "package/base-files/files/root/.profile"
       }
     ],
     "configs": [
