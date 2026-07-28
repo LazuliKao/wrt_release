@@ -4,7 +4,9 @@
   "description": "为固件预置 starship 提示符与默认 bash 配置",
   "enabled": false,
   "phase": "pre_defconfig",
-  "depends": [],
+  "depends": [
+    "upx"
+  ],
   "conflicts": [
     "ohmyzsh"
   ],

@@ -32,6 +32,15 @@ else
         if [ -f "$tmp_dir/starship" ]; then
             install -m0755 "$tmp_dir/starship" "$dest_bin"
             echo "starship: installed successfully to $dest_bin"
+
+            # 2.5 Compress the installed binary using UPX
+            local upx_bin="$BUILD_DIR/upx/upx"
+            if [ -x "$upx_bin" ]; then
+                echo "starship: compressing binary with UPX..."
+                "$upx_bin" --lzma "$dest_bin" || echo "starship: Warning: UPX compression failed" >&2
+            else
+                echo "starship: Warning: UPX binary not found at $upx_bin" >&2
+            fi
         else
             echo "starship: Error: binary not found in archive" >&2
             exit 1
