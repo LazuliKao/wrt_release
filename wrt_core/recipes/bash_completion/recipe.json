@@ -1,20 +1,16 @@
 {
   "$schema": "../recipe.schema.json",
-  "name": "flyline",
-  "description": "为固件集成 Flyline (Bash 增强型命令行编辑器)",
+  "name": "bash_completion",
+  "description": "为固件集成 bash-completion (命令自动补全支持)",
   "enabled": false,
   "phase": "pre_defconfig",
-  "depends": [
-    "bash_completion"
-  ],
-  "conflicts": [
-    "ohmyzsh"
-  ],
+  "depends": [],
+  "conflicts": [],
   "tags": [
     "shell",
     "terminal",
     "bash",
-    "flyline"
+    "bash-completion"
   ],
   "when": {
     "targets": [],
@@ -33,15 +29,10 @@
         "source": "files/root/.bashrc",
         "target": "package/base-files/files/root/.bashrc",
         "append": true
-      },
-      {
-        "source": "files/root/.profile",
-        "target": "package/base-files/files/root/.profile",
-        "append": true
       }
     ],
     "configs": [
-      "configs/flyline.config"
+      "configs/bash_completion.config"
     ],
     "script": "apply.sh"
   }
