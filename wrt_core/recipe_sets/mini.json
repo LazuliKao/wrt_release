@@ -12,7 +12,7 @@
     "cloudflared",
     "homeproxy",
     "net_optimize",
-    "ohmyzsh",
+    "starship",
     "portweaver",
     "qosmate",
     "security_enhancements",

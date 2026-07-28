@@ -12,7 +12,7 @@
     "docker_compose",
     "docker_upgrade",
     "net_optimize",
-    "ohmyzsh",
+    "starship",
     "security_enhancements",
     "sqm",
     "storage_fs",
