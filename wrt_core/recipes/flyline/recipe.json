@@ -1,19 +1,18 @@
 {
   "$schema": "../recipe.schema.json",
-  "name": "starship",
-  "description": "为固件预置 starship 提示符与默认 bash 配置",
+  "name": "flyline",
+  "description": "为固件集成 Flyline (Bash 增强型命令行编辑器)",
   "enabled": false,
   "phase": "pre_defconfig",
-  "depends": [
-    "upx"
-  ],
+  "depends": [],
   "conflicts": [
     "ohmyzsh"
   ],
   "tags": [
     "shell",
     "terminal",
-    "starship"
+    "bash",
+    "flyline"
   ],
   "when": {
     "targets": [],
@@ -40,7 +39,7 @@
       }
     ],
     "configs": [
-      "configs/starship.config"
+      "configs/flyline.config"
     ],
     "script": "apply.sh"
   }

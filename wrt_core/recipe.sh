@@ -209,7 +209,7 @@ recipe_validate_structure() {
         all(.actions.importPackages[]?; type == "object" and (.source | type == "string" and length > 0) and (.path | type == "string" and length > 0) and ((has("target") | not) or (.target | type == "string" and length > 0)) and ((has("script") | not) or (.script | type == "string" and length > 0))) and
         all(.actions.removePackageDirs[]?; type == "string") and
         all(.actions.patches[]?; type == "object" and (.source | type == "string" and length > 0) and (.target | type == "string" and length > 0) and ((has("strip") | not) or (.strip | type == "number" and . >= 0 and floor == .)) and ((has("binary") | not) or (.binary | type == "boolean")) and ((has("ignoreWhitespace") | not) or (.ignoreWhitespace | type == "boolean")) and ((has("forward") | not) or (.forward | type == "boolean")) and ((has("backup") | not) or (.backup | type == "boolean")) and ((has("rejectFile") | not) or (.rejectFile | type == "boolean")) and ((has("fuzz") | not) or (.fuzz | type == "number" and . >= 0 and floor == .))) and
-        all(.actions.files[]?; type == "object" and (.source | type == "string" and length > 0) and (.target | type == "string" and length > 0) and ((has("mode") | not) or (.mode | type == "string" and test("^[0-7]{3,4}$")))) and
+        all(.actions.files[]?; type == "object" and (.source | type == "string" and length > 0) and (.target | type == "string" and length > 0) and ((has("mode") | not) or (.mode | type == "string" and test("^[0-7]{3,4}$"))) and ((has("append") | not) or (.append | type == "boolean"))) and
         all(.actions.configs[]?; type == "string")
     ' "$file" >/dev/null || recipe_die "invalid recipe.json structure: $file"
 }
@@ -448,7 +448,7 @@ recipe_validate_paths() {
                 recipe_die "multiple recipes write target path '$target'"
             fi
             seen_targets="${seen_targets}${target}\n"
-        done < <(recipe_json_lines "$file" '.actions.files[]?.target')
+        done < <(recipe_json_lines "$file" '.actions.files[]? | select(.append != true) | .target')
 
         while IFS= read -r config; do
             [ -n "$config" ] || continue
@@ -933,6 +933,7 @@ recipe_copy_mapping() {
     local source_rel="$2"
     local target_rel="$3"
     local mode="${4:-0644}"
+    local append="${5:-false}"
     local source_path
     local target_path
 
@@ -941,8 +942,33 @@ recipe_copy_mapping() {
 
     [ -f "$source_path" ] || recipe_die "$name: source file not found: $source_rel"
     recipe_ensure_parent_dir "$target_path"
-    install -Dm"$mode" "$source_path" "$target_path"
-    echo "recipe: $name installed $target_rel"
+
+    if [ "$append" = "true" ]; then
+        local marker="# recipe: ${name} (${source_rel}) [append]"
+        if [ -f "$target_path" ] && grep -Fq "$marker" "$target_path"; then
+            echo "recipe: $name already appended $source_rel to $target_rel"
+        else
+            if [ ! -f "$target_path" ]; then
+                # Equivalent to copy
+                install -Dm"$mode" "$source_path" "$target_path"
+                # Add marker at the end for idempotency
+                [ -n "$(tail -c 1 "$target_path" 2>/dev/null)" ] && echo "" >> "$target_path"
+                echo "$marker" >> "$target_path"
+                echo "recipe: $name copied (as append) $source_rel to $target_rel"
+            else
+                # Ensure the existing file ends with a newline before appending
+                if [ -s "$target_path" ] && [ -n "$(tail -c 1 "$target_path" 2>/dev/null)" ]; then
+                    echo "" >> "$target_path"
+                fi
+                echo "$marker" >> "$target_path"
+                cat "$source_path" >> "$target_path"
+                echo "recipe: $name appended $source_rel to $target_rel"
+            fi
+        fi
+    else
+        install -Dm"$mode" "$source_path" "$target_path"
+        echo "recipe: $name installed $target_rel"
+    fi
 }
 
 recipe_apply_config() {
@@ -1271,13 +1297,15 @@ recipe_apply_copy_actions() {
     local source_rel
     local target_rel
     local mode
+    local append
 
     while IFS= read -r entry; do
         [ -n "$entry" ] || continue
         source_rel=$(recipe_json_object_get "$entry" '.source')
         target_rel=$(recipe_json_object_get "$entry" '.target')
         mode=$(recipe_json_object_get_optional "$entry" '.mode // empty')
-        recipe_copy_mapping "$name" "$source_rel" "$target_rel" "${mode:-0644}"
+        append=$(recipe_json_object_get_optional "$entry" '.append // false')
+        recipe_copy_mapping "$name" "$source_rel" "$target_rel" "${mode:-0644}" "$append"
     done < <(recipe_json_lines "$file" "$expr")
 }
 

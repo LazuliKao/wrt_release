@@ -284,16 +284,17 @@ TARGET_TAGS=x86_64,immortalwrt,master
 
 ### `files`
 
-- 作用：复制普通文件到构建树
+- 作用：复制或追加普通文件到构建树
 - 类型：对象数组
-- 必填字段：`source`、`target`
-- 可选字段：`mode`
+- 必填字段：`source` , `target`
+- 可选字段：`mode` , `append`
 
 说明：
 
 - `source` 相对 recipe 目录
 - `target` 相对 `BUILD_DIR`
 - `mode` 缺省为 `0644`
+- `append` 设为 `true` 时为追加模式。如果目标文件不存在，则等于复制；如果目标文件已存在，则以换行符分隔并以幂等方式追加内容（附带 recipe 签名标记防止重复追加）。
 
 ### `configs`
 
@@ -416,7 +417,7 @@ TARGET_TAGS=x86_64,immortalwrt,master
 
 当前实现的路径相关限制：
 
-- `actions.files[].target` 不能与其他 recipe 重复
+- `actions.files[].target` 不能与其他 recipe 重复（除非 `append` 为 `true`）
 - `actions.configs[]` 不能重复引用同一个已解析 config 源路径
 - `actions.files[].source` / `.target`、`actions.patches[].source` / `.target`、`actions.removePackageDirs[]`、`actions.importPackages[].target`、`actions.configs[]` 都必须是安全相对路径
 
