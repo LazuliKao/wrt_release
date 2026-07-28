@@ -1,0 +1,47 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "starship_mini",
+  "description": "为固件预置 starship 提示符与默认 bash 配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [
+    "upx"
+  ],
+  "conflicts": [
+    "ohmyzsh"
+  ],
+  "tags": [
+    "shell",
+    "terminal",
+    "starship"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [
+      {
+        "source": "files/root/.bashrc",
+        "target": "package/base-files/files/root/.bashrc",
+        "append": true
+      },
+      {
+        "source": "files/root/.profile",
+        "target": "package/base-files/files/root/.profile",
+        "append": true
+      }
+    ],
+    "configs": [
+      "configs/starship.config"
+    ],
+    "script": "apply.sh"
+  }
+}
