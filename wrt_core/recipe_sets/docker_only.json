@@ -13,6 +13,7 @@
     "docker_upgrade",
     "net_optimize",
     "starship",
+    "bash_completion",
     "security_enhancements",
     "sqm",
     "storage_fs",

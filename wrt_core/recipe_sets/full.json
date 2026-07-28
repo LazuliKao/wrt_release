@@ -19,6 +19,8 @@
     "net_optimize",
     "nikki",
     "starship",
+    "flyline",
+    "bash_completion",
     "passwall",
     "passwall2",
     "portweaver",
