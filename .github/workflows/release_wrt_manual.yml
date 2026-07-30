@@ -28,6 +28,10 @@ on:
           - lk_ipq60xx_libwrt_mini
           - lk_ipq807x_libwrt
           - lk_ipq807x_libwrt_mini
+          - lk_ipq60xx_qosmio
+          - lk_ipq60xx_qosmio_mini
+          - lk_ipq807x_qosmio
+          - lk_ipq807x_qosmio_mini
 
 permissions:
   actions: write
