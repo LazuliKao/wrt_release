@@ -4,18 +4,14 @@ run-name: Weekly Release WRT
 on:
   # schedule:
   #   - cron: "0 4 * * 5"
-  workflow_dispatch: {}
-
-permissions:
-  actions: write
-  contents: write
-
-jobs:
-  release:
-    strategy:
-      fail-fast: false
-      matrix:
-        model:
+  workflow_dispatch: 
+    inputs:
+      model:
+        type: choice
+        description: 'Model to release'
+        required: true
+        default: lk_x64_immwrt
+        options:
           - lk_x64_immwrt
           - lk_mediatek_immwrt
           - lk_mediatek_immwrt_mini
@@ -25,14 +21,20 @@ jobs:
           - lk_mt798x_7986_k6.6_mini
           - lk_mt798x_7981_rebase_mini
           - lk_mt798x_7981_k6.6_mini
-          # - lk_ipq60xx_immwrt
-          # - lk_ipq60xx_immwrt_mini
+          - lk_ipq60xx_immwrt
+          - lk_ipq60xx_immwrt_mini
           - lk_ipq60xx_libwrt
           - lk_ipq60xx_libwrt_mini
           - lk_ipq807x_libwrt
           - lk_ipq807x_libwrt_mini
 
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  release:
     uses: ./.github/workflows/release_wrt.yml
     with:
-      model: ${{ matrix.model }}
+      model: ${{ github.event.inputs.model }}
     secrets: inherit
