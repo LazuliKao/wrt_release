@@ -17,6 +17,7 @@ jobs:
       matrix:
         model:
           - lk_x64_immwrt
+          - lk_x64_immwrt_mini
           - lk_mediatek_immwrt
           - lk_mediatek_immwrt_mini
           - lk_mt798x_7986_rebase
