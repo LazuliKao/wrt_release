@@ -1,5 +1,5 @@
-name: Weekly Release WRT
-run-name: Weekly Release WRT
+name: Manual Release WRT
+run-name: Manual Release WRT
 
 on:
   # schedule:
