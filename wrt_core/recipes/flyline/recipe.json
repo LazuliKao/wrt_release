@@ -33,11 +33,6 @@
         "source": "files/root/.bashrc",
         "target": "package/base-files/files/root/.bashrc",
         "append": true
-      },
-      {
-        "source": "files/root/.profile",
-        "target": "package/base-files/files/root/.profile",
-        "append": true
       }
     ],
     "configs": [
