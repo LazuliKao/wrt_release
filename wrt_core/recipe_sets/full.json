@@ -38,7 +38,9 @@
     "disable_easytier",
     "disable_smartdns",
     "hiddify_core",
-    "docker_upgrade"
+    "docker_upgrade",
+    "luci_app_bandix",
+    "luci_app_qosify"
   ],
   "disable_recipes": [
     "default_theme_argon"

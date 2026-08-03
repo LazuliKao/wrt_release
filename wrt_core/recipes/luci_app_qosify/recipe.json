@@ -1,0 +1,61 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "luci_app_qosify",
+  "description": "开启 luci-app-qosify 和 qosify (从官方 upstream master 分支获取最新包定义)",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "qos",
+    "qosify",
+    "luci",
+    "network"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "openwrt-luci-master": {
+        "gitUrl": "https://github.com/openwrt/luci.git",
+        "branch": "master",
+        "sparseRoot": null
+      },
+      "openwrt-packages-master": {
+        "gitUrl": "https://github.com/openwrt/packages.git",
+        "branch": "master",
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "openwrt-packages-master",
+        "path": "net/qosify",
+        "packageName": "qosify"
+      },
+      {
+        "source": "openwrt-luci-master",
+        "path": "applications/luci-app-qosify",
+        "packageName": "luci-app-qosify"
+      }
+    ],
+    "removePackageDirs": [
+      "feeds/packages/net/qosify",
+      "feeds/luci/applications/luci-app-qosify",
+      "package/feeds/packages/qosify",
+      "package/feeds/luci/luci-app-qosify"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/luci_app_qosify.config"
+    ],
+    "script": null
+  }
+}
