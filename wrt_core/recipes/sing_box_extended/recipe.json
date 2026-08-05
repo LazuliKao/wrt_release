@@ -1,0 +1,48 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "sing_box_extended",
+  "description": "导入并构建 shtorm-7/sing-box-extended 的 OpenWrt 发布配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "proxy",
+    "sing-box",
+    "network"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "sing-box-extended": {
+        "gitUrl": "https://github.com/shtorm-7/sing-box-extended.git",
+        "branch": null,
+        "tag": "v1.13.14-extended-2.5.3",
+        "depth": 1,
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "sing-box-extended",
+        "path": ".",
+        "packageName": "sing-box",
+        "script": "hook.sh"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/sing_box_extended.config"
+    ],
+    "script": null
+  }
+}
