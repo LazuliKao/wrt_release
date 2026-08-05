@@ -27,16 +27,16 @@
         "branch": "master",
         "sparseRoot": null
       },
-      "openwrt-packages-master": {
-        "gitUrl": "https://github.com/openwrt/packages.git",
-        "branch": "master",
+      "openwrt-main": {
+        "gitUrl": "https://github.com/openwrt/openwrt.git",
+        "branch": "main",
         "sparseRoot": null
       }
     },
     "importPackages": [
       {
-        "source": "openwrt-packages-master",
-        "path": "net/qosify",
+        "source": "openwrt-main",
+        "path": "package/network/config/qosify",
         "packageName": "qosify"
       },
       {
@@ -46,6 +46,7 @@
       }
     ],
     "removePackageDirs": [
+      "package/network/config/qosify",
       "feeds/packages/net/qosify",
       "feeds/luci/applications/luci-app-qosify",
       "package/feeds/packages/qosify",
@@ -56,6 +57,6 @@
     "configs": [
       "configs/luci_app_qosify.config"
     ],
-    "script": null
+    "script": "apply.sh"
   }
 }
