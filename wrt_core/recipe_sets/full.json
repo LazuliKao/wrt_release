@@ -40,7 +40,8 @@
     "hiddify_core",
     "docker_upgrade",
     "luci_app_bandix",
-    "luci_app_qosify"
+    "luci_app_qosify",
+    "sing_box_extended"
   ],
   "disable_recipes": [
     "default_theme_argon"
