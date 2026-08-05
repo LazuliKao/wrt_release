@@ -264,3 +264,37 @@ jobs:
             ./kmods_*.tar.gz
           fail_on_unmatched_files: true
           body_path: ./release_body.txt
+
+      - name: Setup Rclone
+        if: success()
+        uses: AnimMouse/setup-rclone@v1
+        with:
+          rclone_config: ${{ secrets.RCLONE_CONFIG }}
+
+      - name: Upload Firmware & Kmods to OneDrive
+        if: success()
+        run: |
+          REMOTE_NAME="${{ secrets.RCLONE_REMOTE_NAME }}"
+          REMOTE_DIR="${{ secrets.RCLONE_REMOTE_DIR }}"
+          TARGET_DIR="${REMOTE_DIR}/${{ inputs.model }}/${{ env.BUILD_DATE }}"
+          FIRMWARE_PATH="./firmware"
+          rclone copy "$FIRMWARE_PATH" "${REMOTE_NAME}:${TARGET_DIR}" --stats-one-line -P
+          if [ -f ./kmods_*.tar.gz ]; then
+            rclone copy ./kmods_*.tar.gz "${REMOTE_NAME}:${TARGET_DIR}" --stats-one-line -P
+          fi
+
+      - name: Generate Secrets Token (via GitHub App)
+        if: success()
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.RCLONE_APP_ID }}
+          private-key: ${{ secrets.RCLONE_APP_PRIVATE_KEY }}
+
+      - name: Update Rclone Config in Secrets
+        if: success()
+        uses: AnimMouse/setup-rclone/update-config@v1
+        with:
+          rclone_config_secret_name: RCLONE_CONFIG
+          token: ${{ steps.app-token.outputs.token }}
+
