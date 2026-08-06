@@ -306,7 +306,7 @@ update_package() {
             SHORT_COMMIT=$(echo "$COMMIT_SHA" | cut -c1-7)
             sed -i "s/^PKG_GIT_SHORT_COMMIT:=.*/PKG_GIT_SHORT_COMMIT:=$SHORT_COMMIT/g" "$mk_path"
         fi
-        PKG_VER=$(echo "$PKG_VER" | grep -oE "[\.0-9]{1,}")
+        PKG_VER=$(echo "$PKG_VER" | sed 's/^v//')
 
         local PKG_NAME=$(awk -F"=" '/PKG_NAME:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
         local PKG_SOURCE=$(awk -F"=" '/PKG_SOURCE:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")

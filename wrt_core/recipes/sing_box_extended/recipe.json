@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "sing_box_extended",
-  "description": "导入并构建 shtorm-7/sing-box-extended 的 OpenWrt 发布配置",
+  "description": "基于 kenzok8/small-package 打包结构，以本地补丁改为固定编译 shtorm-7/sing-box-extended 源码",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
@@ -21,24 +21,33 @@
     "addFeeds": [],
     "removeFeeds": [],
     "importPackagesRegistry": {
-      "sing-box-extended": {
-        "gitUrl": "https://github.com/shtorm-7/sing-box-extended.git",
-        "branch": null,
-        "tag": "v1.13.14-extended-2.5.3",
+      "small-package": {
+        "gitUrl": "https://github.com/kenzok8/small-package.git",
+        "branch": "main",
+        "tag": null,
         "depth": 1,
         "sparseRoot": null
       }
     },
     "importPackages": [
       {
-        "source": "sing-box-extended",
-        "path": ".",
-        "packageName": "sing-box",
-        "script": "hook.sh"
+        "source": "small-package",
+        "path": "sing-box",
+        "packageName": "sing-box"
       }
     ],
     "removePackageDirs": [],
-    "patches": [],
+    "patches": [
+      {
+        "source": "patches/use-sing-box-extended.patch",
+        "target": "custom_feed/sing-box",
+        "strip": 1,
+        "forward": true,
+        "backup": false,
+        "rejectFile": false,
+        "fuzz": 2
+      }
+    ],
     "files": [],
     "configs": [
       "configs/sing_box_extended.config"
