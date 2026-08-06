@@ -6,6 +6,7 @@
     "default_theme_fluent",
     "luci_theme_fluent",
     "fix_kernel_magic",
+    "opkg_distfeeds",
     "awg",
     "cli_enhancements",
     "core_enhancements",

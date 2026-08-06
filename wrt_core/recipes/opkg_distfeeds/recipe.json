@@ -1,0 +1,30 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "opkg_distfeeds",
+  "description": "Configure opkg distfeeds with custom mirror and version from ini",
+  "enabled": false,
+  "phase": "post_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "opkg",
+    "distfeeds",
+    "mirror"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}
