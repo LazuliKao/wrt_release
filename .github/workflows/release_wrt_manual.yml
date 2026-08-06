@@ -10,10 +10,11 @@ on:
         type: choice
         description: 'Model to release'
         required: true
-        default: lk_x64_immwrt
+        default: lk_x86_64_immwrt
         options:
-          - lk_x64_immwrt
-          - lk_x64_immwrt_mini
+          - lk_x86_64_immwrt
+          - lk_x86_64_immwrt_mini
+          - lk_x86_64-v3_immwrt
           - lk_mediatek_immwrt
           - lk_mediatek_immwrt_mini
           - lk_mt798x_7986_rebase
