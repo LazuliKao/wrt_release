@@ -26,12 +26,32 @@ if [ ! -f "$kernel_makefile" ]; then
     exit 1
 fi
 
-sed -i "/\\$(LINUX_DIR)\/.vermagic$/c\	echo ${kernel_vermagic} > \\$(LINUX_DIR)/.vermagic" "$kernel_defaults"
-sed -i "/STAMP_BUILT:=/c\  STAMP_BUILT:=\\$(STAMP_BUILT)_${kernel_vermagic}" "$kernel_makefile"
+sed -i '/\$(LINUX_DIR)\/.vermagic$/c\	echo '"${kernel_vermagic}"' > \$(LINUX_DIR)/.vermagic' "$kernel_defaults"
+sed -i '/STAMP_BUILT:=/c\  STAMP_BUILT:=\$(STAMP_BUILT)_'"${kernel_vermagic}" "$kernel_makefile"
 
 echo "fix_kernel_magic: kernel vermagic set to ${kernel_vermagic}"
 
 if [ -n "$kernel_modules" ]; then
+    opkg_mirror=$(read_target_ini OPKG_DISTFEEDS_MIRROR)
+    opkg_feeds=$(read_target_ini OPKG_DISTFEEDS)
+    mirror=""
+    if [ -n "$opkg_mirror" ]; then
+        mirror="$opkg_mirror"
+    elif [ -n "$opkg_feeds" ]; then
+        if [ "$opkg_feeds" = "ustc" ]; then
+            mirror="https://mirrors.ustc.edu.cn/immortalwrt"
+        elif [ "$opkg_feeds" = "nju" ]; then
+            mirror="https://mirror.nju.edu.cn/immortalwrt"
+        elif [ "$opkg_feeds" = "official" ]; then
+            mirror="https://downloads.immortalwrt.org"
+        fi
+    fi
+    [ -z "$mirror" ] && mirror="https://mirror.nju.edu.cn/immortalwrt"
+
+    if [[ "$kernel_modules" =~ ^https://downloads.immortalwrt.org(.*) ]]; then
+        kernel_modules="${mirror}${BASH_REMATCH[1]}"
+    fi
+
     uci_defaults_path="$BUILD_DIR/package/base-files/files/etc/uci-defaults"
     mkdir -p "$uci_defaults_path"
     cat > "$uci_defaults_path/99-kmod-distfeeds.sh" <<EOF
