@@ -5,15 +5,15 @@
  
  PKG_NAME:=sing-box
 -PKG_VERSION:=1.13.16
-+PKG_VERSION:=1.13.14
++PKG_VERSION:=1.13.16
  PKG_RELEASE:=1
  
  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 -PKG_SOURCE_URL:=https://codeload.github.com/SagerNet/sing-box/tar.gz/v$(PKG_VERSION)?
 -PKG_HASH:=5d8201669387d0caded7a22c71682b3c025afef7bac8704cceabed52ea8bde5d
-+PKG_SOURCE_URL:=https://codeload.github.com/shtorm-7/sing-box-extended/tar.gz/v1.13.14-extended-2.5.3?
-+PKG_HASH:=9c32f55aab09335ef062f3afae4d0da0c8b9af0970e6458de27f8c231d41c3bb
-+PKG_BUILD_DIR:=$(BUILD_DIR)/sing-box-extended-1.13.14-extended-2.5.3
++PKG_SOURCE_URL:=https://codeload.github.com/shtorm-7/sing-box-extended/tar.gz/00d3ed46bf84b0602e7e542bf9e949fef5080d7f?
++PKG_HASH:=
++PKG_BUILD_DIR:=$(BUILD_DIR)/sing-box-extended-00d3ed46bf84b0602e7e542bf9e949fef5080d7f
  
  PKG_LICENSE:=GPL-3.0-or-later
  PKG_LICENSE_FILES:=LICENSE

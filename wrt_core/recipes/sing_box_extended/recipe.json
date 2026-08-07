@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "sing_box_extended",
-  "description": "基于 kenzok8/small-package 打包结构，以本地补丁改为固定编译 shtorm-7/sing-box-extended 源码",
+  "description": "基于 kenzok8/small-package 打包结构，固定使用兼容 v1.13.16 的 sing-box-extended 提交并在构建时刷新源码哈希",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
@@ -52,6 +52,6 @@
     "configs": [
       "configs/sing_box_extended.config"
     ],
-    "script": null
+    "script": "apply.sh"
   }
 }
