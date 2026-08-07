@@ -1,0 +1,32 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_wireguard",
+  "description": "禁用标准 WireGuard 集成，在底层编译配置中关闭相关模块与接口支持",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "priority": 100,
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "wireguard"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_wireguard.config"
+    ],
+    "script": null
+  }
+}

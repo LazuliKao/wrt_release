@@ -42,7 +42,8 @@
     "docker_upgrade",
     "luci_app_bandix",
     "luci_app_qosify",
-    "sing_box_extended"
+    "sing_box_extended",
+    "disable_wireguard"
   ],
   "disable_recipes": [
     "default_theme_argon"
