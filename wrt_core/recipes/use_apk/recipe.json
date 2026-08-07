@@ -1,0 +1,60 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "use_apk",
+  "description": "Configure the package manager and apply package fixes",
+  "enabled": true,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "system",
+    "packaging",
+    "opkg"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [
+      {
+        "source": "patches/001-libxml2-host-install.patch",
+        "target": "package/libs/libxml2",
+        "strip": 1,
+        "forward": true,
+        "backup": false,
+        "rejectFile": false,
+        "fuzz": 0
+      },
+      {
+        "source": "patches/002-luci-lib-docker-version.patch",
+        "target": "feeds/luci/libs/luci-lib-docker",
+        "strip": 1,
+        "forward": true,
+        "backup": false,
+        "rejectFile": false,
+        "fuzz": 0
+      },
+      {
+        "source": "patches/003-luci-app-dockerman-version.patch",
+        "target": "feeds/luci/applications/luci-app-dockerman",
+        "strip": 1,
+        "forward": true,
+        "backup": false,
+        "rejectFile": false,
+        "fuzz": 0
+      }
+    ],
+    "files": [],
+    "configs": [
+      "configs/use_apk.config"
+    ],
+    "script": null
+  }
+}

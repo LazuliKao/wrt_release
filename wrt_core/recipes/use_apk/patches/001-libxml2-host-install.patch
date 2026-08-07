@@ -1,0 +1,10 @@
+diff --git a/Makefile b/Makefile
+--- a/Makefile
++++ b/Makefile
+@@ -164,4 +164,5 @@ define Host/Install
+ 	$(call Host/Install/Default)
+-	mv $(1)/bin/xml2-config $(1)/bin/$(GNU_HOST_NAME)-xml2-config
++	cp -fL $(1)/bin/xml2-config $(1)/bin/$(GNU_HOST_NAME)-xml2-config
++	rm -f $(1)/bin/xml2-config
+ 	$(LN) $(GNU_HOST_NAME)-xml2-config $(1)/bin/xml2-config
+ endef
