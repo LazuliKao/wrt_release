@@ -1,0 +1,16 @@
+diff --git a/Makefile b/Makefile
+--- a/Makefile
++++ b/Makefile
+@@ -93,11 +93,13 @@ define Build/Compile
+ 	$(MAKE) -C $(PKG_BUILD_DIR)/shadow-kernel \
+ 		$(KERNEL_MAKE_FLAGS) \
++		HOSTPKG_CONFIG="false" \
+ 		KBUILD_HOSTLDFLAGS="$(KBUILD_HOSTLDFLAGS) -lz" \
+ 		olddefconfig
+ 
+ 	$(MAKE) -C $(PKG_BUILD_DIR)/shadow-kernel \
+ 		$(KERNEL_MAKE_FLAGS) \
+ 		$(PKG_JOBS) \
++		HOSTPKG_CONFIG="false" \
+ 		KBUILD_HOSTLDFLAGS="-L$(STAGING_DIR_HOST)/lib -lz" \
+ 		vmlinux
