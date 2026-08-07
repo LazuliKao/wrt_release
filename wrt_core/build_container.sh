@@ -48,7 +48,7 @@ resolve_build_dir() {
 }
 
 if [ -z "$Dev" ]; then
-    echo "Usage: $0 <dev_name> [debug]"
+    echo "Usage: $0 <dev_name> [debug|resume]"
     echo "或者运行 ./start.sh 进行交互式选择"
     exit 1
 fi
@@ -58,7 +58,19 @@ if [[ $Build_Mod == "debug" ]]; then
     ./build.sh "$Dev" debug
     BUILD_WORKDIR=$(resolve_build_dir)
     cd "$BUILD_WORKDIR"
-    export PS1='(wrt-container-debug) \u@\h \w\\$ '
+    export PS1='(wrt-container-debug) \u@\h \w\$ '
+    exec bash -i
+fi
+
+if [[ $Build_Mod == "resume" ]]; then
+    echo "[container-resume] running inside $(hostname) as $(whoami) in $(pwd)"
+    BUILD_WORKDIR=$(resolve_build_dir)
+    if [[ -d "$BUILD_WORKDIR" ]]; then
+        cd "$BUILD_WORKDIR"
+    else
+        echo "Warning: Build directory '$BUILD_WORKDIR' does not exist." >&2
+    fi
+    export PS1='(wrt-container-resume) \u@\h \w\$ '
     exec bash -i
 fi
 

@@ -46,7 +46,7 @@ collect_supported_devs() {
 }
 
 print_usage() {
-    echo "Usage: $0 <device> [debug|container|container_debug|recipe_preview|recipe_config|config_preview]"
+    echo "Usage: $0 <device> [debug|container|container_debug|container_resume|recipe_preview|recipe_config|config_preview]"
     echo "       ./start.sh"
 }
 
@@ -99,10 +99,11 @@ prompt_select_build_mode() {
         echo "  2) debug"
         echo "  3) container"
         echo "  4) container_debug"
-        echo "  5) recipe_config"
-        echo "  6) recipe_preview"
-        echo "  7) config_preview"
-        printf "Select build mode (1-7, q to quit): "
+        echo "  5) container_resume"
+        echo "  6) recipe_config"
+        echo "  7) recipe_preview"
+        echo "  8) config_preview"
+        printf "Select build mode (1-8, q to quit): "
 
         if ! read -r input; then
             echo
@@ -136,21 +137,26 @@ prompt_select_build_mode() {
         fi
 
         if [[ "$input" =~ ^[[:space:]]*5[[:space:]]*$ ]]; then
-            Build_Mod="recipe_config"
+            Build_Mod="container_resume"
             return
         fi
 
         if [[ "$input" =~ ^[[:space:]]*6[[:space:]]*$ ]]; then
-            Build_Mod="recipe_preview"
+            Build_Mod="recipe_config"
             return
         fi
 
         if [[ "$input" =~ ^[[:space:]]*7[[:space:]]*$ ]]; then
+            Build_Mod="recipe_preview"
+            return
+        fi
+
+        if [[ "$input" =~ ^[[:space:]]*8[[:space:]]*$ ]]; then
             Build_Mod="config_preview"
             return
         fi
 
-        echo "Invalid selection. Please enter 1, 2, 3, 4, 5, 6, or 7."
+        echo "Invalid selection. Please enter a number between 1 and 8."
     done
 }
 
@@ -160,7 +166,7 @@ is_interactive_terminal() {
 
 validate_build_mode() {
     case "$Build_Mod" in
-        ""|debug|container|container_debug|recipe_preview|recipe_config|config_preview)
+        ""|debug|container|container_debug|container_resume|recipe_preview|recipe_config|config_preview)
             return 0
             ;;
         *)
@@ -487,6 +493,11 @@ fi
 
 if [[ $Build_Mod == "container_debug" ]]; then
     run_container_build "debug"
+    exit 0
+fi
+
+if [[ $Build_Mod == "container_resume" ]]; then
+    run_container_build "resume"
     exit 0
 fi
 
