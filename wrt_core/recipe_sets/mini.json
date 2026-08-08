@@ -28,7 +28,8 @@
     "disable_ddns_go",
     "disable_adguardhome",
     "disable_openclash",
-    "disable_wireguard"
+    "disable_wireguard",
+    "use_apk"
   ],
   "disable_recipes": [
     "default_theme_argon"
