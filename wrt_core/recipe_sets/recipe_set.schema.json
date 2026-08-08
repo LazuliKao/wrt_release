@@ -48,6 +48,7 @@
           "disable_passwall",
           "disable_pbr",
           "disable_smartdns",
+          "disable_wireguard",
           "docker_compose",
           "docker_upgrade",
           "dockerman",
@@ -86,6 +87,7 @@
           "storage_fs",
           "tailscale_awg",
           "upx",
+          "use_apk",
           "vm_images",
           "wan_bonding",
           "wifi_ap_drivers"
@@ -122,6 +124,7 @@
           "disable_passwall",
           "disable_pbr",
           "disable_smartdns",
+          "disable_wireguard",
           "docker_compose",
           "docker_upgrade",
           "dockerman",
@@ -160,6 +163,7 @@
           "storage_fs",
           "tailscale_awg",
           "upx",
+          "use_apk",
           "vm_images",
           "wan_bonding",
           "wifi_ap_drivers"
