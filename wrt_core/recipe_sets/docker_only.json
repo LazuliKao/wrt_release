@@ -7,6 +7,7 @@
     "luci_theme_fluent",
     "fix_kernel_magic",
     "opkg_distfeeds",
+    "zram",
     "cli_enhancements",
     "core_enhancements",
     "dockerman",

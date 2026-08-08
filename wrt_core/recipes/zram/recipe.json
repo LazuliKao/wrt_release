@@ -1,0 +1,32 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "zram",
+  "description": "启用 ZRAM 内存压缩交换分区支持 (zram-swap)",
+  "enabled": true,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "system",
+    "optimize"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {},
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/zram.config"
+    ],
+    "script": null
+  }
+}
