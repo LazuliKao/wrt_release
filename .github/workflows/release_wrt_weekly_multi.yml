@@ -37,6 +37,9 @@ jobs:
           - lk_ipq60xx_qosmio_mini
           - lk_ipq807x_qosmio
           - lk_ipq807x_qosmio_mini
+          - lk_cudy_tr3000_114m_immwrt
+          - lk_cudy_tr3000_114m_mt798x
+          - lk_cudy_tr3000_114m_mt798x_6.6
 
     uses: ./.github/workflows/release_wrt.yml
     with:
