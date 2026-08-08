@@ -1,0 +1,11 @@
+--- Makefile
++++ Makefile
+@@ -51,4 +51,8 @@
+ define Build/Prepare
+ 	$(Build/Prepare/Default)
+ 
++	# Docker CLI v29 ships vendor.mod/vendor.sum but no go.mod. Force GOPATH mode
++	# so a sibling package's go.mod cannot be selected from target build_dir.
++	sed -i 's/^export GO111MODULE=auto/export GO111MODULE=off/' $(PKG_BUILD_DIR)/scripts/build/binary
++
+ 	EXPECTED_PKG_GIT_SHORT_COMMIT=$$$$( $(CURDIR)/../dockerd/git-short-commit.sh '$(PKG_GIT_URL)' '$(PKG_GIT_REF)' '$(TMP_DIR)/git-short-commit/$(PKG_NAME)-$(PKG_VERSION)' ); \

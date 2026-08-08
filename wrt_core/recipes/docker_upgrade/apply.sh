@@ -60,8 +60,9 @@ for pkg in dockerd containerd runc docker; do
                 _download_upstream_file "runc" "Makefile" "$real_dir"
                 ;;
             "docker")
-                # 升级命令行客户端以通过 dockerd 的同版本校验
+                # Keep Docker CLI builds isolated from sibling Go modules in target build_dir.
                 _download_upstream_file "docker" "Makefile" "$real_dir"
+                patch -d "$real_dir" -p0 < "$BASE_PATH/recipes/docker_upgrade/patches/001-docker-cli-gopath.patch"
                 ;;
         esac
     done
