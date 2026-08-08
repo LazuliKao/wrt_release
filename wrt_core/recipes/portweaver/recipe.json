@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "portweaver",
-  "description": "从 LazuliKao/luci-app-portweaver 仓库导入并预装 portweaver 端口管理应用",
+  "description": "从 LazuliKao/openwrt-portweaver 导入并预装 portweaver 与 LuCI 端口管理应用",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
@@ -21,21 +21,21 @@
     "addFeeds": [],
     "removeFeeds": [],
     "importPackagesRegistry": {
-      "luci-app-portweaver": {
-        "gitUrl": "https://github.com/LazuliKao/luci-app-portweaver.git",
-        "branch": null,
+      "openwrt-portweaver": {
+        "gitUrl": "https://github.com/LazuliKao/openwrt-portweaver.git",
+        "branch": "main",
         "sparseRoot": null
       }
     },
     "importPackages": [
       {
-        "source": "luci-app-portweaver",
-        "path": "portweaver",
+        "source": "openwrt-portweaver",
+        "path": "package/portweaver",
         "packageName": "portweaver"
       },
       {
-        "source": "luci-app-portweaver",
-        "path": "luci-app-portweaver",
+        "source": "openwrt-portweaver",
+        "path": "package/luci-app-portweaver",
         "packageName": "luci-app-portweaver"
       }
     ],
