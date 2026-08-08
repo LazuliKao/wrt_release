@@ -14,6 +14,8 @@
     "dockerman",
     "docker_compose",
     "homeproxy",
+    "hiddify_core",
+    "sing_box_extended",
     "luci_app_daed",
     "luci_app_unishare",
     "lxc",
@@ -38,11 +40,9 @@
     "disable_lucky",
     "disable_easytier",
     "disable_smartdns",
-    "hiddify_core",
     "docker_upgrade",
     "luci_app_bandix",
     "luci_app_qosify",
-    "sing_box_extended",
     "disable_wireguard"
   ],
   "disable_recipes": [

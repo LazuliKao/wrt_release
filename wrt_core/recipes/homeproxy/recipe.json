@@ -5,7 +5,6 @@
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [
-    "hiddify_core"
   ],
   "conflicts": [],
   "tags": [
