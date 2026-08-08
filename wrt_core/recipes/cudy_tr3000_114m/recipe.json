@@ -1,0 +1,31 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "cudy_tr3000_114m",
+  "description": "Cudy TR3000 v1 114M 固件扩容特调版本 (支持 Stock 与 U-boot Layout 扩容)",
+  "enabled": false,
+  "phase": "post_clone",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "cudy",
+    "tr3000",
+    "partition",
+    "size"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}
