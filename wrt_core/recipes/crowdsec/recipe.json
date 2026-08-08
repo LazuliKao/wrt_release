@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
-  "name": "security_enhancements",
-  "description": "配置防火墙安全联动组件与网络篡改防护 (BanIP, Crowdsec 联动, Fwknopd 敲门服务, TTL 修改)",
+  "name": "crowdsec",
+  "description": "配置 CrowdSec 安全联动与防火墙过滤组件",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
@@ -9,7 +9,6 @@
   "tags": [
     "security",
     "firewall",
-    "banip",
     "crowdsec"
   ],
   "when": {
@@ -26,7 +25,7 @@
     "patches": [],
     "files": [],
     "configs": [
-      "configs/security_enhancements.config"
+      "configs/crowdsec.config"
     ],
     "script": null
   }

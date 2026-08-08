@@ -1,0 +1,32 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "fwknopd",
+  "description": "配置 Fwknopd 单包授权 (SPA) 敲门服务",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "security",
+    "firewall",
+    "fwknopd"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/fwknopd.config"
+    ],
+    "script": null
+  }
+}

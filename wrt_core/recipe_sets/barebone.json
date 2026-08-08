@@ -10,7 +10,6 @@
     "cli_enhancements",
     "core_enhancements",
     "net_optimize",
-    "security_enhancements",
     "upx",
     "wifi_ap_drivers",
     "disable_lucky",
