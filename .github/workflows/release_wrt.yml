@@ -276,14 +276,8 @@ jobs:
       - name: Upload Firmware & Kmods to OneDrive
         if: success()
         run: |
-          REMOTE_NAME="${{ secrets.RCLONE_REMOTE_NAME }}"
-          REMOTE_DIR="${{ secrets.RCLONE_REMOTE_DIR }}"
-          TARGET_DIR="${REMOTE_DIR}/${{ inputs.model }}/${{ env.BUILD_DATE }}"
-          FIRMWARE_PATH="./firmware"
-          rclone copy "$FIRMWARE_PATH" "${REMOTE_NAME}:${TARGET_DIR}" --stats-one-line -P
-          if [ -f ./kmods_*.tar.gz ]; then
-            rclone copy ./kmods_*.tar.gz "${REMOTE_NAME}:${TARGET_DIR}" --stats-one-line -P
-          fi
+          chmod +x .github/workflows/rclone_upload.sh
+          .github/workflows/rclone_upload.sh "./firmware" "${{ secrets.RCLONE_REMOTE_NAME }}" "${{ secrets.RCLONE_REMOTE_DIR }}/${{ inputs.model }}/${{ env.BUILD_DATE }}"
 
       - name: Generate Secrets Token (via GitHub App)
         if: success()
