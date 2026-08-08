@@ -1,0 +1,32 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "disable_initramfs",
+  "description": "禁用 Initramfs 固件生成，仅生成标准刷机/升级固件以加快编译并节省空间",
+  "enabled": true,
+  "phase": "pre_defconfig",
+  "priority": 100,
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "disable",
+    "initramfs"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/disable_initramfs.config"
+    ],
+    "script": null
+  }
+}

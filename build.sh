@@ -591,6 +591,9 @@ mkdir -p "$FIRMWARE_DIR"
 find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*.img.gz" -o -name "*.itb" -o -name "*.fip" -o -name "*.ubi" -o -name "*rootfs.tar.gz" -o -name "*.vmdk*" -o -name "*.vhdx*" -o -name "*.qcow2*" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
 \rm -f "$FIRMWARE_DIR/Packages.manifest" 2>/dev/null
 \rm -f "$FIRMWARE_DIR"/mt798*-ram-*.bin 2>/dev/null
+\rm -f "$FIRMWARE_DIR"/*-initramfs-kernel.bin 2>/dev/null
+\rm -f "$FIRMWARE_DIR"/*-preloader.bin 2>/dev/null
+\rm -f "$FIRMWARE_DIR"/*-bl31-uboot.fip 2>/dev/null
 
 if [[ -d action_build ]]; then
     make clean
