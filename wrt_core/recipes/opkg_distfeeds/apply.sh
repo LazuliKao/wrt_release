@@ -94,30 +94,45 @@ fi
 
 # 7. 根据包管理器格式输出并进行补丁
 if [ "$use_apk" -eq 1 ]; then
-    echo "opkg_distfeeds: Target uses APK package manager, converting feeds to APK repositories format"
-    # 将 opkg 格式转换为 apk 格式（去掉 'src/gz <name> ' 前缀）
-    apk_content=$(echo "$rendered_content" | sed -E 's/^src\/gz [^ ]+ //g')
-    
-    repositories_conf="$emortal_def_dir/files/99-repositories"
-    mkdir -p "$(dirname "$repositories_conf")"
-    echo "$apk_content" > "$repositories_conf"
-    
-    # 检查并打补丁到 Makefile
+    echo "opkg_distfeeds: Target uses APK package manager, converting feeds to APK repository indexes"
+    # APK repositories must name the package index explicitly; a bare feed URL
+    # makes apk request the legacy APKINDEX.tar.gz instead of packages.adb.
+    apk_content=$(printf '%s\n' "$rendered_content" | awk '
+        /^[[:space:]]*($|#)/ { print; next }
+        {
+            sub(/^src\/gz[[:space:]]+[^[:space:]]+[[:space:]]+/, "")
+            sub(/\/+$/, "")
+            if ($0 !~ /\/packages\.adb$/) {
+                $0 = $0 "/packages.adb"
+            }
+            print
+        }
+    ')
+
+    distfeeds_list="$emortal_def_dir/files/99-distfeeds.list"
+    mkdir -p "$(dirname "$distfeeds_list")"
+    printf '%s\n' "$apk_content" > "$distfeeds_list"
+
+    # A previous recipe version installed bare URLs into /etc/apk/repositories.
+    # Remove that override so only the valid repository.d feed list is active.
+    rm -f "$emortal_def_dir/files/99-repositories"
+
     if [ -f "$emortal_def_dir/Makefile" ]; then
-        if ! grep -q "99-repositories" "$emortal_def_dir/Makefile"; then
-            echo "opkg_distfeeds: patching default-settings Makefile to install 99-repositories"
+        sed -i '/99-repositories/d' "$emortal_def_dir/Makefile"
+        if ! grep -q "99-distfeeds.list" "$emortal_def_dir/Makefile"; then
+            echo "opkg_distfeeds: patching default-settings Makefile to install 99-distfeeds.list"
             sed -i "/define Package\/default-settings\/install/a\\
 \\t\$(INSTALL_DIR) \$(1)/etc\\n\
-\t\$(INSTALL_DATA) ./files/99-repositories \$(1)/etc/99-repositories\n" "$emortal_def_dir/Makefile"
+\t\$(INSTALL_DATA) ./files/99-distfeeds.list \$(1)/etc/99-distfeeds.list\n" "$emortal_def_dir/Makefile"
         fi
     fi
-    
-    # 检查并打补丁到 99-default-settings 启动脚本
+
     if [ -f "$emortal_def_dir/files/99-default-settings" ]; then
-        if ! grep -q "99-repositories" "$emortal_def_dir/files/99-default-settings"; then
-            echo "opkg_distfeeds: patching 99-default-settings to load 99-repositories"
+        sed -i "\|^\[ -f '/etc/99-repositories' \] && mv '/etc/99-repositories' '/etc/apk/repositories'$|d" "$emortal_def_dir/files/99-default-settings"
+        if ! grep -q "99-distfeeds.list" "$emortal_def_dir/files/99-default-settings"; then
+            echo "opkg_distfeeds: patching 99-default-settings to load 99-distfeeds.list"
             sed -i "/exit 0/i\\
-[ -f \'/etc/99-repositories\' ] && mv \'/etc/99-repositories\' \'/etc/apk/repositories\'\n" "$emortal_def_dir/files/99-default-settings"
+[ -f '/etc/99-distfeeds.list' ] && mv '/etc/99-distfeeds.list' '/etc/apk/repositories.d/distfeeds.list'\n" "$emortal_def_dir/files/99-default-settings"
         fi
     fi
 else
