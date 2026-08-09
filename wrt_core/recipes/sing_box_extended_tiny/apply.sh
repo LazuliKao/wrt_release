@@ -2,7 +2,7 @@
 set -euo pipefail
 
 makefile="$BUILD_DIR/custom_feed/sing-box/Makefile"
-tiny_tags="with_dhcp,with_gvisor,with_quic,with_utls,with_wireguard,with_masque,with_musl,badlinkname,tfogo_checklinkname0"
+tiny_tags="with_clash_api,with_dhcp,with_gvisor,with_quic,with_utls,with_wireguard,with_masque,with_musl,badlinkname,tfogo_checklinkname0"
 install_line='$(call GoPackage/Package/Install/Bin,$(1))'
 upx_line='$(TOPDIR)/upx/upx --lzma $(1)/usr/bin/sing-box'
 
