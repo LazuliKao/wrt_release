@@ -35,6 +35,7 @@
           "cloudflared",
           "core_enhancements",
           "crowdsec",
+          "cudy_tr3000_114m",
           "default_theme_argon",
           "default_theme_fluent",
           "disable_adguardhome",
@@ -42,6 +43,7 @@
           "disable_ddns_go",
           "disable_docker_deps",
           "disable_easytier",
+          "disable_initramfs",
           "disable_istorex",
           "disable_lucky",
           "disable_mosdns",
@@ -54,6 +56,7 @@
           "docker_compose",
           "docker_upgrade",
           "dockerman",
+          "enable_istorex",
           "fix_kernel_magic",
           "flyline",
           "fwknopd",
@@ -92,7 +95,9 @@
           "use_apk",
           "vm_images",
           "wan_bonding",
-          "wifi_ap_drivers"
+          "wifi_ap_drivers",
+          "zapret2",
+          "zram"
         ]
       },
       "uniqueItems": true
@@ -113,6 +118,7 @@
           "cloudflared",
           "core_enhancements",
           "crowdsec",
+          "cudy_tr3000_114m",
           "default_theme_argon",
           "default_theme_fluent",
           "disable_adguardhome",
@@ -120,6 +126,7 @@
           "disable_ddns_go",
           "disable_docker_deps",
           "disable_easytier",
+          "disable_initramfs",
           "disable_istorex",
           "disable_lucky",
           "disable_mosdns",
@@ -132,6 +139,7 @@
           "docker_compose",
           "docker_upgrade",
           "dockerman",
+          "enable_istorex",
           "fix_kernel_magic",
           "flyline",
           "fwknopd",
@@ -170,7 +178,9 @@
           "use_apk",
           "vm_images",
           "wan_bonding",
-          "wifi_ap_drivers"
+          "wifi_ap_drivers",
+          "zapret2",
+          "zram"
         ]
       },
       "uniqueItems": true

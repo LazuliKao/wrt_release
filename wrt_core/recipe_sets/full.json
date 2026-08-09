@@ -40,6 +40,8 @@
     "wan_bonding",
     "wifi_ap_drivers",
     "mwan3",
+    "zapret2",
+    "enable_istorex",
     "disable_lucky",
     "disable_easytier",
     "disable_smartdns",

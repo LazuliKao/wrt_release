@@ -1,0 +1,50 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "zapret2",
+  "description": "预装 zapret2 DPI 绕过工具及其 LuCI 管理界面",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "network",
+    "proxy",
+    "zapret2"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "zapret2-openwrt": {
+        "gitUrl": "https://github.com/1andrevich/zapret2-openwrt.git",
+        "branch": "zap1",
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "zapret2-openwrt",
+        "path": "zapret2",
+        "packageName": "zapret2"
+      },
+      {
+        "source": "zapret2-openwrt",
+        "path": "luci-app-zapret2",
+        "packageName": "luci-app-zapret2"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/zapret2.config"
+    ],
+    "script": null
+  }
+}

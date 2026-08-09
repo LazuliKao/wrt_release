@@ -6,7 +6,9 @@
   "phase": "pre_defconfig",
   "priority": 100,
   "depends": [],
-  "conflicts": [],
+  "conflicts": [
+    "enable_istorex"
+  ],
   "tags": [
     "disable",
     "istorex"

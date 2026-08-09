@@ -1,0 +1,34 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "enable_istorex",
+  "description": "启用 iStoreX 及应用商店集成，配置相关软件包编译开启",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "priority": 100,
+  "depends": [],
+  "conflicts": [
+    "disable_istorex"
+  ],
+  "tags": [
+    "enable",
+    "istorex"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/enable_istorex.config"
+    ],
+    "script": null
+  }
+}
