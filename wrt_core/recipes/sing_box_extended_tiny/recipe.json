@@ -1,0 +1,35 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "sing_box_extended_tiny",
+  "description": "基于 sing-box-extended 构建精简标签集，并使用 UPX 压缩 sing-box 二进制",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [
+    "sing_box_extended",
+    "upx"
+  ],
+  "conflicts": [],
+  "tags": [
+    "proxy",
+    "sing-box",
+    "network",
+    "tiny",
+    "upx"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "sing_box_extended",
-  "description": "基于 kenzok8/small-package 打包结构，固定使用兼容 v1.13.16 的 sing-box-extended 提交并在构建时刷新源码哈希",
+  "description": "使用 sing-box-extended 固定提交构建，并在导入时重写源码、构建标签与链接参数",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
@@ -33,21 +33,12 @@
       {
         "source": "small-package",
         "path": "sing-box",
-        "packageName": "sing-box"
+        "packageName": "sing-box",
+        "script": "hook.sh"
       }
     ],
     "removePackageDirs": [],
-    "patches": [
-      {
-        "source": "patches/use-sing-box-extended.patch",
-        "target": "custom_feed/sing-box",
-        "strip": 1,
-        "forward": true,
-        "backup": false,
-        "rejectFile": false,
-        "fuzz": 2
-      }
-    ],
+    "patches": [],
     "files": [],
     "configs": [
       "configs/sing_box_extended.config"
