@@ -147,9 +147,22 @@ update_ath11k_fw() {
             sed -i 's/ath11k-firmware-ipq8074\([^-[:alnum:]_]\|$\)/ath11k-firmware-ipq8074-ddwrt\1/g' "$ipq807_target"
         fi
 
-        if [ -f "$ipq60_target" ] || [ -f "$ipq807_target" ]; then
-            echo "已同步 ipq60xx/ipq807x ath11k 固件依赖为 ddwrt 包名。"
+        # 自动同步各设备（如 xiaomi_ax9000、jdcloud_re-cs-02 等）引用的 qcn9074 固件名为 ddwrt
+        local ipq807_image="$BUILD_DIR/target/linux/qualcommax/image/ipq807x.mk"
+        local ipq60_image="$BUILD_DIR/target/linux/qualcommax/image/ipq60xx.mk"
+        local ipq50_image="$BUILD_DIR/target/linux/qualcommax/image/ipq50xx.mk"
+
+        if [ -f "$ipq807_image" ]; then
+            sed -i 's/ath11k-firmware-qcn9074\([^-[:alnum:]_]\|$\)/ath11k-firmware-qcn9074-ddwrt\1/g' "$ipq807_image"
         fi
+        if [ -f "$ipq60_image" ]; then
+            sed -i 's/ath11k-firmware-qcn9074\([^-[:alnum:]_]\|$\)/ath11k-firmware-qcn9074-ddwrt\1/g' "$ipq60_image"
+        fi
+        if [ -f "$ipq50_image" ]; then
+            sed -i 's/ath11k-firmware-qcn9074\([^-[:alnum:]_]\|$\)/ath11k-firmware-qcn9074-ddwrt\1/g' "$ipq50_image"
+        fi
+
+        echo "已同步 ipq60xx/ipq807x/ipq50xx ath11k 固件依赖（包括 qcn9074）为 ddwrt 包名。"
     fi
 }
 
