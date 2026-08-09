@@ -594,6 +594,7 @@ find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*.im
 \rm -f "$FIRMWARE_DIR"/*-initramfs-kernel.bin 2>/dev/null
 \rm -f "$FIRMWARE_DIR"/*-preloader.bin 2>/dev/null
 \rm -f "$FIRMWARE_DIR"/*-bl31-uboot.fip 2>/dev/null
+\rm -f "$FIRMWARE_DIR"/*-gpt.bin 2>/dev/null
 
 if [[ -d action_build ]]; then
     make clean
