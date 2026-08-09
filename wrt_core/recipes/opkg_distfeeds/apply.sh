@@ -54,6 +54,19 @@ render_template() {
     sed -e "s/{VERSION}/$version/g" -e "s/{ARCH}/$arch/g" -e "s|{MIRROR}|$mirror|g" "$template_file"
 }
 
+fetch_url() {
+    local url="$1"
+
+    if command -v curl >/dev/null 2>&1; then
+        curl --fail --location --silent --show-error "$url"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -qO- "$url"
+    else
+        echo "opkg_distfeeds warning: neither curl nor wget is available to discover kmod repositories" >&2
+        return 127
+    fi
+}
+
 # 4. 检测是否是 APK 包管理器
 use_apk=0
 if [ -f "$BUILD_DIR/.config" ]; then
@@ -97,7 +110,7 @@ if [ "$use_apk" -eq 1 ]; then
     echo "opkg_distfeeds: Target uses APK package manager, converting feeds to APK repository indexes"
     # APK repositories must name the package index explicitly; a bare feed URL
     # makes apk request the legacy APKINDEX.tar.gz instead of packages.adb.
-    apk_content=$(printf '%s\n' "$rendered_content" | awk '
+    standard_apk_content=$(printf '%s\n' "$rendered_content" | awk '
         /^[[:space:]]*($|#)/ { print; next }
         {
             sub(/^src\/gz[[:space:]]+[^[:space:]]+[[:space:]]+/, "")
@@ -108,6 +121,55 @@ if [ "$use_apk" -eq 1 ]; then
             print
         }
     ')
+
+    target_board=""
+    target_subtarget=""
+    if [ -f "$BUILD_DIR/.config" ]; then
+        target_board=$(awk -F= '
+            $1 ~ /^CONFIG_TARGET_[[:alnum:]]+$/ && $2 == "y" {
+                sub(/^CONFIG_TARGET_/, "", $1)
+                print $1
+                exit
+            }
+        ' "$BUILD_DIR/.config")
+        if [ -n "$target_board" ]; then
+            target_subtarget=$(awk -F= -v board="$target_board" '
+                $2 == "y" && index($1, "CONFIG_TARGET_" board "_") == 1 && $1 !~ /_DEVICE_/ {
+                    sub("^CONFIG_TARGET_" board "_", "", $1)
+                    print $1
+                    exit
+                }
+            ' "$BUILD_DIR/.config")
+        fi
+    fi
+
+    target_apk_content=""
+    if [ -n "$target_board" ] && [ -n "$target_subtarget" ]; then
+        target_repo="$mirror/releases/$version/targets/$target_board/$target_subtarget"
+        target_apk_content="$target_repo/packages/packages.adb"
+
+        kmods_url="$target_repo/kmods/"
+        if kmods_listing=$(fetch_url "$kmods_url" 2>/dev/null); then
+            kmods_directory=$(printf '%s\n' "$kmods_listing" | sed -n 's|.*href="\([0-9][0-9.]*-[0-9][0-9]*-[0-9a-f][0-9a-f]*\)/".*|\1|p' | sed -n '1p')
+            if [ -n "$kmods_directory" ]; then
+                kmod_vermagic="${kmods_directory##*-}"
+                echo "opkg_distfeeds: Using published KERNEL_VERMAGIC '$kmod_vermagic'"
+                target_apk_content="$target_apk_content\n$target_repo/kmods/$kmods_directory/packages.adb"
+            else
+                echo "opkg_distfeeds warning: no published kmod ABI was found at $kmods_url"
+            fi
+        else
+            echo "opkg_distfeeds warning: unable to fetch published kmod ABIs from $kmods_url"
+        fi
+    else
+        echo "opkg_distfeeds warning: unable to determine target board and subtarget; omitting target and kmod repositories"
+    fi
+
+    if [ -n "$target_apk_content" ]; then
+        apk_content=$(printf '%b\n%s\n' "$target_apk_content" "$standard_apk_content")
+    else
+        apk_content="$standard_apk_content"
+    fi
 
     distfeeds_list="$emortal_def_dir/files/99-distfeeds.list"
     mkdir -p "$(dirname "$distfeeds_list")"
