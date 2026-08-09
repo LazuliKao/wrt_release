@@ -39,7 +39,7 @@ define Package/hiddify-core/description
   ShadowTLS, Tor, trojan, VLess, VMess, WireGuard and so on.
 endef
 
-GO_PKG_TAGS:=with_v2ray_api,with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,with_acme,with_clash_api,with_tailscale,with_ccm,with_ocm,tfogo_checklinkname0
+GO_PKG_TAGS:=with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,tfogo_checklinkname0
 
 define Package/hiddify-core/conffiles
 /etc/config/hiddify
