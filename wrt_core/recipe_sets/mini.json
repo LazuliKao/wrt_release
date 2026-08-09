@@ -30,7 +30,8 @@
     "disable_adguardhome",
     "disable_openclash",
     "disable_wireguard",
-    "use_apk"
+    "use_apk",
+    "vm_images"
   ],
   "disable_recipes": [
     "default_theme_argon"
