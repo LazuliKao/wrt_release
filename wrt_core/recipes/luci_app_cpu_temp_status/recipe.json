@@ -1,0 +1,66 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "luci_app_cpu_temp_status",
+  "description": "导入并启用 gSpotx2f 的 CPU 性能管理、CPU 状态及温度状态 LuCI 插件",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "monitor",
+    "luci",
+    "cpu",
+    "temperature"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "luci-app-cpu-perf": {
+        "gitUrl": "https://github.com/gSpotx2f/luci-app-cpu-perf.git",
+        "branch": "master",
+        "sparseRoot": null
+      },
+      "luci-app-cpu-status": {
+        "gitUrl": "https://github.com/gSpotx2f/luci-app-cpu-status.git",
+        "branch": "master",
+        "sparseRoot": null
+      },
+      "luci-app-temp-status": {
+        "gitUrl": "https://github.com/gSpotx2f/luci-app-temp-status.git",
+        "branch": "master",
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "luci-app-cpu-perf",
+        "path": ".",
+        "packageName": "luci-app-cpu-perf"
+      },
+      {
+        "source": "luci-app-cpu-status",
+        "path": ".",
+        "packageName": "luci-app-cpu-status"
+      },
+      {
+        "source": "luci-app-temp-status",
+        "path": ".",
+        "packageName": "luci-app-temp-status"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/luci_app_cpu_temp_status.config"
+    ],
+    "script": null
+  }
+}

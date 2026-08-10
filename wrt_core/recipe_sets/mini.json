@@ -30,6 +30,7 @@
     "disable_adguardhome",
     "disable_openclash",
     "disable_wireguard",
+    "luci_app_cpu_temp_status",
     "use_apk",
     "vm_images"
   ],

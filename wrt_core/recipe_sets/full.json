@@ -48,6 +48,7 @@
     "docker_upgrade",
     "luci_app_bandix",
     "luci_app_qosify",
+    "luci_app_cpu_temp_status",
     "disable_wireguard",
     "use_apk"
   ],
