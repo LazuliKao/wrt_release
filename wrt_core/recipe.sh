@@ -245,16 +245,35 @@ recipe_match_json_array() {
     local actual="$3"
     local item
     local has_items=0
+    local has_positive=0
+    local matched_positive=0
 
     while IFS= read -r item; do
         [ -n "$item" ] || continue
         has_items=1
-        if [ "$item" = "$actual" ]; then
-            return 0
-        fi
+        case "$item" in
+            !*)
+                local neg_item="${item#!}"
+                if [ "$neg_item" = "$actual" ]; then
+                    return 2
+                fi
+                ;;
+            *)
+                has_positive=1
+                if [ "$item" = "$actual" ]; then
+                    matched_positive=1
+                fi
+                ;;
+        esac
     done < <(recipe_json_lines "$file" "$expr")
 
-    [ "$has_items" -eq 0 ]
+    if [ "$has_items" -eq 0 ]; then
+        return 0
+    fi
+    if [ "$has_positive" -eq 1 ] && [ "$matched_positive" -eq 0 ]; then
+        return 2
+    fi
+    return 0
 }
 
 recipe_match_json_tags() {
@@ -263,18 +282,39 @@ recipe_match_json_tags() {
     local wanted
     local tag
     local has_items=0
+    local has_positive=0
+    local matched_positive=0
 
     while IFS= read -r wanted; do
         [ -n "$wanted" ] || continue
         has_items=1
-        while IFS= read -r tag; do
-            if [ "$wanted" = "$tag" ]; then
-                return 0
-            fi
-        done < <(recipe_split_csv "$RECIPE_TARGET_TAGS")
+        case "$wanted" in
+            !*)
+                local neg_wanted="${wanted#!}"
+                while IFS= read -r tag; do
+                    if [ "$neg_wanted" = "$tag" ]; then
+                        return 2
+                    fi
+                done < <(recipe_split_csv "$RECIPE_TARGET_TAGS")
+                ;;
+            *)
+                has_positive=1
+                while IFS= read -r tag; do
+                    if [ "$wanted" = "$tag" ]; then
+                        matched_positive=1
+                    fi
+                done < <(recipe_split_csv "$RECIPE_TARGET_TAGS")
+                ;;
+        esac
     done < <(recipe_json_lines "$file" "$expr")
 
-    [ "$has_items" -eq 0 ]
+    if [ "$has_items" -eq 0 ]; then
+        return 0
+    fi
+    if [ "$has_positive" -eq 1 ] && [ "$matched_positive" -eq 0 ]; then
+        return 2
+    fi
+    return 0
 }
 
 recipe_scan_initial_plan() {
@@ -895,6 +935,14 @@ recipe_init() {
     [ -d "$RECIPE_BASE_PATH/recipes" ] || recipe_die "recipes directory not found: $RECIPE_BASE_PATH/recipes"
 
     RECIPE_TARGET_TAGS=$(recipe_target_ini_get "$RECIPE_TARGET_INI" TARGET_TAGS)
+    local fragments=$(recipe_target_ini_get "$RECIPE_TARGET_INI" CONFIG_FRAGMENTS)
+    local fragment
+    while IFS= read -r fragment; do
+        if [ "$fragment" = "nss" ]; then
+            RECIPE_TARGET_TAGS="${RECIPE_TARGET_TAGS:+${RECIPE_TARGET_TAGS},}nss"
+            break
+        fi
+    done < <(recipe_split_csv "$fragments")
     recipe_build_plan
 }
 

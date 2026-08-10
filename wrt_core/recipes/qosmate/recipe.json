@@ -15,7 +15,9 @@
     "targets": [],
     "repo": [],
     "branch": [],
-    "tags": []
+    "tags": [
+      "!nss"
+    ]
   },
   "actions": {
     "addFeeds": [],
