@@ -206,7 +206,7 @@ recipe_validate_structure() {
         all(.actions.addFeeds[]?; type == "string") and
         all(.actions.removeFeeds[]?; type == "string") and
         all(.actions.importPackagesRegistry[]?; (.gitUrl | type == "string" and length > 0) and ((has("branch") | not) or (.branch == null) or (.branch | type == "string")) and ((has("tag") | not) or (.tag == null) or (.tag | type == "string")) and ((has("commit") | not) or (.commit == null) or (.commit | type == "string")) and ((has("depth") | not) or (.depth == null) or (.depth | type == "number")) and ((has("sparseRoot") | not) or (.sparseRoot == null) or (.sparseRoot | type == "string"))) and
-        all(.actions.importPackages[]?; type == "object" and (.source | type == "string" and length > 0) and (.path | type == "string" and length > 0) and ((has("target") | not) or (.target | type == "string" and length > 0)) and ((has("script") | not) or (.script | type == "string" and length > 0))) and
+        all(.actions.importPackages[]?; type == "object" and (.source | type == "string" and length > 0) and (.path | type == "string" and length > 0) and ((has("target") | not) or (.target | type == "string" and length > 0)) and ((has("packageName") | not) or (.packageName | type == "string" and length > 0)) and ((has("script") | not) or (.script | type == "string" and length > 0)) and ((has("fixLuciMk") | not) or (.fixLuciMk | type == "boolean"))) and
         all(.actions.removePackageDirs[]?; type == "string") and
         all(.actions.patches[]?; type == "object" and (.source | type == "string" and length > 0) and (.target | type == "string" and length > 0) and ((has("strip") | not) or (.strip | type == "number" and . >= 0 and floor == .)) and ((has("binary") | not) or (.binary | type == "boolean")) and ((has("ignoreWhitespace") | not) or (.ignoreWhitespace | type == "boolean")) and ((has("forward") | not) or (.forward | type == "boolean")) and ((has("backup") | not) or (.backup | type == "boolean")) and ((has("rejectFile") | not) or (.rejectFile | type == "boolean")) and ((has("fuzz") | not) or (.fuzz | type == "number" and . >= 0 and floor == .))) and
         all(.actions.files[]?; type == "object" and (.source | type == "string" and length > 0) and (.target | type == "string" and length > 0) and ((has("mode") | not) or (.mode | type == "string" and test("^[0-7]{3,4}$"))) and ((has("append") | not) or (.append | type == "boolean"))) and
@@ -1231,6 +1231,7 @@ recipe_apply_import_package() {
     local import_path="$4"
     local package_name_override="$5"
     local import_script="$6"
+    local fix_luci_mk="${7:-false}"
     local repo_url
     local repo_branch
     local repo_tag
@@ -1305,6 +1306,26 @@ recipe_apply_import_package() {
         BUILD_DIR="$RECIPE_BUILD_DIR" \
         RECIPE_NAME="$recipe_name" \
             bash "$script_path"
+    fi
+
+    if [ "$fix_luci_mk" = "true" ]; then
+        local makefile_path="$target_dir/Makefile"
+        if [ -f "$makefile_path" ]; then
+            if grep -q "include ../../luci.mk" "$makefile_path"; then
+                echo "recipe: replacing '../../luci.mk' with '\$(TOPDIR)/feeds/luci/luci.mk' in $makefile_path"
+                sed -i 's|^include ../../luci\.mk$|include $(TOPDIR)/feeds/luci/luci.mk|' "$makefile_path"
+            elif grep -q "include \$(TOPDIR)/feeds/luci/luci.mk" "$makefile_path"; then
+                echo "recipe: $makefile_path already contains correct luci.mk include"
+            else
+                echo "recipe: appending luci.mk inclusion to $makefile_path"
+                echo "" >> "$makefile_path"
+                echo "include \$(TOPDIR)/feeds/luci/luci.mk" >> "$makefile_path"
+                echo "" >> "$makefile_path"
+                echo "# call BuildPackage - OpenWrt buildroot signature" >> "$makefile_path"
+            fi
+        else
+            echo "recipe: warning: Makefile not found at $makefile_path, cannot fixLuciMk" >&2
+        fi
     fi
 
     # Register and install package in custom_feed
@@ -1429,7 +1450,8 @@ recipe_apply_one() {
         import_path=$(recipe_json_object_get "$entry" '.path')
         import_target=$(recipe_json_object_get_optional "$entry" '.packageName // empty')
         import_script=$(recipe_json_object_get_optional "$entry" '.script // empty')
-        recipe_apply_import_package "$name" "$file" "$source_label" "$import_path" "$import_target" "$import_script"
+        fix_luci_mk=$(recipe_json_object_get_optional "$entry" '.fixLuciMk // false')
+        recipe_apply_import_package "$name" "$file" "$source_label" "$import_path" "$import_target" "$import_script" "$fix_luci_mk"
     done < <(recipe_json_lines "$file" '.actions.importPackages[]? | @json')
 
     recipe_apply_patch_actions "$name" "$file"

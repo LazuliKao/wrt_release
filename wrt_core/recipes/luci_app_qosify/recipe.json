@@ -42,7 +42,8 @@
       {
         "source": "openwrt-luci-master",
         "path": "applications/luci-app-qosify",
-        "packageName": "luci-app-qosify"
+        "packageName": "luci-app-qosify",
+        "fixLuciMk": true
       }
     ],
     "removePackageDirs": [
@@ -57,6 +58,6 @@
     "configs": [
       "configs/luci_app_qosify.config"
     ],
-    "script": "apply.sh"
+    "script": null
   }
 }

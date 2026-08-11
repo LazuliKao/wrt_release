@@ -43,7 +43,8 @@
       {
         "source": "luci-app-mwan3",
         "path": ".",
-        "packageName": "luci-app-mwan3"
+        "packageName": "luci-app-mwan3",
+        "fixLuciMk": true
       }
     ],
     "removePackageDirs": [
@@ -57,6 +58,6 @@
     "configs": [
       "configs/mwan3.config"
     ],
-    "script": "apply.sh"
+    "script": null
   }
 }

@@ -114,7 +114,8 @@
               "source": { "type": "string" },
               "path": { "type": "string" },
               "packageName": { "type": "string" },
-              "script": { "type": "string" }
+              "script": { "type": "string" },
+              "fixLuciMk": { "type": "boolean" }
             }
           }
         },

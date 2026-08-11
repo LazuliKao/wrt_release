@@ -37,7 +37,8 @@
       {
         "source": "self-hosting-luci",
         "path": "applications/luci-app-upnp",
-        "packageName": "luci-app-upnp"
+        "packageName": "luci-app-upnp",
+        "fixLuciMk": true
       },
       {
         "source": "self-hosting-packages",
