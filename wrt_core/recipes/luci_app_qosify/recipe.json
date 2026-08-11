@@ -25,12 +25,12 @@
       "openwrt-luci-master": {
         "gitUrl": "https://github.com/openwrt/luci.git",
         "branch": "master",
-        "sparseRoot": null
+        "depth": 1
       },
       "openwrt-main": {
         "gitUrl": "https://github.com/openwrt/openwrt.git",
         "branch": "main",
-        "sparseRoot": null
+        "depth": 1
       }
     },
     "importPackages": [

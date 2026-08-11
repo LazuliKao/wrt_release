@@ -25,12 +25,12 @@
       "nas-packages": {
         "gitUrl": "https://github.com/linkease/nas-packages.git",
         "branch": "master",
-        "sparseRoot": null
+        "depth": 1
       },
       "nas-packages-luci": {
         "gitUrl": "https://github.com/linkease/nas-packages-luci.git",
         "branch": "main",
-        "sparseRoot": null
+        "depth": 1
       }
     },
     "importPackages": [

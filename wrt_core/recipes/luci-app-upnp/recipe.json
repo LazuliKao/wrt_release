@@ -1,0 +1,57 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "miniupnpd_stun",
+  "description": "Replace upstream miniupnpd and luci-app-upnp with custom version supporting STUN allow-filtered",
+  "enabled": false,
+  "priority": 0,
+  "phase": "post_feeds_install",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "network",
+    "upnp",
+    "nat"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "self-hosting-luci": {
+        "gitUrl": "https://github.com/Self-Hosting-Group/luci.git",
+        "branch": "revision",
+        "depth": 1
+      },
+      "self-hosting-packages": {
+        "gitUrl": "https://github.com/Self-Hosting-Group/packages.git",
+        "branch": "revision",
+        "depth": 1
+      }
+    },
+    "importPackages": [
+      {
+        "source": "self-hosting-luci",
+        "path": "applications/luci-app-upnp",
+        "packageName": "luci-app-upnp"
+      },
+      {
+        "source": "self-hosting-packages",
+        "path": "net/miniupnpd",
+        "packageName": "miniupnpd"
+      }
+    ],
+    "removePackageDirs": [
+      "feeds/packages/net/miniupnpd",
+      "feeds/luci/applications/luci-app-upnp"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}
