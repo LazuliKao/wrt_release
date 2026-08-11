@@ -1,6 +1,6 @@
 {
   "$schema": "../recipe.schema.json",
-  "name": "miniupnpd_stun",
+  "name": "luci-app-upnp",
   "description": "Replace upstream miniupnpd and luci-app-upnp with custom version supporting STUN allow-filtered",
   "enabled": false,
   "priority": 0,
@@ -47,7 +47,9 @@
     ],
     "removePackageDirs": [
       "feeds/packages/net/miniupnpd",
-      "feeds/luci/applications/luci-app-upnp"
+      "feeds/luci/applications/luci-app-upnp",
+      "package/feeds/packages/miniupnpd",
+      "package/feeds/luci/luci-app-upnp"
     ],
     "patches": [],
     "files": [],
