@@ -39,6 +39,7 @@
     "vm_images",
     "wan_bonding",
     "mwan3",
+    "luci-app-upnp",
     "zapret2",
     "enable_istorex",
     "disable_lucky",

@@ -18,6 +18,7 @@
     "upx",
     "wan_bonding",
     "mwan3",
+    "luci-app-upnp",
     "disable_lucky",
     "disable_easytier",
     "disable_smartdns",
