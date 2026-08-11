@@ -12,7 +12,7 @@ replace_version() {
     local label="$4"
 
     if grep -Fq "$new" "$file"; then
-        echo "qosmate: $label is already 1.8.0"
+        echo "qosmate: $label is already 1.9.0"
         return
     fi
 
@@ -22,11 +22,11 @@ replace_version() {
     fi
 
     sed -i "s|$old|$new|" "$file"
-    echo "qosmate: set $label to 1.8.0"
+    echo "qosmate: set $label to 1.9.0"
 }
 
 [ -f "$makefile" ] || { echo "qosmate: missing $makefile" >&2; exit 1; }
 [ -f "$settings" ] || { echo "qosmate: missing $settings" >&2; exit 1; }
 
-replace_version "$makefile" "PKG_VERSION:=1.0.14" "PKG_VERSION:=1.8.0" "package version"
-replace_version "$settings" "const UI_VERSION = '1.2.0';" "const UI_VERSION = '1.8.0';" "frontend version"
+replace_version "$makefile" "PKG_VERSION:=1.0.14" "PKG_VERSION:=1.9.0" "package version"
+replace_version "$settings" "const UI_VERSION = '1.2.0';" "const UI_VERSION = '1.9.0';" "frontend version"
