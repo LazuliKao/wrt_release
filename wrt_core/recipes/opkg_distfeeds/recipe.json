@@ -4,7 +4,9 @@
   "description": "Configure opkg distfeeds with custom mirror and version from ini",
   "enabled": false,
   "phase": "post_defconfig",
-  "depends": [],
+  "depends": [
+    "fix_kernel_magic"
+  ],
   "conflicts": [],
   "tags": [
     "opkg",

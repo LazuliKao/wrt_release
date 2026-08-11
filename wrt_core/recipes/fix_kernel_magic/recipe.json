@@ -3,7 +3,7 @@
   "name": "fix_kernel_magic",
   "description": "按目标 KERNEL_VERMAGIC/KERNEL_MODULES 修正内核 vermagic 与 kmod distfeeds",
   "enabled": false,
-  "phase": "post_clone",
+  "phase": "post_defconfig",
   "depends": [],
   "conflicts": [],
   "tags": [
