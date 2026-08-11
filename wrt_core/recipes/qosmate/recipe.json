@@ -16,7 +16,9 @@
     "repo": [],
     "branch": [],
     "tags": [
-      "!nss"
+      "!nss",
+      "!mt7981",
+      "!mt7986"
     ]
   },
   "actions": {
