@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# 在 CI 环境下（如 GitHub Actions）禁用 git 自动垃圾回收和维护，防止后台进程锁住文件，导致 rm -rf 失败。
+if [ "$GITHUB_ACTIONS" = "true" ] || [ "$CI" = "true" ]; then
+    git config --global gc.auto 0 2>/dev/null || true
+    git config --global maintenance.auto 0 2>/dev/null || true
+fi
+
 network_retry() {
     local max_attempts="${NETWORK_RETRY_MAX:-5}"
     local delay_seconds="${NETWORK_RETRY_DELAY:-5}"
@@ -32,7 +38,7 @@ git_retry() {
     fi
 
     while true; do
-        git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=60 "$@" && return 0
+        git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=60 -c gc.auto=0 -c maintenance.auto=0 "$@" && return 0
         exit_code=$?
         if ((attempt >= max_attempts)); then
             return "$exit_code"
