@@ -16,11 +16,8 @@
     "net_optimize",
     "starship",
     "bash_completion",
-    "sqm",
     "storage_fs",
     "upx",
-    "wifi_ap_drivers",
-    "mwan3",
     "disable_lucky",
     "disable_easytier",
     "disable_smartdns"

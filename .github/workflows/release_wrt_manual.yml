@@ -14,7 +14,9 @@ on:
         options:
           - lk_x86_64_immwrt
           - lk_x86_64_immwrt_mini
+          - lk_x86_64_immwrt_docker_only
           - lk_x86_64-v3_immwrt
+          - lk_x86_64-v3_immwrt_docker_only
           - lk_mediatek_immwrt
           - lk_mediatek_immwrt_mini
           - lk_mt798x_7986_rebase
