@@ -267,6 +267,30 @@ jobs:
           fail_on_unmatched_files: true
           body_path: ./release_body.txt
 
+      - name: Delete Old Releases
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODEL_NAME: ${{ inputs.model }}
+          CURRENT_TAG: ${{ env.BUILD_DATE }}_${{ inputs.model }}
+        run: |
+          echo "Current tag: $CURRENT_TAG"
+          echo "Model name: $MODEL_NAME"
+          
+          # 获取旧的 Release 列表并过滤（匹配当前 model 且不等于当前 tag）
+          OLD_TAGS=$(gh release list --limit 1000 --json tagName --jq ".[] | .tagName | select(endswith(\"_$MODEL_NAME\") and . != \"$CURRENT_TAG\")")
+          
+          if [ -z "$OLD_TAGS" ]; then
+            echo "No old releases found for model $MODEL_NAME."
+          else
+            echo "Found old releases to delete:"
+            echo "$OLD_TAGS"
+            for tag in $OLD_TAGS; do
+              echo "Deleting release and tag: $tag"
+              gh release delete "$tag" --yes --cleanup-tag || true
+            done
+          fi
+
       - name: Setup Rclone
         if: success()
         uses: AnimMouse/setup-rclone@v1
