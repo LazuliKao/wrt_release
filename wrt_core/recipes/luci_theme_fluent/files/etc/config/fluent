@@ -1,0 +1,7 @@
+config global
+	option menu_layout '{"version":1,"itemMoves":[["admin/services/zapret2","admin/vpn","admin/vpn/cloudflared"],["admin/services/homeproxy","admin/vpn","admin/services/zapret2"],["admin/services/nikki","admin/vpn","admin/services/homeproxy"],["admin/services/passwall","admin/vpn","admin/services/nikki"]]}'
+	option prefers_reduced_motion '0'
+	option primary '#fd7c90'
+	option progressbar_font '#884e57'
+	option dark_primary '#db7093'
+	option dark_progressbar_font '#ffd6e4'

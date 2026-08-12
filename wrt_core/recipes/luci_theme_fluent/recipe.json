@@ -36,7 +36,13 @@
     ],
     "removePackageDirs": [],
     "patches": [],
-    "files": [],
+    "files": [
+      {
+        "source": "files/etc/config/fluent",
+        "target": "custom_feed/luci-theme-fluent/root/etc/config/fluent",
+        "mode": "0644"
+      }
+    ],
     "configs": [
       "configs/luci_theme_fluent.config"
     ],
