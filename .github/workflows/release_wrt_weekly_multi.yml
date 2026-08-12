@@ -23,22 +23,30 @@ jobs:
           - lk_x86_64-v3_immwrt_docker_only
           - lk_mediatek_immwrt
           - lk_mediatek_immwrt_mini
+          - lk_mediatek_immwrt_docker_only
           - lk_mt798x_7986_rebase
+          - lk_mt798x_7986_rebase_docker_only
           - lk_mt798x_7986_k6.6
+          - lk_mt798x_7986_k6.6_docker_only
           - lk_mt798x_7986_rebase_mini
           - lk_mt798x_7986_k6.6_mini
           - lk_mt798x_7981_rebase_mini
           - lk_mt798x_7981_k6.6_mini
           # - lk_ipq60xx_immwrt
           # - lk_ipq60xx_immwrt_mini
+          # - lk_ipq60xx_immwrt_docker_only
           - lk_ipq60xx_libwrt
           - lk_ipq60xx_libwrt_mini
+          - lk_ipq60xx_libwrt_docker_only
           - lk_ipq807x_libwrt
           - lk_ipq807x_libwrt_mini
+          - lk_ipq807x_libwrt_docker_only
           - lk_ipq60xx_qosmio
           - lk_ipq60xx_qosmio_mini
+          - lk_ipq60xx_qosmio_docker_only
           - lk_ipq807x_qosmio
           - lk_ipq807x_qosmio_mini
+          - lk_ipq807x_qosmio_docker_only
           - lk_cudy_tr3000_114m_immwrt
           - lk_cudy_tr3000_114m_mt798x
           - lk_cudy_tr3000_114m_mt798x_6.6
