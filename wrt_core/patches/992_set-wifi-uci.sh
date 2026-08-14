@@ -174,6 +174,7 @@ linksys,mx4200v1 | \
 gemtek,w1701k-ubi)
 	gemtek_w1701k_wifi_cfg
 	;;
+link,nn6000-v1 | \
 link,nn6000-v2)
 	link_nn6000_wifi_cfg
 	;;
