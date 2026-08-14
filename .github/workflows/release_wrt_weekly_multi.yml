@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   release:
+    name: Release ${{ matrix.model }}
     strategy:
       fail-fast: false
       matrix:

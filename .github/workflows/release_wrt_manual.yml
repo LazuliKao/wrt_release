@@ -1,5 +1,5 @@
 name: Manual Release WRT
-run-name: Manual Release WRT
+run-name: Manual Release WRT - ${{ inputs.model }}
 
 on:
   # schedule:
@@ -53,6 +53,7 @@ permissions:
 
 jobs:
   release:
+    name: Release ${{ github.event.inputs.model }}
     uses: ./.github/workflows/release_wrt.yml
     with:
       model: ${{ github.event.inputs.model }}
