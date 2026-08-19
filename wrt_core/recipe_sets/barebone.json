@@ -11,6 +11,7 @@
     "core_enhancements",
     "net_optimize",
     "upx",
+    "use_apk",
     "disable_lucky",
     "disable_easytier",
     "disable_smartdns",

@@ -18,6 +18,7 @@
     "bash_completion",
     "storage_fs",
     "upx",
+    "use_apk",
     "disable_lucky",
     "disable_easytier",
     "disable_smartdns"
