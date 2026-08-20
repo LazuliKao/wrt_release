@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+OPENWRT_PACKAGES_REVISION="6b2c2a7ab493dbf1a24914be56a41dbd475aae03"
+
 # 打印执行日志
 echo "docker_upgrade: [开始] 正在执行容器底层套件与 CLI 客户端越级覆盖方案 (v29.x)..."
 
@@ -10,7 +12,7 @@ _download_upstream_file() {
     local pkg_name="$1"
     local file_rel="$2"
     local dest_dir="$3"
-    local base_url="https://raw.githubusercontent.com/openwrt/packages/master/utils"
+    local base_url="https://raw.githubusercontent.com/openwrt/packages/${OPENWRT_PACKAGES_REVISION}/utils"
     
     mkdir -p "$(dirname "$dest_dir/$file_rel")"
     if curl -fsSL "$base_url/$pkg_name/$file_rel" -o "$dest_dir/$file_rel"; then
@@ -52,6 +54,10 @@ for pkg in dockerd containerd runc docker; do
                 _download_upstream_file "dockerd" "files/dockerd.init" "$real_dir"
                 _download_upstream_file "dockerd" "files/etc/config/dockerd" "$real_dir"
                 _download_upstream_file "dockerd" "files/etc/sysctl.d/sysctl-br-netfilter-ip.conf" "$real_dir"
+                mkdir -p "$real_dir/patches"
+                cp "$BASE_PATH/recipes/docker_upgrade/patches/002-dockerd-skip-host-runtime-copy.patch" \
+                    "$real_dir/patches/999-dockerd-skip-host-runtime-copy.patch"
+                echo "docker_upgrade: 已安装 dockerd 宿主运行时复制修复补丁"
                 ;;
             "containerd")
                 _download_upstream_file "containerd" "Makefile" "$real_dir"
@@ -75,4 +81,4 @@ echo "docker_upgrade: 重新在 OpenWrt 源码树中建立链接缓存..."
     ./scripts/feeds install -f dockerd containerd runc docker
 )
 
-echo "docker_upgrade: [成功] 所有容器核心套件与 CLI 客户端已越级覆写为最新版本！"
+echo "docker_upgrade: [成功] 所有容器核心套件与 CLI 客户端已覆写为固定兼容版本！"

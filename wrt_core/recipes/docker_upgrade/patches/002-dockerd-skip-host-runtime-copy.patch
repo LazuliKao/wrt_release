@@ -1,0 +1,10 @@
+--- a/hack/make/binary-daemon
++++ b/hack/make/binary-daemon
+@@ -32,5 +32,6 @@
+ 	GO_PACKAGE='github.com/moby/moby/v2/cmd/dockerd'
+ 	BINARY_NAME='dockerd'
+ 	source "${MAKEDIR}/.binary"
+-	copy_binaries "$DEST"
++	# OpenWrt packages nested runtimes separately; never copy host binaries
++	# into the target bundle during native-architecture builds.
+ )

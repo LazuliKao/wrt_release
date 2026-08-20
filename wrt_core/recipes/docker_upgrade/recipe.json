@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "docker_upgrade",
-  "description": "安全升级 Docker 守护进程 (dockerd v29) 及其核心运行时套件 (containerd v2.2+, runc v1.3+) 到官方最新 Master 分支",
+  "description": "从固定 OpenWrt packages 修订升级 Docker 守护进程及其核心运行时，并修复原生 x86_64 构建时复制宿主运行时的问题",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
