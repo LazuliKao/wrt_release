@@ -1,0 +1,53 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "oaf",
+  "description": "从 destan19/OpenAppFilter 导入 Open App Filter 内核模块、服务与 LuCI 管理界面",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "network",
+    "oaf"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "openappfilter-upstream": {
+        "gitUrl": "https://github.com/destan19/OpenAppFilter.git",
+        "branch": "master",
+        "depth": 1,
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "openappfilter-upstream",
+        "path": "oaf",
+        "packageName": "oaf"
+      },
+      {
+        "source": "openappfilter-upstream",
+        "path": "open-app-filter",
+        "packageName": "open-app-filter"
+      },
+      {
+        "source": "openappfilter-upstream",
+        "path": "luci-app-oaf",
+        "packageName": "luci-app-oaf"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": null
+  }
+}

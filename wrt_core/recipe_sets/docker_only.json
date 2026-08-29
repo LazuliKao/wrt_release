@@ -14,6 +14,7 @@
     "docker_compose",
     "docker_upgrade",
     "net_optimize",
+    "oaf",
     "starship",
     "bash_completion",
     "storage_fs",

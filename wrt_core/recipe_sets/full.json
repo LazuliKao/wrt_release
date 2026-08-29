@@ -21,6 +21,7 @@
     "luci_app_unishare",
     "lxc",
     "net_optimize",
+    "oaf",
     "nikki",
     "starship",
     "flyline",
