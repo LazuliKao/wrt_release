@@ -43,6 +43,12 @@
               "null"
             ]
           },
+          "latestRelease": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "depth": {
             "type": [
               "integer",

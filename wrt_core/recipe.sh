@@ -24,6 +24,8 @@ RECIPE_TARGET_TAGS=""
 RECIPE_BASE_PATH=""
 RECIPE_ALLOW_CONFLICTS=0
 RECIPE_GLOBAL_REGISTRY_DATA=""
+declare -A RECIPE_LATEST_RELEASE_TAGS=()
+RECIPE_RESOLVED_RELEASE_TAG=""
 RECIPE_COLOR_RESET=""
 RECIPE_COLOR_BOLD=""
 RECIPE_COLOR_DIM=""
@@ -205,7 +207,7 @@ recipe_validate_structure() {
         all(.when.tags[]?; type == "string") and
         all(.actions.addFeeds[]?; type == "string") and
         all(.actions.removeFeeds[]?; type == "string") and
-        all(.actions.importPackagesRegistry[]?; (.gitUrl | type == "string" and length > 0) and ((has("branch") | not) or (.branch == null) or (.branch | type == "string")) and ((has("tag") | not) or (.tag == null) or (.tag | type == "string")) and ((has("commit") | not) or (.commit == null) or (.commit | type == "string")) and ((has("depth") | not) or (.depth == null) or (.depth | type == "number")) and ((has("sparseRoot") | not) or (.sparseRoot == null) or (.sparseRoot | type == "string"))) and
+        all(.actions.importPackagesRegistry[]?; (.gitUrl | type == "string" and length > 0) and ((has("branch") | not) or (.branch == null) or (.branch | type == "string")) and ((has("tag") | not) or (.tag == null) or (.tag | type == "string")) and ((has("commit") | not) or (.commit == null) or (.commit | type == "string")) and ((has("latestRelease") | not) or (.latestRelease == null) or (.latestRelease | type == "boolean")) and (((.latestRelease // false) | not) or ((.branch // null) == null and (.tag // null) == null and (.commit // null) == null)) and ((has("depth") | not) or (.depth == null) or (.depth | type == "number")) and ((has("sparseRoot") | not) or (.sparseRoot == null) or (.sparseRoot | type == "string"))) and
         all(.actions.importPackages[]?; type == "object" and (.source | type == "string" and length > 0) and (.path | type == "string" and length > 0) and ((has("target") | not) or (.target | type == "string" and length > 0)) and ((has("packageName") | not) or (.packageName | type == "string" and length > 0)) and ((has("script") | not) or (.script | type == "string" and length > 0)) and ((has("fixLuciMk") | not) or (.fixLuciMk | type == "boolean"))) and
         all(.actions.removePackageDirs[]?; type == "string") and
         all(.actions.patches[]?; type == "object" and (.source | type == "string" and length > 0) and (.target | type == "string" and length > 0) and ((has("strip") | not) or (.strip | type == "number" and . >= 0 and floor == .)) and ((has("binary") | not) or (.binary | type == "boolean")) and ((has("ignoreWhitespace") | not) or (.ignoreWhitespace | type == "boolean")) and ((has("forward") | not) or (.forward | type == "boolean")) and ((has("backup") | not) or (.backup | type == "boolean")) and ((has("rejectFile") | not) or (.rejectFile | type == "boolean")) and ((has("fuzz") | not) or (.fuzz | type == "number" and . >= 0 and floor == .))) and
@@ -218,7 +220,7 @@ recipe_validate_global_registry() {
     local registry="$RECIPE_BASE_PATH/recipes/import_registry.json"
 
     [ -f "$registry" ] || recipe_die "IMPORT_PACKAGES registry not found: $registry"
-    jq -e '(.sources | type == "object") and all(.sources[]; (.gitUrl | type == "string" and length > 0) and ((has("branch") | not) or (.branch == null) or (.branch | type == "string")) and ((has("tag") | not) or (.tag == null) or (.tag | type == "string")) and ((has("commit") | not) or (.commit == null) or (.commit | type == "string")) and ((has("depth") | not) or (.depth == null) or (.depth | type == "number")) and ((has("sparseRoot") | not) or (.sparseRoot == null) or (.sparseRoot | type == "string")))' "$registry" >/dev/null || recipe_die "invalid IMPORT_PACKAGES registry: $registry"
+    jq -e '(.sources | type == "object") and all(.sources[]; (.gitUrl | type == "string" and length > 0) and ((has("branch") | not) or (.branch == null) or (.branch | type == "string")) and ((has("tag") | not) or (.tag == null) or (.tag | type == "string")) and ((has("commit") | not) or (.commit == null) or (.commit | type == "string")) and ((has("latestRelease") | not) or (.latestRelease == null) or (.latestRelease | type == "boolean")) and (((.latestRelease // false) | not) or ((.branch // null) == null and (.tag // null) == null and (.commit // null) == null)) and ((has("depth") | not) or (.depth == null) or (.depth | type == "number")) and ((has("sparseRoot") | not) or (.sparseRoot == null) or (.sparseRoot | type == "string")))' "$registry" >/dev/null || recipe_die "invalid IMPORT_PACKAGES registry: $registry"
 }
 
 recipe_has_name() {
@@ -1224,6 +1226,62 @@ git_sync_repo() {
     return 0
 }
 
+
+recipe_resolve_latest_release_tag() {
+    local source_label="$1"
+    local repo_url="$2"
+    local repo_path
+    local response
+    local tag
+    local curl_args=(-fsSL -H "Accept: application/vnd.github+json")
+
+    if [ -n "${RECIPE_LATEST_RELEASE_TAGS[$source_label]:-}" ]; then
+        RECIPE_RESOLVED_RELEASE_TAG="${RECIPE_LATEST_RELEASE_TAGS[$source_label]}"
+        return 0
+    fi
+
+    case "$repo_url" in
+        https://github.com/*|http://github.com/*)
+            repo_path="${repo_url#*github.com/}"
+            ;;
+        git@github.com:*)
+            repo_path="${repo_url#git@github.com:}"
+            ;;
+        *)
+            recipe_die "$source_label latestRelease requires a GitHub repository URL"
+            return 1
+            ;;
+    esac
+    repo_path="${repo_path%.git}"
+    if [[ "$repo_path" != */* || "$repo_path" == */*/* || "$repo_path" == /* || "$repo_path" == */ ]]; then
+        recipe_die "$source_label latestRelease requires an owner/repository URL"
+        return 1
+    fi
+
+    if [ -n "${GITHUB_TOKEN:-}" ]; then
+        curl_args+=(-H "Authorization: token $GITHUB_TOKEN")
+    fi
+    if declare -F curl_retry >/dev/null 2>&1; then
+        if ! response=$(curl_retry "${curl_args[@]}" "https://api.github.com/repos/$repo_path/releases/latest"); then
+            recipe_die "failed to resolve latest release for $source_label"
+            return 1
+        fi
+    else
+        if ! response=$(curl "${curl_args[@]}" "https://api.github.com/repos/$repo_path/releases/latest"); then
+            recipe_die "failed to resolve latest release for $source_label"
+            return 1
+        fi
+    fi
+    if ! tag=$(printf '%s\n' "$response" | jq -er '.tag_name | strings | select(length > 0)'); then
+        recipe_die "latest release for $source_label has no tag"
+        return 1
+    fi
+
+    RECIPE_LATEST_RELEASE_TAGS["$source_label"]="$tag"
+    RECIPE_RESOLVED_RELEASE_TAG="$tag"
+}
+
+
 recipe_apply_import_package() {
     local recipe_name="$1"
     local recipe_file="$2"
@@ -1236,6 +1294,7 @@ recipe_apply_import_package() {
     local repo_branch
     local repo_tag
     local repo_commit
+    local repo_latest_release
     local repo_depth
     local sparse_root
     local source_dir
@@ -1251,8 +1310,19 @@ recipe_apply_import_package() {
     repo_branch=$(recipe_registry_get_optional "$recipe_file" "$source_label" '.branch // empty')
     repo_tag=$(recipe_registry_get_optional "$recipe_file" "$source_label" '.tag // empty')
     repo_commit=$(recipe_registry_get_optional "$recipe_file" "$source_label" '.commit // empty')
+    repo_latest_release=$(recipe_registry_get_optional "$recipe_file" "$source_label" '.latestRelease // false')
     repo_depth=$(recipe_registry_get_optional "$recipe_file" "$source_label" '.depth // empty')
     sparse_root=$(recipe_registry_get_optional "$recipe_file" "$source_label" '.sparseRoot // empty')
+
+    if [ "$repo_latest_release" = "true" ]; then
+        if [ -n "$repo_branch" ] || [ -n "$repo_tag" ] || [ -n "$repo_commit" ]; then
+            recipe_die "$source_label latestRelease cannot be combined with branch, tag, or commit"
+            return 1
+        fi
+        recipe_resolve_latest_release_tag "$source_label" "$repo_url" || return 1
+        repo_tag="$RECIPE_RESOLVED_RELEASE_TAG"
+        echo "recipe: resolved latest release for $source_label as $repo_tag"
+    fi
 
     if [ "$import_path" = "." ]; then
         repo_root_package=1

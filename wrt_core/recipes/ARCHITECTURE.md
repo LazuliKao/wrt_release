@@ -214,7 +214,7 @@ TARGET_TAGS=x86_64,immortalwrt,master
 - 作用：为当前 recipe 提供额外的导入源定义
 - 类型：对象
 - 键名：逻辑 source 名
-- 值：`gitUrl`、可选 `branch`、可选 `sparseRoot`
+- 值：`gitUrl`、可选 `branch`、`tag`、`commit`、`latestRelease`、`depth`、`sparseRoot`
 
 示例：
 
@@ -227,6 +227,10 @@ TARGET_TAGS=x86_64,immortalwrt,master
   }
 }
 ```
+
+`latestRelease: true` resolves the latest non-prerelease GitHub release through
+the GitHub API and clones its `tag_name`. It cannot be combined with `branch`,
+`tag`, or `commit`; the resolved tag is cached for the rest of the build.
 
 ### `importPackages`
 

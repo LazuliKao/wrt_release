@@ -99,6 +99,7 @@
               "branch": { "type": ["string", "null"] },
               "tag": { "type": ["string", "null"] },
               "commit": { "type": ["string", "null"] },
+              "latestRelease": { "type": ["boolean", "null"] },
               "depth": { "type": ["integer", "null"], "minimum": 1 },
               "sparseRoot": { "type": ["string", "null"] }
             }
