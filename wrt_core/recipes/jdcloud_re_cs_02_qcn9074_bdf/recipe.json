@@ -1,0 +1,39 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "jdcloud_re_cs_02_qcn9074_bdf",
+  "description": "Install verified QCN9074 board data for JDCloud RE-CS-02",
+  "enabled": true,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "jdcloud",
+    "qcn9074",
+    "firmware"
+  ],
+  "when": {
+    "targets": [
+      "lk_ipq60xx_libwrt",
+      "lk_ipq60xx_libwrt_mini",
+      "lk_ipq60xx_libwrt_docker_only"
+    ],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [
+      {
+        "source": "files/Makefile",
+        "target": "package/firmware/jdcloud-re-cs-02-qcn9074-bdf/Makefile"
+      }
+    ],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}
