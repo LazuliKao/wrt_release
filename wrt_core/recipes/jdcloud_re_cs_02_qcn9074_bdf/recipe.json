@@ -33,7 +33,9 @@
         "target": "package/firmware/jdcloud-re-cs-02-qcn9074-bdf/Makefile"
       }
     ],
-    "configs": [],
+    "configs": [
+      "configs/jdcloud_re_cs_02_qcn9074_bdf.config"
+    ],
     "script": "apply.sh"
   }
 }
