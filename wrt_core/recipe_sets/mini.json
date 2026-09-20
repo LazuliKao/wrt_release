@@ -1,7 +1,7 @@
 {
   "$schema": "./recipe_set.schema.json",
   "name": "mini",
-  "description": "轻量精简集合（对齐 ct3003 精简规范，无 Docker/PassWall/OpenClash 等）",
+  "description": "轻量精简集合",
   "recipes": [
     "default_theme_fluent",
     "luci_theme_fluent",
@@ -10,7 +10,6 @@
     "awg",
     "zram",
     "core_enhancements",
-    "homeproxy",
     "net_optimize",
     "starship_mini",
     "qosmate",
@@ -30,7 +29,8 @@
     "disable_wireguard",
     "luci_app_cpu_temp_status",
     "use_apk",
-    "vm_images"
+    "vm_images",
+    "portweaver_lite"
   ],
   "disable_recipes": [
     "default_theme_argon"

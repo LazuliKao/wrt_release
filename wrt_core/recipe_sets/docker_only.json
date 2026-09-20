@@ -22,7 +22,8 @@
     "use_apk",
     "disable_lucky",
     "disable_easytier",
-    "disable_smartdns"
+    "disable_smartdns",
+    "portweaver_lite"
   ],
   "disable_recipes": [
     "default_theme_argon"

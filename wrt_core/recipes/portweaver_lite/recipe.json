@@ -1,17 +1,18 @@
 {
   "$schema": "../recipe.schema.json",
-  "name": "portweaver",
-  "description": "从 LazuliKao/openwrt-portweaver 导入并预装 portweaver 与 LuCI 端口管理应用",
+  "name": "portweaver_lite",
+  "description": "从 LazuliKao/openwrt-portweaver 导入并预装轻量版 portweaver 与 LuCI 端口管理应用",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
   "conflicts": [
-    "portweaver_lite"
+    "portweaver"
   ],
   "tags": [
     "network",
     "portweaver",
-    "utility"
+    "utility",
+    "lite"
   ],
   "when": {
     "targets": [],
@@ -37,6 +38,11 @@
       },
       {
         "source": "openwrt-portweaver",
+        "path": "package/portweaver-lite",
+        "packageName": "portweaver-lite"
+      },
+      {
+        "source": "openwrt-portweaver",
         "path": "package/luci-app-portweaver",
         "packageName": "luci-app-portweaver"
       }
@@ -45,7 +51,7 @@
     "patches": [],
     "files": [],
     "configs": [
-      "configs/portweaver.config"
+      "configs/portweaver_lite.config"
     ],
     "script": null
   }
