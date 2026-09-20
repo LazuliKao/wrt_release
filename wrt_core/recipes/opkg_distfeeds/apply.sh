@@ -10,7 +10,7 @@ read_target_ini() {
 
 # 1. 默认参数
 DEFAULT_MIRROR="https://mirror.nju.edu.cn/immortalwrt"
-DEFAULT_VERSION="25.12.1"
+DEFAULT_VERSION="25.12.2"
 DEFAULT_ARCH="aarch64_cortex-a53"
 
 # 2. 读取配置

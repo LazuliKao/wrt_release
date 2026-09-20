@@ -40,10 +40,10 @@ if [ -z "$kernel_vermagic" ]; then
             elif [[ "$branch" =~ ^[0-9] ]]; then
                 version="$branch"
             else
-                version="25.12.1"
+                version="25.12.2"
             fi
         else
-            version="25.12.1"
+            version="25.12.2"
         fi
     fi
     
