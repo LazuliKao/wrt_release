@@ -244,10 +244,7 @@ update_package() {
     if [ -z "$dir" ]; then
         return 0
     fi
-    local branch="$2"
-    if [ -z "$branch" ]; then
-        branch="releases"
-    fi
+    local branch="${2:-releases}"
     local mk_path="$dir/Makefile"
     if [ -f "$mk_path" ]; then
         local PKG_REPO=$(grep -oE "^PKG_GIT_URL.*github.com(/[-_a-zA-Z0-9]{1,}){2}" "$mk_path" | awk -F"/" '{print $(NF - 1) "/" $NF}')
@@ -263,7 +260,7 @@ update_package() {
             echo "错误：从 https://api.github.com/repos/$PKG_REPO/$branch 获取版本信息失败" >&2
             return 1
         fi
-        if [ -n "$3" ]; then
+        if [ -n "${3:-}" ]; then
             PKG_VER="$3"
         fi
         local PKG_VER_CLEAN
