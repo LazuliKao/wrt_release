@@ -81,6 +81,6 @@
     "configs": [
       "configs/tailscale_awg.config"
     ],
-    "script": null
+    "script": "apply.sh"
   }
 }
