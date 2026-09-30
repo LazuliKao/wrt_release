@@ -1,0 +1,45 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "luci_app_shadowrt",
+  "description": "从 LazuliKao/linkease-openwrt-app-actions 导入 luci-app-shadowrt LuCI 管理界面",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "luci",
+    "shadowrt",
+    "linkease"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "linkease-openwrt-app-actions": {
+        "gitUrl": "https://github.com/LazuliKao/linkease-openwrt-app-actions.git",
+        "branch": "main",
+        "depth": 1
+      }
+    },
+    "importPackages": [
+      {
+        "source": "linkease-openwrt-app-actions",
+        "path": "applications/luci-app-shadowrt",
+        "packageName": "luci-app-shadowrt"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/luci_app_shadowrt.config"
+    ],
+    "script": null
+  }
+}
