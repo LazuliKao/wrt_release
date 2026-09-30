@@ -1,0 +1,56 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "luci_app_mtk_dash2",
+  "description": "导入 MTK Dash2 LuCI 管理界面及 MediaTek EasyMesh WAPP 运行组件",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [
+    "mt798x_hnat"
+  ],
+  "conflicts": [],
+  "tags": [
+    "network",
+    "luci",
+    "mediatek",
+    "easymesh",
+    "mt798x"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [
+      "https://github.com/Yuzhii0718/immortalwrt-mt798x-6.6-padavanonly"
+    ],
+    "branch": [
+      "openwrt-24.10-6.6"
+    ],
+    "tags": [
+      "mt7981",
+      "mt7986"
+    ]
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "luci-app-mtk-dash2": {
+        "gitUrl": "https://github.com/yyyyy114514/luci-app-mtk-dash2.git",
+        "tag": "v0.4.6",
+        "depth": 1
+      }
+    },
+    "importPackages": [
+      {
+        "source": "luci-app-mtk-dash2",
+        "path": ".",
+        "packageName": "luci-app-mtk-dash2"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/luci_app_mtk_dash2.config"
+    ],
+    "script": null
+  }
+}
