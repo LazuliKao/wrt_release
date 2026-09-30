@@ -8,9 +8,18 @@ read_target_ini() {
     fi
 }
 
-# 1. 默认参数
+# 1. 检测包管理器并确定默认版本
+use_apk=0
+if [ -f "$BUILD_DIR/.config" ] && grep -q '^CONFIG_USE_APK=y' "$BUILD_DIR/.config"; then
+    use_apk=1
+fi
+
 DEFAULT_MIRROR="https://mirror.nju.edu.cn/immortalwrt"
-DEFAULT_VERSION="25.12.2"
+if [ "$use_apk" -eq 1 ]; then
+    DEFAULT_VERSION="25.12.2"
+else
+    DEFAULT_VERSION="24.10.6"
+fi
 DEFAULT_ARCH="aarch64_cortex-a53"
 
 # 2. 读取配置
@@ -21,7 +30,9 @@ version=$(read_target_ini OPKG_DISTFEEDS_VERSION)
 if [ -z "$version" ]; then
     branch=$(read_target_ini REPO_BRANCH)
     if [ -n "$branch" ]; then
-        if [[ "$branch" =~ ^v[0-9] ]]; then
+        if [ "$branch" = "openwrt-24.10-6.6" ]; then
+            version="24.10.6"
+        elif [[ "$branch" =~ ^v[0-9] ]]; then
             version="${branch#v}"
         elif [[ "$branch" =~ ^openwrt-[0-9] ]]; then
             version="${branch#openwrt-}"
@@ -67,22 +78,14 @@ fetch_url() {
     fi
 }
 
-# 4. 检测是否是 APK 包管理器
-use_apk=0
-if [ -f "$BUILD_DIR/.config" ]; then
-    if grep -q '^CONFIG_USE_APK=y' "$BUILD_DIR/.config"; then
-        use_apk=1
-    fi
-fi
-
-# 5. 定位 default-settings 软件包目录
+# 4. 定位 default-settings 软件包目录
 emortal_def_dir="$BUILD_DIR/package/emortal/default-settings"
 if [ ! -d "$emortal_def_dir" ]; then
     echo "opkg_distfeeds warning: default-settings package directory not found at $emortal_def_dir"
     mkdir -p "$emortal_def_dir/files"
 fi
 
-# 6. 获取软件源渲染后的源内容
+# 5. 获取软件源渲染后的源内容
 rendered_content=""
 if [ -n "$custom_feeds" ]; then
     # 判断是否是预设名称 (nju / ustc / official)
@@ -105,7 +108,7 @@ else
     rendered_content=$(render_template "$RECIPE_DIR/presets/nju.conf")
 fi
 
-# 7. 根据包管理器格式输出并进行补丁
+# 6. 根据包管理器格式输出并进行补丁
 if [ "$use_apk" -eq 1 ]; then
     echo "opkg_distfeeds: Target uses APK package manager, converting feeds to APK repository indexes"
     # APK repositories must name the package index explicitly; a bare feed URL

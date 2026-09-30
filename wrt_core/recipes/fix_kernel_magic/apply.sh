@@ -9,6 +9,11 @@ read_target_ini() {
 kernel_vermagic=$(read_target_ini KERNEL_VERMAGIC)
 kernel_modules=$(read_target_ini KERNEL_MODULES)
 
+use_apk=0
+if [ -f "$BUILD_DIR/.config" ] && grep -q '^CONFIG_USE_APK=y' "$BUILD_DIR/.config"; then
+    use_apk=1
+fi
+
 if [ -z "$kernel_vermagic" ]; then
     echo "fix_kernel_magic: KERNEL_VERMAGIC is empty; attempting to crawl from mirror"
     
@@ -33,17 +38,27 @@ if [ -z "$kernel_vermagic" ]; then
     if [ -z "$version" ]; then
         branch=$(read_target_ini REPO_BRANCH)
         if [ -n "$branch" ]; then
-            if [[ "$branch" =~ ^v[0-9] ]]; then
+            if [ "$branch" = "openwrt-24.10-6.6" ]; then
+                version="24.10.6"
+            elif [[ "$branch" =~ ^v[0-9] ]]; then
                 version="${branch#v}"
             elif [[ "$branch" =~ ^openwrt-[0-9] ]]; then
                 version="${branch#openwrt-}"
             elif [[ "$branch" =~ ^[0-9] ]]; then
                 version="$branch"
             else
-                version="25.12.2"
+                if [ "$use_apk" -eq 1 ]; then
+                    version="25.12.2"
+                else
+                    version="24.10.6"
+                fi
             fi
         else
-            version="25.12.2"
+            if [ "$use_apk" -eq 1 ]; then
+                version="25.12.2"
+            else
+                version="24.10.6"
+            fi
         fi
     fi
     
