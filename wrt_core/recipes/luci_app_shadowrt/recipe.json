@@ -32,6 +32,11 @@
         "source": "linkease-openwrt-app-actions",
         "path": "applications/luci-app-shadowrt",
         "packageName": "luci-app-shadowrt"
+      },
+      {
+        "source": "linkease-openwrt-app-actions",
+        "path": "applications/docker-lan-bridge",
+        "packageName": "docker-lan-bridge"
       }
     ],
     "removePackageDirs": [],
