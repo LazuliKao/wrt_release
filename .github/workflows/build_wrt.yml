@@ -188,3 +188,11 @@ jobs:
         with:
           name: ${{ env.BUILD_DATE }}_${{ inputs.model }}
           path: ./firmware/*.*
+
+      - name: Upload Build Config
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ env.BUILD_DATE }}_${{ inputs.model }}_config
+          path: ./action_build/.config
+          if-no-files-found: warn
