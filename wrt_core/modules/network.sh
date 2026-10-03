@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # 在 CI 环境下（如 GitHub Actions）禁用 git 自动垃圾回收和维护，防止后台进程锁住文件，导致 rm -rf 失败。
-if [ "$GITHUB_ACTIONS" = "true" ] || [ "$CI" = "true" ]; then
+if [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
     git config --global gc.auto 0 2>/dev/null || true
     git config --global maintenance.auto 0 2>/dev/null || true
 fi
