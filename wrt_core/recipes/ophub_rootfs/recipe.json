@@ -1,0 +1,39 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "ophub_rootfs",
+  "description": "Install ophub's LuCI updater in generic ARMv8 rootfs images",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": ["ophub", "armsr"],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": ["ophub"]
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "ophub-luci-app-amlogic": {
+        "gitUrl": "https://github.com/ophub/luci-app-amlogic.git",
+        "branch": "main",
+        "sparseRoot": null
+      }
+    },
+    "importPackages": [
+      {
+        "source": "ophub-luci-app-amlogic",
+        "path": "luci-app-amlogic",
+        "packageName": "luci-app-amlogic"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": ["configs/ophub_rootfs.config"],
+    "script": null
+  }
+}

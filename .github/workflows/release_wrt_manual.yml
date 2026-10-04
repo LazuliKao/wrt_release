@@ -46,6 +46,13 @@ on:
           - lk_cudy_tr3000_114m_immwrt
           - lk_cudy_tr3000_114m_mt798x
           - lk_cudy_tr3000_114m_mt798x_6.6
+          - ophub_armv8_immwrt
+          - ophub_armv8_immwrt_mini
+          - ophub_armv8_immwrt_docker_only
+      ophub_boards:
+        description: 'Ophub board, platform, or underscore-separated boards'
+        required: false
+        default: bdy-g98
 
 permissions:
   actions: write
@@ -57,4 +64,5 @@ jobs:
     uses: ./.github/workflows/release_wrt.yml
     with:
       model: ${{ github.event.inputs.model }}
+      ophub_boards: ${{ github.event.inputs.ophub_boards }}
     secrets: inherit
