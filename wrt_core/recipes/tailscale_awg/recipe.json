@@ -30,8 +30,7 @@
       },
       "luci-app-tailscale-community": {
         "gitUrl": "https://github.com/Tokisaki-Galaxy/luci-app-tailscale-community.git",
-        "branch": "master",
-        "sparseRoot": null
+        "latestRelease": true
       }
     },
     "importPackages": [
