@@ -599,7 +599,7 @@ recipe_validate_dependency_completeness() {
         while IFS= read -r dep; do
             [ -n "$dep" ] || continue
             if ! recipe_has_name "$dep"; then
-                recipe_die "recipe '$name' is in the build plan, but its dependency '$dep' is missing or was filtered out"
+                recipe_die "recipe '$name' is in the build plan, but its dependency '$dep' is missing or was filtered out" || return 1
             fi
             
             # Allow dependencies to run in different phases, since phase sequence naturally governs the execution order.
@@ -877,7 +877,6 @@ recipe_required_by_enabled() {
 recipe_build_plan() {
     recipe_validate_global_registry
     recipe_scan_initial_plan
-    recipe_resolve_depends
     recipe_filter_conditions
     recipe_resolve_depends
     recipe_filter_conditions

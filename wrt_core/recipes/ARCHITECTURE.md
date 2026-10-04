@@ -366,9 +366,9 @@ the GitHub API and clones its `tag_name`. It cannot be combined with `branch`,
 2. 扫描全部 `recipe.json`，收集 `enabled: true` 的 recipe
 3. 读取目标 ini 的 `RECIPES` 并追加到候选集
 4. 读取目标 ini 的 `DISABLE_RECIPES` 并从候选集中移除
-5. 解析 `depends`，补齐依赖
-6. 按 `when.targets` / `when.repo` / `when.branch` / `when.tags` 过滤不匹配项
-7. 再做一轮依赖补齐和条件过滤
+5. 按 `when.targets` / `when.repo` / `when.branch` / `when.tags` 过滤不匹配项
+6. 解析 `depends`，仅为匹配目标的 recipe 补齐依赖
+7. 过滤不匹配目标的依赖项
 8. 检查依赖完整性，防止某个已启用 recipe 的依赖在过滤后缺失
 9. 检查 `conflicts`
 10. 校验动作路径是否安全
