@@ -1,0 +1,39 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "mt798x_warp_config",
+  "description": "确保 MT798x Wi-Fi 驱动编译 WARP proxy 模块",
+  "enabled": true,
+  "phase": "post_defconfig",
+  "depends": [
+    "mt798x_hnat"
+  ],
+  "conflicts": [],
+  "tags": [
+    "mt798x",
+    "wifi",
+    "warp"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [
+      "https://github.com/Yuzhii0718/immortalwrt-mt798x-6.6-padavanonly"
+    ],
+    "branch": [
+      "openwrt-24.10-6.6"
+    ],
+    "tags": [
+      "mt7981",
+      "mt7986"
+    ]
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}
