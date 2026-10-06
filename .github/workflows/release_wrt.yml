@@ -263,11 +263,11 @@ jobs:
           WHOAMI: ZqinKing
 
       - name: Install ophub image dependencies
-        if: ${{ startsWith(inputs.model, 'ophub_armv8_') }}
+        if: ${{ startsWith(inputs.model, 'ophub_armv8_') || startsWith(inputs.model, 'ophub_bdy_') }}
         run: sudo apt-get update && sudo apt-get install -y btrfs-progs dosfstools e2fsprogs parted util-linux pv zstd xz-utils
 
       - name: Package ophub images
-        if: ${{ startsWith(inputs.model, 'ophub_armv8_') }}
+        if: ${{ startsWith(inputs.model, 'ophub_armv8_') || startsWith(inputs.model, 'ophub_bdy_') }}
         env:
           OPHUB_BOARDS: ${{ inputs.ophub_boards }}
         run: bash wrt_core/ophub_package.sh --rootfs-dir ./firmware --board "$OPHUB_BOARDS" --output ./firmware
@@ -276,7 +276,7 @@ jobs:
         run: |
           echo "云编译发布" > release_body.txt
           echo "源码：${{ env.BUILD_SRC }}" >> release_body.txt
-          if [[ "${{ inputs.model }}" == ophub_armv8_* ]]; then
+          if [[ "${{ inputs.model }}" == ophub_armv8_* || "${{ inputs.model }}" == ophub_bdy_* ]]; then
             echo "Kernel/DTB/modules: supplied by ophub/kernel for selected boards (${{ inputs.ophub_boards }})" >> release_body.txt
           else
             echo "Kernel: ${{ env.KVER }}" >> release_body.txt

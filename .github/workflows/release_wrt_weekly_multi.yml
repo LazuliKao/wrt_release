@@ -51,6 +51,7 @@ jobs:
           - lk_cudy_tr3000_114m_immwrt
           - lk_cudy_tr3000_114m_mt798x
           - lk_cudy_tr3000_114m_mt798x_6.6
+          - ophub_bdy_g98_immwrt
 
     uses: ./.github/workflows/release_wrt.yml
     with:

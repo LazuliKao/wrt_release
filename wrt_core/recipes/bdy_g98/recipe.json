@@ -1,0 +1,37 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "bdy_g98",
+  "description": "BDY-G98 NAS (RK3588) hardware support with Motorcomm YT9215 DSA switches and RTL8125/8126 NICs",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "bdy_g98",
+    "rockchip",
+    "rk3588",
+    "dsa",
+    "yt921x"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": [
+      "bdy_g98"
+    ]
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {},
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/bdy_g98.config"
+    ],
+    "script": "apply.sh"
+  }
+}
