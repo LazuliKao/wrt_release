@@ -1,0 +1,70 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+# /sbin/tempinfo —— 概览页「温度」行数据源
+
+IEEE_PATH="/sys/class/ieee80211"
+THERMAL_PATH="/sys/class/thermal"
+SHOW_PON_OPTICS=0
+
+fmt_c() { [ -r "$1" ] && awk '{printf("%.1f°C", $0 / 1000)}' "$1" 2>/dev/null; }
+f1() { [ -n "$1" ] && awk -v v="$1" 'BEGIN { printf("%.1f", v) }' 2>/dev/null; }
+f2() { [ -n "$1" ] && awk -v v="$1" 'BEGIN { printf("%.2f", v) }' 2>/dev/null; }
+
+PON_JSON=""
+if [ -x /usr/sbin/ponctl ]; then
+	pon_dev=""
+	if [ -x /sbin/uci ]; then
+		pon_dev="$(/sbin/uci -q get pon.@xpon[0].device 2>/dev/null)"
+	fi
+	if [ -n "$pon_dev" ]; then
+		PON_JSON="$(/usr/sbin/ponctl --device "$pon_dev" status --json 2>/dev/null)"
+	else
+		PON_JSON="$(/usr/sbin/ponctl status --json 2>/dev/null)"
+	fi
+fi
+
+jf() {
+	[ -n "$PON_JSON" ] || return 0
+	[ -x /usr/bin/jsonfilter ] || return 0
+	printf '%s' "$PON_JSON" | /usr/bin/jsonfilter -q -e "$1" 2>/dev/null
+}
+
+cpu_temp=""
+if [ -r "$THERMAL_PATH/thermal_zone0/temp" ]; then
+	cpu_temp="$(fmt_c "$THERMAL_PATH/thermal_zone0/temp")"
+fi
+
+wifi_temp=""
+for p in "$IEEE_PATH"/phy*/hwmon*/temp1_input \
+         "$IEEE_PATH"/phy*/device/hwmon/hwmon*/temp1_input; do
+	[ -r "$p" ] || continue
+	t="$(fmt_c "$p")"
+	[ -n "$t" ] && wifi_temp="${wifi_temp:+$wifi_temp }$t"
+done
+
+pon_temp="" pon_tx="" pon_rx="" pon_bias="" pon_volt=""
+if [ -n "$PON_JSON" ]; then
+	pon_temp="$(f1 "$(jf '@.frontend.temperature_celsius')")"
+	if [ "$SHOW_PON_OPTICS" = "1" ]; then
+		pon_tx="$(f2 "$(jf '@.frontend.tx_power_dbm')")"
+		pon_rx="$(f2 "$(jf '@.frontend.rx_power_dbm')")"
+		pon_bias="$(f2 "$(jf '@.frontend.tx_bias_ma')")"
+		pon_volt="$(f2 "$(jf '@.frontend.voltage_volts')")"
+	fi
+fi
+
+out=""
+[ -n "$cpu_temp" ] && out="CPU: $cpu_temp"
+[ -n "$wifi_temp" ] && out="${out:+$out, }WiFi: $wifi_temp"
+
+if [ -n "$pon_temp" ]; then
+	pon="PON: ${pon_temp}°C"
+	[ -n "$pon_tx" ]   && pon="$pon ↑${pon_tx}dBm"
+	[ -n "$pon_rx" ]   && pon="$pon ↓${pon_rx}dBm"
+	[ -n "$pon_bias" ] && pon="$pon ${pon_bias}mA"
+	[ -n "$pon_volt" ] && pon="$pon ${pon_volt}V"
+	out="${out:+$out, }$pon"
+fi
+
+[ -n "$out" ] || out="No temperature info"
+printf '%s' "$out"

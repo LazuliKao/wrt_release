@@ -1,0 +1,32 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "luci_app_airoha",
+  "description": "Airoha 专有 LuCI 状态与管理插件（SoC/NPU 状态页、PON 光模块状态卡片、NAT 模式切换）",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "luci",
+    "airoha",
+    "status"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/luci_app_airoha.config"
+    ],
+    "script": "apply.sh"
+  }
+}

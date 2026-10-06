@@ -1,0 +1,32 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "airoha_an7581",
+  "description": "Airoha AN7581 PON 芯片平台底层适配：剥离 stock NPU 固件、补全 DTS WiFi 卸载内存区、注入温度采集脚本与中国 Wi-Fi 默认设置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "platform",
+    "airoha",
+    "an7581"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": [
+      "an7581"
+    ]
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}

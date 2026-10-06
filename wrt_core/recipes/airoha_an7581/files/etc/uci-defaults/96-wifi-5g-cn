@@ -1,0 +1,57 @@
+#!/bin/sh
+# 5G WiFi 默认值：国家码 CN、信道 auto、频宽 160MHz
+
+COUNTRY='CN'
+CHANNEL='auto'
+HTMODE='HE160'
+FALLBACK='HE80'
+
+log() { logger -t wifi-5g "$@"; }
+
+if [ ! -f /etc/config/wireless ]; then
+	command -v wifi >/dev/null 2>&1 && wifi config >/dev/null 2>&1
+fi
+[ -f /etc/config/wireless ] || { log "未找到 /etc/config/wireless，跳过"; exit 0; }
+
+support_160() {
+	local phy="$1"
+	[ -z "$phy" ] && return 1
+	command -v iw >/dev/null 2>&1 || return 1
+	iw phy "$phy" info 2>/dev/null | grep -q '160 MHz' || return 1
+	return 0
+}
+
+changed=0
+for dev in $(uci -q show wireless | sed -n 's/^wireless\.\([A-Za-z0-9_-]*\)=wifi-device$/\1/p'); do
+	band="$(uci -q get wireless.$dev.band 2>/dev/null)"
+	hwmode="$(uci -q get wireless.$dev.hwmode 2>/dev/null)"
+
+	is5g=0
+	[ "$band" = "5g" ] && is5g=1
+	[ -z "$band" ] && [ "$hwmode" = "11a" ] && is5g=1
+	[ "$is5g" = "0" ] && continue
+
+	ht="$HTMODE"
+	phy="$(uci -q get wireless.$dev.phy 2>/dev/null)"
+	if [ -n "$phy" ] && ! support_160 "$phy"; then
+		ht="$FALLBACK"
+		log "$dev：未检测到 160MHz 能力，回落为 $ht"
+	fi
+
+	uci -q set wireless.$dev.country="$COUNTRY"
+	uci -q set wireless.$dev.country_ie='1'
+	uci -q set wireless.$dev.channel="$CHANNEL"
+	uci -q set wireless.$dev.htmode="$ht"
+
+	log "$dev：country=$COUNTRY channel=$CHANNEL htmode=$ht"
+	changed=1
+done
+
+if [ "$changed" = "1" ]; then
+	uci -q commit wireless
+	log "已提交 wireless 配置"
+else
+	log "未找到 5G radio，未做任何修改"
+fi
+
+exit 0
