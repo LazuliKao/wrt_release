@@ -24,7 +24,13 @@ fi
 
 FEEDS_CONF="feeds.conf.default"
 GOLANG_REPO="https://github.com/sbwml/packages_lang_golang"
-GOLANG_BRANCH="26.x"
+GOLANG_BRANCH="27.x"
+if [[ -n "$TARGET_INI" && -f "$TARGET_INI" ]]; then
+    _CUSTOM_GO_BRANCH=$(awk -F"=" '$1 == "GOLANG_BRANCH" {print $2}' "$TARGET_INI")
+    if [[ -n "$_CUSTOM_GO_BRANCH" ]]; then
+        GOLANG_BRANCH="$_CUSTOM_GO_BRANCH"
+    fi
+fi
 LAN_ADDR="192.168.1.1"
 
 SCRIPT_DIR=$(cd $(dirname $0) && pwd)
