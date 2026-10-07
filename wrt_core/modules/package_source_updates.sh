@@ -327,6 +327,20 @@ update_package() {
         sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:='$PKG_VER'/g' "$mk_path"
         sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
 
+        # 若上游版本包含连字符修订后缀 (如 1.102.5-r1)，直接用于 apk mkpkg 会生成非法版本号 (如 -r1-r1)。
+        # 在 Package 规则中主动归一化 VERSION (替换 -r 为 _p)，同时不破坏标准纯版本号 (如 1.102.4)。
+        if [[ "$PKG_VER" =~ -r[0-9]+ ]]; then
+            local NORM_PKG_VER
+            NORM_PKG_VER=$(echo "$PKG_VER" | sed -E 's/-r([0-9]+)/_p\1/g')
+            if grep -q "define Package/" "$mk_path"; then
+                if grep -q "^[[:space:]]*VERSION:=" "$mk_path"; then
+                    sed -i "s/^[[:space:]]*VERSION:=.*/  VERSION:=\$(subst -r,_p,\$(PKG_VERSION))-r\$(PKG_RELEASE)/" "$mk_path"
+                else
+                    sed -i "/define Package\/$1/a\  VERSION:=\$(subst -r,_p,\$(PKG_VERSION))-r\$(PKG_RELEASE)" "$mk_path"
+                fi
+            fi
+        fi
+
         echo "更新软件包 $1 到 $PKG_VER $PKG_HASH"
     fi
 }
