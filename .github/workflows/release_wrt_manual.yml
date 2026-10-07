@@ -50,7 +50,7 @@ on:
           - ophub_armv8_immwrt_mini
           - ophub_armv8_immwrt_docker_only
           - ophub_bdy_g98_immwrt
-          - lk_an7581_mini
+          - lk_an7581_ponwrt_mini
       ophub_boards:
         description: 'Ophub board, platform, or underscore-separated boards'
         required: false
