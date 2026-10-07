@@ -6,5 +6,5 @@ diff --git a/Makefile b/Makefile
  PKG_BUILD_PARALLEL:=1
  PKG_BUILD_FLAGS:=no-mips16
 +PKG_BUILD_DEPENDS:=golang/host
- 
+
  GO_PKG:=tailscale.com/cmd/tailscaled
