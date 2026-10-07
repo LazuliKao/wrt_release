@@ -1,12 +1,12 @@
 # sing-box-extended Recipe
 
-本 recipe 为 OpenWrt 集成 `sing-box-extended`，替换 small-package 中的上游 sing-box 源码包。当前版本号保持为 `1.13.16`，源码固定为 `shtorm-7/sing-box-extended` 提交：
+本 recipe 为 OpenWrt 集成 `sing-box-extended`，替换 small-package 中的上游 sing-box 源码包。当前版本为 `1.14.1`，源码固定为 `shtorm-7/sing-box-extended` 发布版本：
 
 ```text
-00d3ed46bf84b0602e7e542bf9e949fef5080d7f
+v1.14.1-extended-2.7.2
 ```
 
-> 这不是官方 `SagerNet/sing-box` v1.13.16 原始源码包。版本号沿用 1.13.16，协议实现和构建标签来自扩展分支。
+> 这不是官方 `SagerNet/sing-box` 原始源码包。版本号采用 1.14.1，协议实现和构建标签来自扩展分支。
 
 ## Recipe 行为
 
