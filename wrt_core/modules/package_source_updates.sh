@@ -335,8 +335,10 @@ update_package() {
             if grep -q "define Package/" "$mk_path"; then
                 if grep -q "^[[:space:]]*VERSION:=" "$mk_path"; then
                     sed -i "s/^[[:space:]]*VERSION:=.*/  VERSION:=\$(subst -r,_p,\$(PKG_VERSION))-r\$(PKG_RELEASE)/" "$mk_path"
-                else
-                    sed -i "/define Package\/$1/a\  VERSION:=\$(subst -r,_p,\$(PKG_VERSION))-r\$(PKG_RELEASE)" "$mk_path"
+                elif grep -q "^[[:space:]]*define Package/$1[[:space:]]*$" "$mk_path"; then
+                    sed -i "/^[[:space:]]*define Package\/$1[[:space:]]*$/a\  VERSION:=\$(subst -r,_p,\$(PKG_VERSION))-r\$(PKG_RELEASE)" "$mk_path"
+                elif grep -q '^[[:space:]]*define Package/\$(PKG_NAME)[[:space:]]*$' "$mk_path"; then
+                    sed -i '/^[[:space:]]*define Package\/\$(PKG_NAME)[[:space:]]*$/a\  VERSION:=\$(subst -r,_p,\$(PKG_VERSION))-r\$(PKG_RELEASE)' "$mk_path"
                 fi
             fi
         fi
