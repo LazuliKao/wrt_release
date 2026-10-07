@@ -4,5 +4,4 @@ set -euo pipefail
 source "$BASE_PATH/modules/network.sh"
 source "$BASE_PATH/modules/package_source_updates.sh"
 
-update_package "sing-box" "releases" "1.13.16"
-echo "sing_box_extended: refreshed sing-box-extended source hash"
+echo "sing_box_extended: configured sing-box-extended source"
