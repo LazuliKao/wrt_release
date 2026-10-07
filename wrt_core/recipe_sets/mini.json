@@ -30,7 +30,8 @@
     "luci_app_cpu_temp_status",
     "use_apk",
     "vm_images",
-    "portweaver_lite"
+    "portweaver_lite",
+    "openssh_sftp_server"
   ],
   "disable_recipes": [
     "default_theme_argon"
