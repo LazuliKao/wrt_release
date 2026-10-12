@@ -8,10 +8,9 @@ rootfs_dir="$repo_root/firmware"
 rootfs_file=""
 output_dir="$repo_root/firmware"
 board=""
-custom_kernel=0
 
 usage() {
-    echo "Usage: $0 --board <ophub board|platform|board1_board2> [--rootfs <rootfs.tar.gz> | --rootfs-dir <directory>] [--output <directory>] [--custom-kernel]"
+    echo "Usage: $0 --board <ophub board|platform|board1_board2> [--rootfs <rootfs.tar.gz> | --rootfs-dir <directory>] [--output <directory>]"
 }
 
 while (($#)); do
@@ -25,9 +24,6 @@ while (($#)); do
                 --output) output_dir=$2 ;;
             esac
             shift 2 ;;
-        --custom-kernel)
-            custom_kernel=1
-            shift ;;
         --help|-h) usage; exit 0 ;;
         *) usage >&2; exit 2 ;;
     esac
@@ -72,98 +68,6 @@ git clone --quiet https://github.com/ophub/amlogic-s9xxx-openwrt.git "$workdir/r
 git -C "$workdir/remake" checkout --quiet --detach "$ophub_ref"
 mkdir -p "$workdir/remake/openwrt-armsr"
 cp "$rootfs_file" "$workdir/remake/openwrt-armsr/"
-
-if ((custom_kernel)); then
-    echo "Configuring ophub/remake with local custom kernel chain ($board)..."
-
-    # 1. 查找 OpenWrt 自主编译产出的内核文件 (ARM64 Image)
-    local_kernel=""
-    for cand in \
-        "$rootfs_dir"/*-kernel.bin \
-        "$repo_root/firmware"/*-kernel.bin \
-        "$repo_root/firmware"/*Image* \
-        "$repo_root/action_build/bin/targets/armsr/armv8"/*-kernel.bin \
-        "$repo_root/action_build/build_dir/target-aarch64_generic_musl/linux-armsr_armv8/linux-"*/arch/arm64/boot/Image \
-        "$repo_root/ophub-immortalwrt/build_dir/target-aarch64_generic_musl/linux-armsr_armv8/linux-"*/arch/arm64/boot/Image; do
-        if [[ -f "$cand" ]]; then
-            local_kernel=$(realpath "$cand")
-            break
-        fi
-    done
-
-    [[ -n "$local_kernel" ]] || { echo "Error: Local custom kernel not found in $rootfs_dir or build trees." >&2; exit 1; }
-    echo "Found local kernel: $local_kernel"
-
-    # 2. 准备本地内核暂存目录供 remake 链接模式使用
-    custom_kdir="$workdir/custom_kpkg"
-    mkdir -p "$custom_kdir"
-    cp -f "$local_kernel" "$custom_kdir/local_Image"
-
-    # 3. 阻止 remake 从 rootfs 中清空 OpenWrt 编译出的 /lib/modules/
-    sed -i 's|\[\[ -n "\${tag_rootfs}" && -d "\${tag_rootfs}/lib/modules" \]\] && rm -rf "\${tag_rootfs}/lib/modules"/\*|# custom_kernel: preserve rootfs /lib/modules|g' "$workdir/remake/remake"
-
-    # 4. 彻底屏蔽 download_kernel（不下载任何远程内核）
-    sed -i 's|^download_kernel$|# custom_kernel: skip download_kernel|g' "$workdir/remake/remake"
-
-    # 5. 重写 replace_kernel 为本地复制与软链接模式 (保持和原 replace_kernel 完全一致的引导链路规范):
-    #    - 安装 local_Image 到 bootfs 命名为 vmlinuz-${kernel_name}
-    #    - 对 rockchip: ln -sf vmlinuz-${kernel_name} Image
-    #    - 确保 /boot/dtb/rockchip 存在且软链接 dtb-${kernel_name} -> dtb
-    #    - 保留 /lib/modules
-    cat << 'EOF' > "$workdir/custom_replace_kernel.sh"
-replace_kernel() {
-    process_msg "(3/6) Installing local custom kernel files (symlink mode)."
-    cd "${current_path}"
-
-    local_kernel_bin="CUSTOM_KERNEL_PATH"
-    local_kname="6.12"
-    if [[ -d "${tag_rootfs}/lib/modules" ]]; then
-        local first_mod_dir
-        first_mod_dir="$(ls -1 "${tag_rootfs}/lib/modules" 2>/dev/null | grep -E '^[0-9]' | head -n 1 || true)"
-        if [[ -n "${first_mod_dir}" ]]; then
-            local_kname="${first_mod_dir}"
-        fi
-    fi
-    kernel_name="${local_kname}"
-
-    # 01. 仿照原生 replace_kernel 模式在 /boot 写入实体内核并创建 Image 软链接
-    cp -f "${local_kernel_bin}" "${tag_bootfs}/vmlinuz-${kernel_name}"
-    (cd "${tag_bootfs}" && rm -f Image && ln -sf "vmlinuz-${kernel_name}" Image)
-    [[ -f "${tag_bootfs}/uInitrd-${kernel_name}" ]] && (cd "${tag_bootfs}" && ln -sf "uInitrd-${kernel_name}" uInitrd)
-
-    # 02. 设备树链接模式支持: 保留 dtb-${kernel_name} -> dtb 软链接
-    mkdir -p "${tag_bootfs}/dtb/${PLATFORM}"
-    (cd "${tag_bootfs}" && rm -f "dtb-${kernel_name}" && ln -sf dtb "dtb-${kernel_name}")
-
-    # 03. 镜像已由 make_image 按原 kernel 值创建；改用本地内核版本时，
-    #     同步重命名实际文件，否则后续压缩阶段会找不到 build_image_file。
-    local previous_kernel="${kernel}"
-    local previous_image_file="${build_image_file}"
-
-    # 04. 修正版本显示和镜像文件名，确保与本地内核版本对齐
-    kernel="${kernel_name}"
-    openwrt_filename="openwrt_${openwrt_alias}${PLATFORM}_${board}_k${kernel}_$(date +"%Y.%m.%d").img"
-    build_image_file="${out_path}/${openwrt_filename}"
-    if [[ "${build_image_file}" != "${previous_image_file}" ]]; then
-        [[ -f "${previous_image_file}" ]] || error_msg "Image created by make_image is missing: ${previous_image_file}"
-        mv -f "${previous_image_file}" "${build_image_file}"
-    fi
-}
-EOF
-    sed -i "s|CUSTOM_KERNEL_PATH|$custom_kdir/local_Image|g" "$workdir/custom_replace_kernel.sh"
-
-    # 用自定义函数替换 remake 中的 replace_kernel 函数定义
-    python3 -c "
-with open('$workdir/remake/remake', 'r') as f:
-    content = f.read()
-with open('$workdir/custom_replace_kernel.sh', 'r') as f:
-    repl = f.read()
-import re
-new_content = re.sub(r'replace_kernel\(\) \{[\s\S]*?\n\}\n\nrefactor_bootfs', repl + '\n\nrefactor_bootfs', content, count=1)
-with open('$workdir/remake/remake', 'w') as f:
-    f.write(new_content)
-"
-fi
 
 echo "Building ophub images for $board from $(basename "$rootfs_file") (revision $ophub_ref)"
 (cd "$workdir/remake" && sudo ./remake -b "$board")
