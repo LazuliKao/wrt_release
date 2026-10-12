@@ -422,7 +422,7 @@ prepare_container_image() {
     cat > "$container_tmp_Dockerfile" <<EOF
 FROM $base_image
 USER root
-RUN apt-get update && apt-get install -y sudo git jq build-essential cmake g++ bison flex dwarves libbpf-dev libdw-dev libelf-dev libncurses5-dev python3-distutils zlib1g-dev python3 pkg-config libssl-dev && \
+RUN apt-get update && apt-get install -y sudo git jq build-essential cmake g++ bison flex dwarves libbpf-dev libdw-dev libelf-dev libncurses5-dev python3-distutils zlib1g-dev python3 pkg-config libssl-dev cpio u-boot-tools qemu-user && \
     git clone --depth 1 --branch v1.31 https://github.com/acmel/dwarves.git /tmp/dwarves && \
     cmake -S /tmp/dwarves -B /tmp/dwarves/build -DCMAKE_BUILD_TYPE=Release && \
     cmake --build /tmp/dwarves/build -j2 && \
@@ -554,6 +554,15 @@ fi
 
 apply_config
 run_build_recipe_phase pre_defconfig
+if [[ "$Dev" == ophub_bdy_g98_* ]]; then
+    # This updater downloads an independent ophub kernel, breaking the local
+    # Image/DTB/modules ABI contract. Upgrade G98 with complete local images.
+    sed -i \
+        -e '/^CONFIG_PACKAGE_luci-app-amlogic=/d' \
+        -e '/^# CONFIG_PACKAGE_luci-app-amlogic is not set$/d' \
+        "$BASE_PATH/../$BUILD_DIR/.config"
+    printf '%s\n' '# CONFIG_PACKAGE_luci-app-amlogic is not set' >> "$BASE_PATH/../$BUILD_DIR/.config"
+fi
 print_config_fragment_summary
 remove_uhttpd_dependency
 
@@ -595,6 +604,11 @@ find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*.im
 \rm -f "$FIRMWARE_DIR"/*-preloader.bin 2>/dev/null
 \rm -f "$FIRMWARE_DIR"/*-bl31-uboot.fip 2>/dev/null
 \rm -f "$FIRMWARE_DIR"/*-gpt.bin 2>/dev/null
+
+if [[ "$Dev" == ophub_bdy_g98_* ]]; then
+    bash "$BASE_PATH/recipes/bdy_g98/kernel/export.sh" "$BASE_PATH/../$BUILD_DIR" \
+        "$FIRMWARE_DIR/immortalwrt-armsr-armv8-generic-rootfs.tar.gz" "$FIRMWARE_DIR/local-kernel"
+fi
 
 if [[ -d action_build ]]; then
     make clean

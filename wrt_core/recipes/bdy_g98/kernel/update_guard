@@ -1,0 +1,4 @@
+#!/bin/sh
+echo 'This G98 image uses a locally built kernel, DTB and modules.' >&2
+echo 'Upgrade with a complete G98 image from the same build pipeline.' >&2
+exit 1

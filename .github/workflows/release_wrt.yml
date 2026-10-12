@@ -101,6 +101,7 @@ jobs:
           sudo -E apt -yqq install dos2unix
           sudo -E apt -yqq install dwarves
           sudo -E apt -yqq install libfuse-dev
+          sudo -E apt -yqq install cpio u-boot-tools qemu-user
           sudo -E apt -yqq autoremove --purge
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
@@ -270,13 +271,21 @@ jobs:
         if: ${{ startsWith(inputs.model, 'ophub_armv8_') || startsWith(inputs.model, 'ophub_bdy_') }}
         env:
           OPHUB_BOARDS: ${{ inputs.ophub_boards }}
-        run: bash wrt_core/ophub_package.sh --rootfs-dir ./firmware --board "$OPHUB_BOARDS" --output ./firmware
+        run: |
+          args=(--rootfs-dir ./firmware --board "$OPHUB_BOARDS" --output ./firmware)
+          if [[ '${{ inputs.model }}' == ophub_bdy_g98_* ]]; then
+            args+=(--kernel-bundle ./firmware/local-kernel)
+          fi
+          bash wrt_core/ophub_package.sh "${args[@]}"
 
       - name: Prepare Release Body
         run: |
           echo "云编译发布" > release_body.txt
           echo "源码：${{ env.BUILD_SRC }}" >> release_body.txt
-          if [[ "${{ inputs.model }}" == ophub_armv8_* || "${{ inputs.model }}" == ophub_bdy_* ]]; then
+          if [[ "${{ inputs.model }}" == ophub_bdy_g98_* ]]; then
+            echo "Kernel/DTB/modules/initramfs: local build $(cat firmware/local-kernel/kernel-release)" >> release_body.txt
+            echo "KMOD归档: ${KMOD_ARCHIVE}" >> release_body.txt
+          elif [[ "${{ inputs.model }}" == ophub_armv8_* || "${{ inputs.model }}" == ophub_bdy_* ]]; then
             echo "Kernel/DTB/modules: supplied by ophub/kernel for selected boards (${{ inputs.ophub_boards }})" >> release_body.txt
           else
             echo "Kernel: ${{ env.KVER }}" >> release_body.txt
