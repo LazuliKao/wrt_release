@@ -1,0 +1,44 @@
+#!/bin/sh
+export PATH=/bin:/sbin
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+exec </dev/console >/dev/console 2>&1
+echo 'G98 local initramfs: locating root filesystem'
+root=
+for arg in $(cat /proc/cmdline); do
+    case "$arg" in root=*) root=${arg#root=} ;; esac
+done
+for module in /lib/modules/*/kernel/openwrt/*.ko; do
+    # OpenWrt modules are flat; retry below for dependency ordering.
+    [ -f "$module" ] && insmod "$module" 2>/dev/null
+done
+for attempt in $(seq 1 30); do
+    for module in /lib/modules/*/kernel/openwrt/*.ko; do
+        [ -f "$module" ] && insmod "$module" 2>/dev/null
+    done
+    device=
+    case "$root" in
+        /dev/*) [ -b "$root" ] && device=$root ;;
+        UUID=*|LABEL=*)
+            key=${root%%=*}; value=${root#*=}
+            for candidate in /dev/mmcblk*p* /dev/sd*[0-9] /dev/nvme*n*p*; do
+                [ -b "$candidate" ] || continue
+                if blkid "$candidate" | grep -Fq " $key=\"$value\""; then
+                    device=$candidate; break
+                fi
+            done ;;
+    esac
+    if [ -n "$device" ] && mount -t btrfs -o rw "$device" /newroot; then
+        if [ -x /newroot/sbin/init ]; then
+            mount --move /proc /newroot/proc
+            mount --move /sys /newroot/sys
+            mount --move /dev /newroot/dev
+            exec switch_root /newroot /sbin/init
+        fi
+        umount /newroot
+    fi
+    sleep 1
+done
+echo "Failed to mount root=$root; entering recovery shell"
+exec sh
