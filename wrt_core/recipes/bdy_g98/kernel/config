@@ -29,6 +29,7 @@ CONFIG_SPI_ROCKCHIP=y
 # symbols explicitly so clean non-interactive CI builds do not prompt.
 # CONFIG_INPUT_RK805_PWRKEY is not set
 # CONFIG_PINCTRL_RK805 is not set
+# CONFIG_CHARGER_RK817 is not set
 CONFIG_I2C_RK3X=y
 CONFIG_ROCKCHIP_IODOMAIN=y
 CONFIG_NET_DSA=y
