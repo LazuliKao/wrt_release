@@ -25,9 +25,10 @@ CONFIG_SPI_MASTER=y
 CONFIG_REGMAP=y
 CONFIG_REGMAP_SPI=y
 CONFIG_SPI_ROCKCHIP=y
-# The 6.12 RK8xx MFD Kconfig exposes this optional input driver; keep the
-# kernel configuration non-interactive on clean CI builds.
+# The 6.12 RK8xx MFD Kconfig exposes optional RK805 drivers; mark unused
+# symbols explicitly so clean non-interactive CI builds do not prompt.
 # CONFIG_INPUT_RK805_PWRKEY is not set
+# CONFIG_PINCTRL_RK805 is not set
 CONFIG_I2C_RK3X=y
 CONFIG_ROCKCHIP_IODOMAIN=y
 CONFIG_NET_DSA=y
