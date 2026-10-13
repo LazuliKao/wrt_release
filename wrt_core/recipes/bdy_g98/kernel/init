@@ -9,11 +9,8 @@ root=
 for arg in $(cat /proc/cmdline); do
     case "$arg" in root=*) root=${arg#root=} ;; esac
 done
-for module in /lib/modules/*/kernel/openwrt/*.ko; do
-    # OpenWrt modules are flat; retry below for dependency ordering.
-    [ -f "$module" ] && insmod "$module" 2>/dev/null
-done
-for attempt in $(seq 1 30); do
+attempt=0
+while [ "$attempt" -lt 30 ]; do
     for module in /lib/modules/*/kernel/openwrt/*.ko; do
         [ -f "$module" ] && insmod "$module" 2>/dev/null
     done
@@ -39,6 +36,7 @@ for attempt in $(seq 1 30); do
         umount /newroot
     fi
     sleep 1
+    attempt=$((attempt + 1))
 done
 echo "Failed to mount root=$root; entering recovery shell"
 exec sh

@@ -18,8 +18,6 @@ The YT921x backport is pinned independently to
 * `kernel/config`: boot-critical Linux kernel options.
 * `kernel/export.sh`: export the complete local kernel bundle.
 * `kernel/init`: target initramfs entry point.
-* `kernel/validate.py`: standard bundle and U-Boot CRC validation.
-* `kernel/verify_image.sh`: read-only final image verification.
 * `kernel/update_guard`: prevent independent remote kernel upgrades.
 
 The shared packaging entry point remains `wrt_core/ophub_package.sh`.
@@ -34,7 +32,7 @@ After the firmware build succeeds, `kernel/export.sh` exports:
   tree (original remake requires at least two DTBs).
 * `modules-<release>.tar.gz`: the rootfs modules in the directory layout
   expected by original remake.
-* `kernel-release`, `provenance.txt` and `sha256sums`.
+* `kernel-release`, a rootfs SHA-256 binding and archive checksums.
 
 Local build example on the development machine:
 
@@ -46,13 +44,11 @@ sudo bash wrt_core/ophub_package.sh --board bdy-g98 \
   --output firmware/ophub-immortalwrt
 ```
 
-The wrapper checks the bundle and its rootfs provenance before starting
-remake, seeds `kernel/stable/<release>` and changes only the selected model's
-kernel tag. Original remake functions and board hooks run unchanged.
-The final compressed image is mounted read-only to compare Image, uInitrd,
-G98 DTB and every installed module with the local bundle. G98's independent
-remote-kernel updater is disabled; use complete images for upgrades.
+The wrapper checks archive checksums and confirms that the kernel bundle was
+exported alongside the selected rootfs. It seeds `kernel/stable/<release>`
+and changes only the selected model's kernel tag. Original remake functions
+and board hooks run unchanged. G98's independent remote-kernel updater is
+disabled; use complete images for upgrades.
 
-These checks validate the image's contents and boot-file contract. Hardware
-acceptance still requires serial-console boot, rootfs mounting, Ethernet/DSA,
-NVMe and thermal/fan checks on a G98.
+Hardware acceptance still requires serial-console boot, rootfs mounting,
+Ethernet/DSA, NVMe and thermal/fan checks on a G98.

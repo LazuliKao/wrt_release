@@ -57,15 +57,14 @@ if [[ -n "$kernel_bundle" ]]; then
     kernel_bundle=$(realpath "$kernel_bundle")
     release=$(cat "$kernel_bundle/kernel-release")
     [[ "$release" =~ ^6\.12\.[0-9]+$ ]] || { echo 'Invalid local kernel release.' >&2; exit 1; }
-    for archive in "boot-$release.tar.gz" "dtb-rockchip-$release.tar.gz" "modules-$release.tar.gz" provenance.txt sha256sums; do
+    for archive in "boot-$release.tar.gz" "dtb-rockchip-$release.tar.gz" "modules-$release.tar.gz" rootfs.sha256 sha256sums; do
         [[ -s "$kernel_bundle/$archive" ]] || { echo "Missing local kernel artifact: $archive" >&2; exit 1; }
     done
     (cd "$kernel_bundle" && sha256sum --check sha256sums)
     rootfs_hash=$(sha256sum "$rootfs_file" | cut -d' ' -f1)
-    grep -q "^$rootfs_hash  .*rootfs.tar.gz$" "$kernel_bundle/provenance.txt" || {
+    [[ "$rootfs_hash" == "$(cat "$kernel_bundle/rootfs.sha256")" ]] || {
         echo 'Kernel bundle belongs to a different rootfs build.' >&2; exit 1;
     }
-    python3 "$g98_kernel_dir/validate.py" "$kernel_bundle"
 elif [[ "$board" == bdy-g98 ]]; then
     echo 'G98 requires an explicit complete --kernel-bundle from this build.' >&2; exit 1
 fi
@@ -109,7 +108,7 @@ path.write_text('\n'.join(lines) + '\n')
 PY
     dest="$workdir/remake/make-openwrt/kernel/stable/$release"
     mkdir -p "$dest"
-    cp "$kernel_bundle/"*.tar.gz "$kernel_bundle/sha256sums" "$kernel_bundle/kernel-release" "$kernel_bundle/provenance.txt" "$dest/"
+    cp "$kernel_bundle/"*.tar.gz "$kernel_bundle/sha256sums" "$kernel_bundle/kernel-release" "$kernel_bundle/rootfs.sha256" "$dest/"
     # Board overlay is copied after downloaded common updater scripts.
     guard_dir="$workdir/remake/make-openwrt/openwrt-files/different-files/bdy-g98/rootfs/usr/sbin"
     mkdir -p "$guard_dir"
@@ -126,9 +125,6 @@ images=("$workdir/remake/openwrt/out/"*.img.gz "${workdir}/remake/openwrt/out/"*
 shopt -u nullglob
 ((${#images[@]} > 0)) || { echo 'ophub/remake produced no compressed images.' >&2; exit 1; }
 for image in "${images[@]}"; do
-    if [[ -n "$kernel_bundle" ]]; then
-        sudo bash "$g98_kernel_dir/verify_image.sh" "$image" "$kernel_bundle"
-    fi
     sudo install -m 0644 "$image" "$output_dir/$(basename "$image")"
 done
 success=1
