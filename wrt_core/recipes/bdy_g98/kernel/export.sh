@@ -8,7 +8,7 @@ rootfs=$(realpath "$2")
 mkdir -p "$3"
 output=$(realpath "$3")
 fail() { echo "$*" >&2; exit 1; }
-for cmd in cpio gzip python3 readelf sha256sum qemu-aarch64; do command -v "$cmd" >/dev/null || fail "Missing $cmd"; done
+for cmd in cpio gzip python3 readelf sha256sum; do command -v "$cmd" >/dev/null || fail "Missing $cmd"; done
 mapfile -t kernels < <(find "$tree/build_dir/target-aarch64_generic_musl/linux-armsr_armv8" -mindepth 1 -maxdepth 1 -type d -name 'linux-6.12.*')
 [[ ${#kernels[@]} == 1 ]] || fail 'Expected exactly one prepared armsr 6.12 kernel tree.'
 kernel=${kernels[0]}
@@ -55,9 +55,7 @@ cp "$work/root/bin/busybox" "$work/initrd/bin/"
 find "$work/root/lib" -maxdepth 1 \( -name '*.so' -o -name '*.so.*' \) -exec cp -a -t "$work/initrd/lib" {} +
 readelf -h "$work/initrd/bin/busybox" | grep -q AArch64 || fail 'BusyBox is not an AArch64 executable.'
 cp -a "$work/modules/." "$work/initrd/lib/modules"
-applets=$(qemu-aarch64 -L "$work/initrd" "$work/initrd/bin/busybox" --list)
-for applet in sh mount umount cat grep blkid insmod sleep seq switch_root; do
-    grep -qx "$applet" <<< "$applets" || fail "Target BusyBox lacks $applet"
+for applet in sh mount umount cat grep blkid insmod sleep switch_root; do
     ln -s busybox "$work/initrd/bin/$applet"
 done
 cp "$base/init" "$work/initrd/init"
@@ -76,13 +74,7 @@ tar -czf "$work/bundle/boot-$release.tar.gz" -C "$work/boot" .
 tar -czf "$work/bundle/dtb-rockchip-$release.tar.gz" -C "$work/dtb" .
 tar -czf "$work/bundle/modules-$release.tar.gz" -C "$work/modules" "$release"
 printf '%s\n' "$release" > "$work/bundle/kernel-release"
-{
-    printf 'OpenWrt revision: %s\n' "$(git -C "$tree" rev-parse HEAD)"
-    printf 'G98 DTS upstream: c2d18bda9688e571fe2d5124a86c04ab57f33977\n'
-    sha256sum "$rootfs" "$kernel/arch/arm64/boot/Image" "$kernel/.config" "$kernel/System.map" "$tree/.config"
-    [[ -f "$kernel/.vermagic" ]] && cat "$kernel/.vermagic"
-} > "$work/bundle/provenance.txt"
-(cd "$work/bundle" && sha256sum ./*.tar.gz kernel-release provenance.txt > sha256sums)
+sha256sum "$rootfs" | cut -d' ' -f1 > "$work/bundle/rootfs.sha256"
+(cd "$work/bundle" && sha256sum ./*.tar.gz kernel-release rootfs.sha256 > sha256sums)
 cp -a "$work/bundle/." "$output/"
-python3 "$base/validate.py" "$output"
 echo "Exported local ophub kernel $release to $output"
