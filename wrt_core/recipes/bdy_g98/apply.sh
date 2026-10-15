@@ -69,6 +69,9 @@ fi
 # 4. 将补丁安装到目标内核补丁目录
 if [ -d "$build_dir/target/linux/generic/backport-6.12" ]; then
     cp -f "$CACHED_PATCH" "$build_dir/target/linux/generic/backport-6.12/$PATCH_NAME"
+    # Local follow-ups sort after the pinned base driver, before 800-*.
+    cp -f "$recipe_dir"/kernel/patches/*.patch \
+          "$build_dir/target/linux/generic/backport-6.12/"
 fi
 
 # The armsr target uses generic/files, not rockchip/files. Compile this DTB
