@@ -30,6 +30,7 @@ on:
           - zn_m2_immwrt
           - zn_m2_libwrt
           - x64_immwrt
+          - lk_h3c_hm2004_du
       add_fragments:
         required: false
         description: Add config fragments, comma separated
@@ -110,6 +111,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Create private source token
+        id: private-source-token
+        if: ${{ inputs.model == 'lk_h3c_hm2004_du' }}
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.PRIVATE_SOURCE_APP_ID }}
+          private-key: ${{ secrets.PRIVATE_SOURCE_APP_PRIVATE_KEY }}
+          owner: LazuliKao
+          permission-contents: read
+          repositories: |
+            openwrt-fttr
+            luci-app-fttr
+
+      - name: Prepare private Git authentication
+        if: ${{ inputs.model == 'lk_h3c_hm2004_du' }}
+        run: |
+          install -m 700 wrt_core/git_askpass.sh "$RUNNER_TEMP/git-askpass"
+          echo "GIT_ASKPASS=$RUNNER_TEMP/git-askpass" >> "$GITHUB_ENV"
+          echo "GIT_TERMINAL_PROMPT=0" >> "$GITHUB_ENV"
+
       - name: Set Build Date and Timezone
         id: set-vars
         env:
@@ -129,6 +150,8 @@ jobs:
           echo "BUILD_DIR_KEY=$BUILD_DIR_KEY" >> $GITHUB_ENV
 
       - name: Pre Clone
+        env:
+          GH_REPO_TOKEN: ${{ steps.private-source-token.outputs.token }}
         run: ./wrt_core/pre_clone_action.sh ${{ inputs.model }}
 
       - name: Cache Dependencies
@@ -181,6 +204,7 @@ jobs:
         env:
           ADD_CONFIG_FRAGMENTS: ${{ inputs.add_fragments }}
           REMOVE_CONFIG_FRAGMENTS: ${{ inputs.remove_fragments }}
+          GH_REPO_TOKEN: ${{ steps.private-source-token.outputs.token }}
         run: ./build.sh ${{ inputs.model }}
 
       - name: Get Kernel Verion

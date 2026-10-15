@@ -1,0 +1,62 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "h3c-hm2004-du_fttr",
+  "description": "导入 H3C HM2004-DU FTTR 驱动、控制工具及 LuCI 管理界面",
+  "enabled": false,
+  "priority": 0,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "h3c",
+    "hm2004-du",
+    "fttr",
+    "an7581"
+  ],
+  "when": {
+    "targets": [
+      "lk_h3c_hm2004_du"
+    ],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "luci-app-fttr": {
+        "gitUrl": "https://github.com/LazuliKao/luci-app-fttr.git",
+        "branch": "main"
+      },
+      "openwrt-fttr": {
+        "gitUrl": "https://github.com/LazuliKao/openwrt-fttr.git",
+        "branch": "main"
+      }
+    },
+    "importPackages": [
+      {
+        "source": "openwrt-fttr",
+        "path": "h3c-fmcs",
+        "packageName": "h3c-fmcs"
+      },
+      {
+        "source": "openwrt-fttr",
+        "path": "h3c-fttr-tools",
+        "packageName": "h3c-fttr-tools"
+      },
+      {
+        "source": "luci-app-fttr",
+        "path": ".",
+        "packageName": "luci-app-fttr"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/h3c-hm2004-du_fttr.config"
+    ],
+    "script": null
+  }
+}
