@@ -3,17 +3,27 @@ export PATH=/bin:/sbin
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 mount -t devtmpfs devtmpfs /dev
-exec </dev/console >/dev/console 2>&1
+# boot.cmd also selects tty1; /dev/console can therefore hide all recovery
+# output from the serial terminal even though ttyS2 is already registered.
+if [ -c /dev/ttyS2 ]; then
+    exec </dev/ttyS2 >/dev/ttyS2 2>&1
+else
+    exec </dev/console >/dev/console 2>&1
+fi
 echo 'G98 local initramfs: locating root filesystem'
 root=
 for arg in $(cat /proc/cmdline); do
     case "$arg" in root=*) root=${arg#root=} ;; esac
 done
+echo "G98 local initramfs: root=$root"
+# Storage controllers are built in. Resolve the root filesystem module's
+# dependencies once, instead of repeatedly insmod'ing unrelated drivers.
+if ! modprobe btrfs; then
+    echo 'G98 local initramfs: failed to load Btrfs dependencies; entering recovery shell'
+    exec sh
+fi
 attempt=0
 while [ "$attempt" -lt 30 ]; do
-    for module in /lib/modules/*/kernel/openwrt/*.ko; do
-        [ -f "$module" ] && insmod "$module" 2>/dev/null
-    done
     device=
     case "$root" in
         /dev/*) [ -b "$root" ] && device=$root ;;
@@ -26,11 +36,14 @@ while [ "$attempt" -lt 30 ]; do
                 fi
             done ;;
     esac
+    [ "$attempt" -ne 0 ] || echo "G98 local initramfs: waiting for root device and Btrfs modules"
     if [ -n "$device" ] && mount -t btrfs -o rw "$device" /newroot; then
+        echo "G98 local initramfs: mounted $device"
         if [ -x /newroot/sbin/init ]; then
             mount --move /proc /newroot/proc
             mount --move /sys /newroot/sys
             mount --move /dev /newroot/dev
+            echo 'G98 local initramfs: starting /sbin/init'
             exec switch_root /newroot /sbin/init
         fi
         umount /newroot
@@ -39,4 +52,6 @@ while [ "$attempt" -lt 30 ]; do
     attempt=$((attempt + 1))
 done
 echo "Failed to mount root=$root; entering recovery shell"
+cat /proc/filesystems
+blkid
 exec sh
