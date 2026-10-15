@@ -422,7 +422,7 @@ prepare_container_image() {
     cat > "$container_tmp_Dockerfile" <<EOF
 FROM $base_image
 USER root
-RUN apt-get update && apt-get install -y sudo git jq build-essential cmake g++ bison flex dwarves libbpf-dev libdw-dev libelf-dev libncurses5-dev python3-distutils zlib1g-dev python3 pkg-config libssl-dev cpio u-boot-tools && \
+RUN apt-get update && apt-get install -y sudo git jq build-essential cmake g++ bison flex dwarves libbpf-dev libdw-dev libelf-dev libncurses5-dev python3-distutils zlib1g-dev python3 pkg-config libssl-dev cpio u-boot-tools kmod && \
     git clone --depth 1 --branch v1.31 https://github.com/acmel/dwarves.git /tmp/dwarves && \
     cmake -S /tmp/dwarves -B /tmp/dwarves/build -DCMAKE_BUILD_TYPE=Release && \
     cmake --build /tmp/dwarves/build -j2 && \
