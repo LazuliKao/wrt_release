@@ -18,7 +18,7 @@
     "$schema": { "type": "string" },
     "name": {
       "type": "string",
-      "pattern": "^[a-z0-9_]+$"
+      "pattern": "^[a-z0-9_-]+$"
     },
     "description": { "type": "string" },
     "enabled": { "type": "boolean" },
@@ -38,12 +38,12 @@
     },
     "depends": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+      "items": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
       "uniqueItems": true
     },
     "conflicts": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+      "items": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
       "uniqueItems": true
     },
     "tags": {
