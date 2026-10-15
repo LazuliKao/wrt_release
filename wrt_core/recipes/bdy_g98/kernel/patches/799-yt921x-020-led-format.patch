@@ -1,0 +1,32 @@
+From 5c450c357c005e70b8375ad13dcd9219deb0bd83 Mon Sep 17 00:00:00 2001
+From: ophub <68696949+ophub@users.noreply.github.com>
+Date: Sat, 19 Sep 2026 12:08:27 +0800
+Subject: [PATCH] net: dsa: yt921x: Fix -Wformat warnings in
+ yt921x_led_profile_setup()
+
+Upstream: https://github.com/ophub/linux-6.18.y/commit/5c450c357c005e70b8375ad13dcd9219deb0bd83
+Source: https://github.com/ophub/linux-6.18.y/commit/5c450c357c005e70b8375ad13dcd9219deb0bd83.patch
+Backport: Linux 6.12, after 799-yt921x-010-bdy-g98-led-profile.patch
+  and LEDE 241650a12c1121c76ba6e82567f3cbd81e368d3d
+  target/linux/generic/backport-6.12/799-net-dsa-add-motorcomm-yt921x.patch
+  SHA256: ceda8360e790819a7137c6c1ccfea2a0e909d13d3f1fd2ba053c0e2805c87e06
+  Full upstream diff retained. Use %08lx for the unsigned-long BIT()
+  profile expressions, keeping %08x for the u32 register values. The C
+  context occurs four lines earlier in the pinned backport.
+---
+ drivers/net/dsa/yt921x.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/dsa/yt921x.c b/drivers/net/dsa/yt921x.c
+index 2cced6b792..26e47ccd57 100644
+--- a/drivers/net/dsa/yt921x.c
++++ b/drivers/net/dsa/yt921x.c
+@@ -4848,7 +4848,7 @@ static int yt921x_led_profile_setup(struct yt921x_priv *priv)
+ 			return res;
+ 
+ 		dev_info(dev,
+-			 "port %d: LED0 0x%08x -> 0x%08x, LED1 0x%08x -> 0x%08x\n",
++			 "port %d: LED0 0x%08x -> 0x%08lx, LED1 0x%08x -> 0x%08lx\n",
+ 			 dp->index, old0, YT921X_LED_PROFILE_LINK, old1,
+ 			 YT921X_LED_PROFILE_ACT);
+ 	}

@@ -1,0 +1,174 @@
+From 36e2e370843c943a8ea53999d455d2e65fe62dfe Mon Sep 17 00:00:00 2001
+From: ophub <68696949+ophub@users.noreply.github.com>
+Date: Thu, 13 Aug 2026 17:55:35 +0800
+Subject: [PATCH] net: dsa: yt921x: keep bdy-g98 RJ45 LEDs lit on link, blink
+ on activity
+
+Board-level experiments (swapping the two pin signal sources through
+the parallel remapping register, and parking one pin with an empty
+action) confirmed the shared net, so a split one-solid-one-blink
+indication is not possible on this hardware; the profile has to be a
+joint one.
+
+Add the 10M/100M/1000M ON bits to the LED1 action (0x2670): the net
+is held lit while the link is up at any speed, and RX/TX blink takes
+over during traffic.  While unlinked, LED0 (DISABLE_LINK_TRY) keeps
+the net low.  Both LEDs are now solid on link, blink on activity and
+stay dark when the cable is out.
+
+Upstream: https://github.com/ophub/linux-6.18.y/commit/36e2e370843c943a8ea53999d455d2e65fe62dfe
+Source: https://github.com/ophub/linux-6.18.y/commit/36e2e370843c943a8ea53999d455d2e65fe62dfe.patch
+Backport: Linux 6.12, after LEDE 241650a12c1121c76ba6e82567f3cbd81e368d3d
+  target/linux/generic/backport-6.12/799-net-dsa-add-motorcomm-yt921x.patch
+  SHA256: ceda8360e790819a7137c6c1ccfea2a0e909d13d3f1fd2ba053c0e2805c87e06
+  Full upstream diff retained without behavior or schema changes. The C
+  contexts occur four lines earlier in the pinned backport; patch tools
+  resolve that offset. Apply 799-yt921x-020-led-format.patch afterwards.
+---
+ .../bindings/net/dsa/motorcomm,yt921x.yaml    |  9 +++
+ drivers/net/dsa/yt921x.c                      | 65 +++++++++++++++++--
+ drivers/net/dsa/yt921x.h                      | 26 ++++++++
+ 3 files changed, 96 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/dsa/motorcomm,yt921x.yaml b/Documentation/devicetree/bindings/net/dsa/motorcomm,yt921x.yaml
+index 33a6552e46..9612fbc801 100644
+--- a/Documentation/devicetree/bindings/net/dsa/motorcomm,yt921x.yaml
++++ b/Documentation/devicetree/bindings/net/dsa/motorcomm,yt921x.yaml
+@@ -31,6 +31,15 @@ properties:
+   reset-gpios:
+     maxItems: 1
+ 
++  motorcomm,bdy-g98-led-profile:
++    type: boolean
++    description:
++      Apply the bdy-g98 board RJ45 LED profile to all user ports after chip
++      reset. Both LEDs of each jack are tied to one electrical net on this
++      board, so they always show the same thing: solid on link at any
++      speed, blinking on RX/TX activity, dark while unlinked.
++      Vendor-specific, only meaningful on bdy-g98 hardware.
++
+   mdio:
+     $ref: /schemas/net/mdio.yaml#
+     unevaluatedProperties: false
+diff --git a/drivers/net/dsa/yt921x.c b/drivers/net/dsa/yt921x.c
+index 624372d8ec..2cced6b792 100644
+--- a/drivers/net/dsa/yt921x.c
++++ b/drivers/net/dsa/yt921x.c
+@@ -4798,6 +4798,64 @@ static int yt921x_chip_setup(struct yt921x_priv *priv)
+ 	return 0;
+ }
+ 
++/* bdy-g98 ties both RJ45 LEDs of each gigabit jack to one electrical
++ * net driven by the port's two parallel LED pins, so the two LEDs
++ * always show the same thing: a pin driving the net low wins over a
++ * released pin, and blink wins over solid.  The board profile is
++ * therefore a joint one: LED1 holds the net lit on link at any speed
++ * and blinks it on RX/TX activity, LED0 keeps the net low while the
++ * port is trying to link.  Net effect: both LEDs solid on link, both
++ * blink on traffic, both dark while unlinked.  YT921X_RST_HW reverts
++ * the LED controller, so apply this after reset.
++ */
++#define YT921X_LED_PROFILE_LINK	(YT921X_LED_10M_ON | YT921X_LED_100M_ON | \
++				 YT921X_LED_1000M_ON | \
++				 YT921X_LED_DISABLE_LINK_TRY)
++#define YT921X_LED_PROFILE_ACT	(YT921X_LED_10M_ON | YT921X_LED_100M_ON | \
++				 YT921X_LED_1000M_ON | \
++				 YT921X_LED_RXACT_BLINK | \
++				 YT921X_LED_TXACT_BLINK | YT921X_LED_ACT_BLINK_IND)
++
++/* Caller must hold priv->reg_lock */
++static int yt921x_led_profile_setup(struct yt921x_priv *priv)
++{
++	struct device *dev = to_device(priv);
++	struct dsa_switch *ds = &priv->ds;
++	struct dsa_port *dp;
++	u32 old0, old1;
++	int res;
++
++	if (!of_property_read_bool(dev->of_node,
++				   "motorcomm,bdy-g98-led-profile"))
++		return 0;
++
++	dsa_switch_for_each_user_port(dp, ds) {
++		res = yt921x_reg_read(priv, YT921X_LED_CTRL_0(dp->index),
++				      &old0);
++		if (res)
++			return res;
++		res = yt921x_reg_read(priv, YT921X_LED_CTRL_1(dp->index),
++				      &old1);
++		if (res)
++			return res;
++		res = yt921x_reg_write(priv, YT921X_LED_CTRL_0(dp->index),
++				       YT921X_LED_PROFILE_LINK);
++		if (res)
++			return res;
++		res = yt921x_reg_write(priv, YT921X_LED_CTRL_1(dp->index),
++				       YT921X_LED_PROFILE_ACT);
++		if (res)
++			return res;
++
++		dev_info(dev,
++			 "port %d: LED0 0x%08x -> 0x%08x, LED1 0x%08x -> 0x%08x\n",
++			 dp->index, old0, YT921X_LED_PROFILE_LINK, old1,
++			 YT921X_LED_PROFILE_ACT);
++	}
++
++	return 0;
++}
++
+ static int yt921x_dsa_setup(struct dsa_switch *ds)
+ {
+ 	struct yt921x_priv *priv = to_yt921x_priv(ds);
+@@ -4839,12 +4897,11 @@ static int yt921x_dsa_setup(struct dsa_switch *ds)
+ 
+ 	mutex_lock(&priv->reg_lock);
+ 	res = yt921x_chip_setup(priv);
++	if (!res)
++		res = yt921x_led_profile_setup(priv);
+ 	mutex_unlock(&priv->reg_lock);
+ 
+-	if (res)
+-		return res;
+-
+-	return 0;
++	return res;
+ }
+ 
+ static const struct phylink_mac_ops yt921x_phylink_mac_ops = {
+diff --git a/drivers/net/dsa/yt921x.h b/drivers/net/dsa/yt921x.h
+index df1f5a9d96..8dd0c2b523 100644
+--- a/drivers/net/dsa/yt921x.h
++++ b/drivers/net/dsa/yt921x.h
+@@ -230,6 +230,32 @@
+ #define  YT921X_MIB_DATA_RX_OAM			0xa8
+ #define  YT921X_MIB_DATA_TX_OAM			0xac
+ 
++/* Parallel LED controller. Action bits are per-port per-LED; LED0 has two
++ * extra bits (16-17). Bit values follow the vendor SDK (fal_tiger_led.c).
++ */
++#define YT921X_LED_GLB_CTRL		0xd0000
++#define  YT921X_LED_GLB_ENABLE			BIT(21)
++#define YT921X_LED_CTRL_0(port)		(0xd0004 + 4 * (port))
++#define YT921X_LED_CTRL_1(port)		(0xd0040 + 4 * (port))
++#define YT921X_LED_CTRL_2(port)		(0xd0080 + 4 * (port))
++#define  YT921X_LED_10M_BLINK			BIT(0)
++#define  YT921X_LED_100M_BLINK			BIT(1)
++#define  YT921X_LED_1000M_BLINK			BIT(2)
++#define  YT921X_LED_10M_ON			BIT(4)
++#define  YT921X_LED_100M_ON			BIT(5)
++#define  YT921X_LED_1000M_ON			BIT(6)
++#define  YT921X_LED_RXACT_ON			BIT(7)
++#define  YT921X_LED_TXACT_ON			BIT(8)
++#define  YT921X_LED_RXACT_BLINK			BIT(9)
++#define  YT921X_LED_TXACT_BLINK			BIT(10)
++#define  YT921X_LED_HALFDUPLEX_ON		BIT(11)
++#define  YT921X_LED_FULLDUPLEX_ON		BIT(12)
++#define  YT921X_LED_ACT_BLINK_IND		BIT(13)
++#define  YT921X_LED_LOOPDETECT_IND		BIT(14)
++#define  YT921X_LED_EEE_IND			BIT(15)
++#define  YT921X_LED_COLLISION_BLINK		BIT(16)	/* LED0 only */
++#define  YT921X_LED_DISABLE_LINK_TRY		BIT(17)	/* LED0 only */
++
+ #define YT921X_EDATA_CTRL		0xe0000
+ #define  YT921X_EDATA_CTRL_ADDR_M		GENMASK(15, 8)
+ #define   YT921X_EDATA_CTRL_ADDR(x)			FIELD_PREP(YT921X_EDATA_CTRL_ADDR_M, (x))

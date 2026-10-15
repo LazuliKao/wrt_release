@@ -1,0 +1,80 @@
+From: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+Subject: [PATCH] net: stmmac: move check for hardware checksum supported
+
+Backport the checksum eligibility check from upstream commit
+b55dfb173ce808ecc8c598f2c378a9b04c5ce241 to Linux 6.12, which does not
+yet have stmmac_features_check(). Register that callback here instead.
+
+Most DSA-tagged packets cannot trigger the hardware checksum engine.
+Reject checksum offload before segmentation: harmonize_features() then
+also clears GSO features, rather than letting stmmac_xmit() send a tagged
+GSO skb through the hardware TSO path before checking its ethertype.
+Ordinary IP packets retain checksum and TSO offload.
+
+Upstream: https://github.com/gregkh/linux/commit/b55dfb173ce808ecc8c598f2c378a9b04c5ce241
+Signed-off-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+---
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -4441,6 +4441,29 @@ static bool stmmac_has_ip_ethertype(struct sk_buff *skb)
+ 		(proto == htons(ETH_P_IP) || proto == htons(ETH_P_IPV6));
+ }
+ 
++static netdev_features_t stmmac_features_check(struct sk_buff *skb,
++					     struct net_device *dev,
++					     netdev_features_t features)
++{
++	struct stmmac_priv *priv = netdev_priv(dev);
++	u16 queue = skb_get_queue_mapping(skb);
++
++	/* DWMAC IPs can be synthesized to support tx coe only for a few tx
++	 * queues. In that case, checksum offloading for those queues that don't
++	 * support tx coe needs to fallback to software checksum calculation.
++	 *
++	 * Packets that won't trigger the COE e.g. most DSA-tagged packets will
++	 * also have to be checksummed in software.
++	 * Disabling hardware checksumming also disables TSO; see
++	 * harmonize_features() in net/core/dev.c.
++	 */
++	if (priv->plat->tx_queues_cfg[queue].coe_unsupported ||
++	    !stmmac_has_ip_ethertype(skb))
++		features &= ~(NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM);
++
++	return features;
++}
++
+ /**
+  *  stmmac_xmit - Tx entry point of the driver
+  *  @skb : the socket buffer
+@@ -4514,21 +4537,7 @@ static netdev_tx_t stmmac_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	first_entry = entry;
+ 	WARN_ON(tx_q->tx_skbuff[first_entry]);
+ 
+-	csum_insertion = (skb->ip_summed == CHECKSUM_PARTIAL);
+-	/* DWMAC IPs can be synthesized to support tx coe only for a few tx
+-	 * queues. In that case, checksum offloading for those queues that don't
+-	 * support tx coe needs to fallback to software checksum calculation.
+-	 *
+-	 * Packets that won't trigger the COE e.g. most DSA-tagged packets will
+-	 * also have to be checksummed in software.
+-	 */
+-	if (csum_insertion &&
+-	    (priv->plat->tx_queues_cfg[queue].coe_unsupported ||
+-	     !stmmac_has_ip_ethertype(skb))) {
+-		if (unlikely(skb_checksum_help(skb)))
+-			goto dma_map_err;
+-		csum_insertion = !csum_insertion;
+-	}
++	csum_insertion = skb->ip_summed == CHECKSUM_PARTIAL;
+ 
+ 	if (likely(priv->extend_desc))
+ 		desc = (struct dma_desc *)(tx_q->dma_etx + entry);
+@@ -7089,6 +7098,7 @@ static const struct net_device_ops stmmac_netdev_ops = {
+ 	.ndo_stop = stmmac_release,
+ 	.ndo_change_mtu = stmmac_change_mtu,
+ 	.ndo_fix_features = stmmac_fix_features,
++	.ndo_features_check = stmmac_features_check,
+ 	.ndo_set_features = stmmac_set_features,
+ 	.ndo_set_rx_mode = stmmac_set_rx_mode,
+ 	.ndo_tx_timeout = stmmac_tx_timeout,
