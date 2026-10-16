@@ -554,15 +554,6 @@ fi
 
 apply_config
 run_build_recipe_phase pre_defconfig
-if [[ "$Dev" == ophub_bdy_g98_* ]]; then
-    # This updater downloads an independent ophub kernel, breaking the local
-    # Image/DTB/modules ABI contract. Upgrade G98 with complete local images.
-    sed -i \
-        -e '/^CONFIG_PACKAGE_luci-app-amlogic=/d' \
-        -e '/^# CONFIG_PACKAGE_luci-app-amlogic is not set$/d' \
-        "$BASE_PATH/../$BUILD_DIR/.config"
-    printf '%s\n' '# CONFIG_PACKAGE_luci-app-amlogic is not set' >> "$BASE_PATH/../$BUILD_DIR/.config"
-fi
 print_config_fragment_summary
 remove_uhttpd_dependency
 
