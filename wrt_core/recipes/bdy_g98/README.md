@@ -18,7 +18,7 @@ The YT921x backport is pinned independently to
 
 * YT921x aligns with ophub's initial import
   `ffe6d52efca61ed646a4864c36d01332a2e1dba1`, retaining the Linux 6.12 TC,
-  allocation and HSR API adaptations. The tagger is identical. The LEDE
+  allocation and HSR API adaptations. The baseline tagger is identical. The LEDE
   base already includes external port 9 (`port < 10`), so ophub's separate
   `2f40513e045a1c6d8ed1ebc7113232a8a9282380` fix is not applied twice.
 * Ophub `36e2e370843c943a8ea53999d455d2e65fe62dfe` applies the board's
@@ -33,6 +33,12 @@ The YT921x backport is pinned independently to
   offload before the network core chooses segmentation, which also forces
   software GSO. Ordinary IP traffic retains hardware TSO. This is not a global
   `ethtool tso off` workaround and does not change the device-tree TSO flags.
+* The local RX ownership fix removes four `kfree_skb()` calls from the
+  YT921x tagger's rejection paths. On Linux 6.12, `dsa_switch_rcv()` frees
+  the original skb when the tagger returns `NULL`; freeing it in both places
+  can panic in `kfree_skbmem()` / `__slab_free()` during receive softirq.
+  Short packets, invalid tag EtherTypes, missing RX-port-valid bits and
+  unknown source ports are still rejected, with cleanup owned by DSA core.
 
 The LED and TSO behavior must still be checked on hardware after flashing:
 leave GSO/TSO enabled, compare large HTTP/TCP transfers through both four-port
@@ -46,7 +52,6 @@ alone does not establish that the original slow-transfer symptom is fixed.
 * `kernel/config`: boot-critical Linux kernel options.
 * `kernel/export.sh`: export the complete local kernel bundle.
 * `kernel/init`: target initramfs entry point.
-* `kernel/update_guard`: prevent independent remote kernel upgrades.
 
 The shared packaging entry point remains `wrt_core/ophub_package.sh`.
 
@@ -75,8 +80,8 @@ sudo bash wrt_core/ophub_package.sh --board bdy-g98 \
 The wrapper checks archive checksums and confirms that the kernel bundle was
 exported alongside the selected rootfs. It seeds `kernel/stable/<release>`
 and changes only the selected model's kernel tag. Original remake functions
-and board hooks run unchanged. G98's independent remote-kernel updater is
-disabled; use complete images for upgrades.
+and board hooks run unchanged. G98 retains `luci-app-amlogic` and the upstream
+updater scripts, allowing updates to official ophub firmware and kernels.
 
 Hardware acceptance still requires serial-console boot, rootfs mounting,
 Ethernet/DSA, NVMe and thermal/fan checks on a G98.

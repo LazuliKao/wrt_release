@@ -109,12 +109,6 @@ PY
     dest="$workdir/remake/make-openwrt/kernel/stable/$release"
     mkdir -p "$dest"
     cp "$kernel_bundle/"*.tar.gz "$kernel_bundle/sha256sums" "$kernel_bundle/kernel-release" "$kernel_bundle/rootfs.sha256" "$dest/"
-    # Board overlay is copied after downloaded common updater scripts.
-    guard_dir="$workdir/remake/make-openwrt/openwrt-files/different-files/bdy-g98/rootfs/usr/sbin"
-    mkdir -p "$guard_dir"
-    for updater in openwrt-kernel openwrt-update-rockchip openwrt-update-amlogic; do
-        install -m 0755 "$g98_kernel_dir/update_guard" "$guard_dir/$updater"
-    done
     remake_args+=(-a false -k "$release")
 fi
 echo "Building ophub images for $board from $(basename "$rootfs_file") (revision $ophub_ref)"
