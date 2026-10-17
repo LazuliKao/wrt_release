@@ -47,7 +47,7 @@
       },
       {
         "source": "luci-app-fttr",
-        "path": ".",
+        "path": "package/luci-app-fttr",
         "packageName": "luci-app-fttr"
       }
     ],
