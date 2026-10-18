@@ -85,6 +85,9 @@ dest="$build_dir/target/linux/generic/files/arch/arm64/boot/dts/rockchip"
 mkdir -p "$dest"
 python3 "$recipe_dir/prepare_dts.py" "$dts" "$dest/rk3588-bdy-g98.dts"
 curl -fL --retry 3 -o "$dest/rk3588-rk806-single.dtsi" 'https://raw.githubusercontent.com/coolsnowwolf/lede/c2d18bda9688e571fe2d5124a86c04ab57f33977/target/linux/rockchip/files/arch/arm64/boot/dts/rockchip/rk3588-rk806-single.dtsi'
+# Mainline RK806 matches lowercase, hyphenated regulator node names.
+# Preserve labels and properties so CPU and ADC supplies retain their constraints.
+sed -i -E 's/(DCDC|PLDO|NLDO)_REG([0-9]+)([[:space:]]*\{)/\L\1\E-reg\2\3/g' "$dest/rk3588-rk806-single.dtsi"
 # Merge at the kernel-config layer: OpenWrt .config does not directly enable
 # arbitrary kernel symbols. Later package selections can still select modules.
 python3 - "$build_dir/target/linux/armsr/armv8/config-6.12" "$recipe_dir/kernel/config" <<'PY'
