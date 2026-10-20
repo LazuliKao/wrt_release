@@ -42,6 +42,11 @@
       },
       {
         "source": "openwrt-fttr",
+        "path": "h3c-fmcs-firmware",
+        "packageName": "h3c-fmcs-firmware"
+      },
+      {
+        "source": "openwrt-fttr",
         "path": "h3c-fttr-tools",
         "packageName": "h3c-fttr-tools"
       },
