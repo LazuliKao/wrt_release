@@ -32,3 +32,5 @@ wrt_core/deconfig/test.config
 .taskmaster/
 .sisyphus/
 ENV.md
+/.playwright-mcp
+/.omo
