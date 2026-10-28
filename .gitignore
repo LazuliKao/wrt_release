@@ -34,3 +34,4 @@ wrt_core/deconfig/test.config
 ENV.md
 /.playwright-mcp
 /.omo
+/.wrt-host-tools/

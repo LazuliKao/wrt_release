@@ -90,7 +90,14 @@ jobs:
           sudo rm -rf /opt/ghc || true
           sudo rm -rf /usr/local/.ghcup || true
           sudo rm -rf /usr/share/swift || true
-          sudo rm -rf "${AGENT_TOOLSDIRECTORY:-/opt/hostedtoolcache}" || true
+          # Keep hosted Go installations available for external bootstrap.
+          toolcache="${AGENT_TOOLSDIRECTORY:-/opt/hostedtoolcache}"
+          for tool in "$toolcache"/*; do
+            case "${tool##*/}" in
+              go|Go) ;;
+              *) sudo rm -rf "$tool" || true ;;
+            esac
+          done
           docker system prune -af || true
           sudo -E apt-get autoremove --purge -y || true
           sudo -E apt-get clean || true
@@ -103,6 +110,7 @@ jobs:
           sudo -E apt -yqq install dwarves
           sudo -E apt -yqq install libfuse-dev
           sudo -E apt -yqq install cpio u-boot-tools kmod
+          sudo -E apt -yqq install clang-18 llvm-18 || echo "WARNING: optional host LLVM unavailable; keeping upstream BPF toolchain"
           sudo -E apt -yqq autoremove --purge
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
