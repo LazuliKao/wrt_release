@@ -1,0 +1,26 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "sonic_fullcone",
+  "description": "通过上游一键脚本集成 SONiC Full Cone NAT 内核、用户态及 LuCI 补丁，运行时保持默认关闭",
+  "enabled": true,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": ["network", "nat", "fullcone"],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}
