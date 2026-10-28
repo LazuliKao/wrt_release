@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # airoha_an7581 recipe apply.sh
-# 1. 剥离 DEFAULT_PACKAGES/DEVICE_PACKAGES 中的 stock NPU 固件
-# 2. 批量为机型 DTS 补全 WiFi 卸载所需的 NPU 保留内存区
-# 3. 注入系统文件 (tempinfo & 96-wifi-5g-cn)
+# 1. 注入系统文件 (tempinfo & 96-wifi-5g-cn)
+# 2. 保留上游 NPU 固件选择，批量补全 WiFi 卸载所需的 NPU 保留内存区
 # ==============================================================================
 set -euo pipefail
 
@@ -29,39 +28,9 @@ cp -f "$RECIPE_DIR/files/etc/uci-defaults/96-wifi-5g-cn" files/etc/uci-defaults/
 chmod +x files/etc/uci-defaults/96-wifi-5g-cn
 
 # ------------------------------------------------------------------------------
-# 2. 剥离 DEFAULT_PACKAGES / DEVICE_PACKAGES 中的 stock NPU 固件
-# ------------------------------------------------------------------------------
-echo ">>> 正在从 target 配置中剥离 stock NPU 固件..."
-perl -e '
-my $STRIP_RE = qr/airoha-[A-Za-z0-9_.-]*npu-firmware/;
-for my $f (@ARGV) {
-    open(my $fh, "<", $f) or next;
-    local $/; my $c = <$fh>; close $fh;
-    my @lines = split(/(?<=\n)/, $c);
-    my @out; my $in = 0; my $changed = 0;
-    for my $l (@lines) {
-        if ($l =~ /^[ \t]*(?:DEFAULT_PACKAGES|DEVICE_PACKAGES)[ \t]*[+:?!]?=/) {
-            $in = 1;
-        }
-        if ($in && $l =~ /$STRIP_RE/) {
-            $l =~ s/[ \t]*$STRIP_RE\b//g;
-            $changed = 1;
-        }
-        if ($in && $l !~ /\\\s*\n?$/) {
-            $in = 0;
-        }
-        push @out, $l;
-    }
-    if ($changed) {
-        open(my $w, ">", $f) or die "write $f: $!";
-        print $w join("", @out); close $w;
-        print "已剥离 NPU 默认包: $f\n";
-    }
-}
-' $(grep -rlE '(DEFAULT_PACKAGES|DEVICE_PACKAGES)' target/ 2>/dev/null || true) || true
-
-# ------------------------------------------------------------------------------
-# 3. 批量为机型 DTS 补全 WiFi 卸载所需的 NPU 保留内存区
+# 2. 批量为机型 DTS 补全 WiFi 卸载所需的 NPU 保留内存区
+# 固件由上游 DEFAULT_PACKAGES/DEVICE_PACKAGES 按设备选择，不在此删除。
+# DTS 的内存引用不能替代 NPU 驱动实际请求的 rv32/data 固件文件。
 # ------------------------------------------------------------------------------
 DTS_DIR="target/linux/airoha/dts"
 if [ -d "$DTS_DIR" ]; then
