@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "airoha_an7581",
-  "description": "Airoha AN7581 PON 芯片平台底层适配：剥离 stock NPU 固件、补全 DTS WiFi 卸载内存区、注入温度采集脚本与中国 Wi-Fi 默认设置",
+  "description": "Airoha AN7581 PON 芯片平台底层适配：保留设备默认 NPU 固件、补全 DTS WiFi 卸载内存区、注入温度采集脚本与中国 Wi-Fi 默认设置",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
