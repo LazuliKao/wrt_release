@@ -1,0 +1,48 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "luci_app_airoha_npu",
+  "description": "Import rchen14b/luci-app-airoha-npu for AN7581 LuCI NPU and SoC monitoring",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "luci",
+    "airoha",
+    "an7581"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": [
+      "an7581"
+    ]
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "luci-app-airoha-npu": {
+        "gitUrl": "https://github.com/rchen14b/luci-app-airoha-npu.git",
+        "branch": "main",
+        "depth": 1,
+        "sparseRoot": "luci-app-airoha-npu"
+      }
+    },
+    "importPackages": [
+      {
+        "source": "luci-app-airoha-npu",
+        "path": ".",
+        "packageName": "luci-app-airoha-npu"
+      }
+    ],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/luci_app_airoha_npu.config"
+    ],
+    "script": null
+  }
+}
