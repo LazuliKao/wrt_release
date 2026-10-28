@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "luci_app_airoha_npu",
-  "description": "Import rchen14b/luci-app-airoha-npu for AN7581 LuCI NPU and SoC monitoring",
+  "description": "导入 Airoha LuCI 插件：NPU/SoC 监控、PON 光模块状态与 NAT 模式切换",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
@@ -26,8 +26,12 @@
       "luci-app-airoha-npu": {
         "gitUrl": "https://github.com/rchen14b/luci-app-airoha-npu.git",
         "branch": "main",
-        "depth": 1,
-        "sparseRoot": "luci-app-airoha-npu"
+        "depth": 1
+      },
+      "qwe-qaq-luci-app": {
+        "gitUrl": "https://github.com/qwe-qaq/luci-app.git",
+        "branch": "main",
+        "depth": 1
       }
     },
     "importPackages": [
@@ -35,9 +39,21 @@
         "source": "luci-app-airoha-npu",
         "path": ".",
         "packageName": "luci-app-airoha-npu"
+      },
+      {
+        "source": "qwe-qaq-luci-app",
+        "path": "luci-app-pon-status"
+      },
+      {
+        "source": "qwe-qaq-luci-app",
+        "path": "luci-app-natmode"
       }
     ],
-    "removePackageDirs": [],
+    "removePackageDirs": [
+      "package/custom/luci-app-airoha-npu",
+      "package/custom/luci-app-pon-status",
+      "package/custom/luci-app-natmode"
+    ],
     "patches": [],
     "files": [],
     "configs": [
