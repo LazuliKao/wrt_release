@@ -20,7 +20,7 @@
     "removePackageDirs": [],
     "patches": [],
     "files": [],
-    "configs": [],
+    "configs": ["configs/disable_legacy_nft_fullcone.config"],
     "script": "apply.sh"
   }
 }
