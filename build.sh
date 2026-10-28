@@ -435,7 +435,16 @@ RUN apt-get update && apt-get install -y sudo git jq build-essential cmake g++ b
     ln -sf llvm-dis-18 /usr/bin/llvm-dis && \
     ln -sf opt-18 /usr/bin/opt && \
     ln -sf llvm-strip-18 /usr/bin/llvm-strip
+RUN apt-get install -y clang-18 llvm-18 || echo 'WARNING: optional host LLVM unavailable; using upstream BPF toolchain'
+ENV CARGO_HOME=/opt/wrt-cargo
+RUN mkdir -p /opt/wrt-cargo && chown $container_default_user /opt/wrt-cargo
 USER $container_default_user
+RUN if command -v curl >/dev/null 2>&1 && \
+       curl --proto '=https' --tlsv1.2 --connect-timeout 15 --max-time 120 -fsSL https://sh.rustup.rs -o /tmp/wrt-rustup-init.sh && \
+       timeout 180 sh /tmp/wrt-rustup-init.sh -y --no-modify-path --default-toolchain none; then \
+      echo 'Optional rustup manager installed'; \
+    else echo 'WARNING: rustup unavailable; using source Rust'; fi; rm -f /tmp/wrt-rustup-init.sh
+ENV PATH=/opt/wrt-cargo/bin:\$PATH
 RUN git config --global pull.rebase false
 RUN git config --global advice.detachedHead false
 CMD ["bash", "wrt_core/build_container.sh", "$image_name"]
@@ -467,6 +476,13 @@ run_container_build() {
         -w /build \
         -e ADD_CONFIG_FRAGMENTS \
         -e REMOVE_CONFIG_FRAGMENTS \
+        -e WRT_HOST_ACCEL \
+        -e WRT_HOST_ACCEL_GO \
+        -e WRT_HOST_ACCEL_LLVM \
+        -e WRT_HOST_ACCEL_RUST \
+        -e WRT_HOST_ACCEL_PYTHON \
+        -e WRT_HOST_LLVM_ROOT \
+        -e RUSTUP_HOME=/build/.wrt-host-tools/rustup \
         --shm-size=8g \
         --ipc=shareable \
         --ulimit nofile=65535:65535 \
@@ -558,6 +574,8 @@ print_config_fragment_summary
 remove_uhttpd_dependency
 
 cd "$BASE_PATH/../$BUILD_DIR"
+source "$BASE_PATH/modules/host_accel.sh"
+host_accel_run prepare "$PWD"
 make defconfig
 run_build_recipe_phase post_defconfig
 
@@ -568,6 +586,7 @@ if grep -qE "^CONFIG_TARGET_x86_64=y" "$CONFIG_FILE"; then
     fi
 fi
 run_build_recipe_phase finalize
+host_accel_run finalize "$PWD"
 
 if [[ $Build_Mod == "debug" ]]; then
     exit 0
