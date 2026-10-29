@@ -23,8 +23,9 @@
     "importPackagesRegistry": {
       "small-package": {
         "gitUrl": "https://github.com/kenzok8/small-package.git",
-        "branch": "main",
+        "branch": null,
         "tag": null,
+        "commit": "d717de7f75162e09efdb8c0e54e147a7e593b062",
         "depth": 1,
         "sparseRoot": null
       }
