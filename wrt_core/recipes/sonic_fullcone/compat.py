@@ -16,28 +16,27 @@ LEGACY_PATCHES = (
     "package/libs/libnftnl/patches/001-libnftnl-add-fullcone-expression-support.patch",
     "package/network/utils/nftables/patches/002-nftables-add-fullcone-expression-support.patch",
 )
-# Known providers (ponwrt and kenzok8/small-package). Keep the source available;
-# disable its outputs instead of deleting whole feed/package directories.
+# Identify legacy providers by package identity, outputs and source repository,
+# not version-specific Makefile hashes. Keep their source and disable outputs.
 LEGACY_PROVIDERS = {
-    "d5760441fd792264bfab59211250f8a315bb456d24a67ad270cbb41face2a051":
+    "fullconenat":
         {"kmod-ipt-fullconenat", "iptables-mod-fullconenat", "ip6tables-mod-fullconenat"},
-    "d73a977915db8fff9b6635b33e648675fb078dea46e8bd5021eb2ff5484d4588":
-        {"kmod-ipt-fullconenat", "iptables-mod-fullconenat", "ip6tables-mod-fullconenat"},
-    "a6a53ab39130be53b3492e85d87c6519dbe1467c4ce982d4abe893728ae13b37":
-        {"kmod-nft-fullcone"},
+    "fullconenat-nft": {"kmod-nft-fullcone"},
+}
+LEGACY_SOURCES = {
+    "fullconenat": "https://github.com/llccd/netfilter-full-cone-nat",
+    "fullconenat-nft": "https://github.com/fullcone-nat-nftables/nft-fullcone",
 }
 # Reviewed MTK plugin: writes nf_conntrack_nat_mode at startup and pulls the old
 # xt_FULLCONENAT module. Disable the management plugin, not HNAT kernel drivers.
-MTK_PROVIDER = "78b181dd79326000eb7080e69ad045a2664d9b290214fe453b8b2eb57b65d7b4"
 OLD_OUTPUTS = {"kmod-ipt-fullconenat", "iptables-mod-fullconenat",
                "ip6tables-mod-fullconenat", "kmod-nft-fullcone"}
 MTK_OUTPUTS = {"luci-app-turboacc-mtk", "luci-i18n-turboacc-mtk-zh-cn"}
 # qwe-qaq/luci-app natmode 0.1.6 loads nft_fullcone and controls the old global
 # firewall switches. Disable this reviewed manager rather than porting its UI.
 LEGACY_MANAGERS = {
-    MTK_PROVIDER: MTK_OUTPUTS,
-    "323c663e869e1854aae53842fda66941f2fb92511ecfbf2d55709af1f1890aa7":
-        {"luci-app-natmode"},
+    "luci-app-turboacc-mtk": MTK_OUTPUTS,
+    "luci-app-natmode": {"luci-app-natmode"},
 }
 FULLCONE = re.compile(r"full[\s_-]*cone|nf_conntrack_nat_mode", re.I)
 STATE = ".sonic-fullcone-state.json"
@@ -113,6 +112,18 @@ def makefile_conflict(content):
     return None
 
 
+def legacy_outputs(makefile):
+    name = makefile.parent.name
+    names = package_names(makefile)
+    if name in LEGACY_MANAGERS and name in names:
+        return LEGACY_MANAGERS[name]
+    if name in LEGACY_PROVIDERS and names == LEGACY_PROVIDERS[name]:
+        sources = re.findall(r"^\s*PKG_SOURCE_URL\s*[:?]?=\s*([^\s#]+)", text(makefile), re.M)
+        if any(source.rstrip("/").removesuffix(".git") == LEGACY_SOURCES[name] for source in sources):
+            return LEGACY_PROVIDERS[name]
+    return None
+
+
 def package_scan(root, active):
     providers = {}
     installed = list(files(root / "package"))
@@ -129,20 +140,16 @@ def package_scan(root, active):
         ):
             if path == root / rel:
                 content = re.sub(r"\+" + re.escape(dependency) + r"(?=\s|$)", "", content)
-        sha = digest(path)
-        known = LEGACY_PROVIDERS.get(sha)
-        manager = LEGACY_MANAGERS.get(sha)
-        if manager and path.parent.name in manager:
-            known = manager
+        known = legacy_outputs(path)
         if known:
             providers[path.parent] = known
             log(f"已识别旧实现包: {path.relative_to(root)}")
         elif names & OLD_OUTPUTS:
-            fail(f"未识别的 Full Cone 包/依赖: {path.relative_to(root)} (sha256={sha})")
+            fail(f"未识别的 Full Cone 包/依赖: {path.relative_to(root)}")
         elif names & active:
             conflict = makefile_conflict(content)
             if conflict:
-                fail(f"未识别的 Full Cone 包/依赖: {path.relative_to(root)}: {conflict} (sha256={sha})")
+                fail(f"未识别的 Full Cone 包/依赖: {path.relative_to(root)}: {conflict}")
     for path in installed:
         if path.name == "Makefile" or "patches" in path.parts or not path.is_file():
             continue
@@ -272,7 +279,7 @@ def patch_scan(root, installed, active, trusted, allow_legacy):
         if "patches" not in path.parts:
             continue
         parents = [p for p in path.parents if (p / "Makefile").is_file()]
-        if parents and digest(parents[0] / "Makefile") in {*LEGACY_PROVIDERS, *LEGACY_MANAGERS}:
+        if parents and legacy_outputs(parents[0] / "Makefile"):
             # All outputs of these providers are disabled, so their private
             # kernel-compatibility patches will not participate in the build.
             continue
