@@ -194,6 +194,67 @@ def upstream_outputs(root):
     return paths
 
 
+def patch_conflict(contents):
+    # Inspect the resulting code in each hunk, marking which lines are added.
+    # Removed text, patch descriptions and filenames do not implement anything.
+    chunks = []
+    lines = []
+    added = []
+    filename = ""
+    in_hunk = False
+
+    def flush():
+        if lines:
+            chunks.append((filename, "\n".join(lines), added[:]))
+            lines.clear()
+            added.clear()
+
+    for line in contents.splitlines():
+        if line.startswith("+++ "):
+            flush()
+            filename = line[4:].split("\t", 1)[0]
+            in_hunk = False
+        elif line.startswith("@@ "):
+            flush()
+            in_hunk = True
+        elif in_hunk and line[:1] in {" ", "+"}:
+            lines.append(line[1:])
+            added.append(line.startswith("+"))
+        elif in_hunk and not line.startswith(("-", "\\")):
+            flush()
+            in_hunk = False
+    flush()
+    # Keep newline positions while removing literals/comments so a log message
+    # mentioning full-cone cannot masquerade as a kernel/module implementation.
+    literals = re.compile(r'/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', re.S)
+    for filename, code, additions in chunks:
+        name = Path(filename).name
+        if (Path(filename).suffix.lower() in {".md", ".rst", ".txt", ".po", ".pot"}
+                or name.startswith(("README", "INSTALL", "CHANGELOG", "COPYING"))):
+            continue
+        blank = lambda m: re.sub(r"[^\n]", " ", m.group())
+        cleaned = literals.sub(blank, code)
+        uncommented = literals.sub(
+            lambda m: blank(m) if m.group().startswith(("/*", "//")) else m.group(), code)
+        for raw, stripped, command, is_added in zip(
+            code.split("\n"), cleaned.split("\n"), uncommented.split("\n"), additions,
+        ):
+            if not is_added or re.match(r"\s*(?://|\*(?:\s|/))", raw):
+                continue
+            if raw.lstrip().startswith("#") and not re.match(
+                r"\s*#\s*(?:define|if|ifdef|ifndef|elif|include|undef|error|pragma)\b", raw,
+            ):
+                continue
+            # Module loaders and nft expression registration use string literals
+            # as operational arguments; these remain concrete conflict evidence.
+            operational = re.search(
+                r"(?:^|[;&|])\s*(?:modprobe|insmod)\s+['\"]?(?:xt_FULLCONENAT|nft_fullcone)\b"
+                r"|\.name\s*=\s*\"fullcone\"", command)
+            if FULLCONE.search(stripped) or operational:
+                return f"{filename}: {raw.strip()}"
+    return None
+
+
 def patch_scan(root, installed, active, trusted, allow_legacy):
     core = {root / p for p in (
         "package/network/config/firewall", "package/network/config/firewall4",
@@ -231,8 +292,9 @@ def patch_scan(root, installed, active, trusted, allow_legacy):
             continue
         if allow_legacy and rel in LEGACY_PATCHES:
             continue
-        if FULLCONE.search(path.name) or FULLCONE.search(text(path)):
-            fail(f"未识别或已改动的 Full Cone 补丁: {rel} (sha256={sha})")
+        conflict = patch_conflict(text(path))
+        if conflict:
+            fail(f"未识别或已改动的 Full Cone 补丁: {rel}: {conflict} (sha256={sha})")
 
 
 def load_state(root):
