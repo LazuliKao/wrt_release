@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "luci_app_airoha_npu",
-  "description": "导入 Airoha LuCI 插件：NPU/SoC 监控、PON 光模块状态与 NAT 模式切换",
+  "description": "导入 Airoha LuCI 插件：NPU/SoC 监控与 PON 光模块状态",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
@@ -43,10 +43,6 @@
       {
         "source": "qwe-qaq-luci-app",
         "path": "luci-app-pon-status"
-      },
-      {
-        "source": "qwe-qaq-luci-app",
-        "path": "luci-app-natmode"
       }
     ],
     "removePackageDirs": [

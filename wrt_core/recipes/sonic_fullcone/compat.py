@@ -8,18 +8,14 @@ import re
 import sys
 
 
-# Exact reviewed contents from ponwrt 9f3ef3b; a renamed or modified patch is NOT
-# automatically removable. Check before the upstream installer overwrites files.
-LEGACY_PATCHES = {
-    "package/network/config/firewall4/patches/001-firewall4-add-support-for-fullcone-nat.patch":
-        "e043a5f7d07d7569f32df8af4b70f11b809611dfa5bc8cf8c33f6ee4478fefd9",
-    "package/network/config/firewall/patches/fullconenat.patch":
-        "072dde81094b8af5950b9e5cd7bbc05e664a75659db661753fae94e296272291",
-    "package/libs/libnftnl/patches/001-libnftnl-add-fullcone-expression-support.patch":
-        "c22f13bbd9a257b49512b97628e45ac322f25631221769b72036c6cf938f986f",
-    "package/network/utils/nftables/patches/002-nftables-add-fullcone-expression-support.patch":
-        "2e844e5ae01b17db7be305c919f786912c771c3ff4faa6ab6b8f2295ea4764be",
-}
+# Explicit legacy integration paths. Their contents vary across source branches;
+# only these paths are replaceable, never arbitrary Full Cone filename matches.
+LEGACY_PATCHES = (
+    "package/network/config/firewall4/patches/001-firewall4-add-support-for-fullcone-nat.patch",
+    "package/network/config/firewall/patches/fullconenat.patch",
+    "package/libs/libnftnl/patches/001-libnftnl-add-fullcone-expression-support.patch",
+    "package/network/utils/nftables/patches/002-nftables-add-fullcone-expression-support.patch",
+)
 # Known providers (ponwrt and kenzok8/small-package). Keep the source available;
 # disable its outputs instead of deleting whole feed/package directories.
 LEGACY_PROVIDERS = {
@@ -36,6 +32,13 @@ MTK_PROVIDER = "78b181dd79326000eb7080e69ad045a2664d9b290214fe453b8b2eb57b65d7b4
 OLD_OUTPUTS = {"kmod-ipt-fullconenat", "iptables-mod-fullconenat",
                "ip6tables-mod-fullconenat", "kmod-nft-fullcone"}
 MTK_OUTPUTS = {"luci-app-turboacc-mtk", "luci-i18n-turboacc-mtk-zh-cn"}
+# qwe-qaq/luci-app natmode 0.1.6 loads nft_fullcone and controls the old global
+# firewall switches. Disable this reviewed manager rather than porting its UI.
+LEGACY_MANAGERS = {
+    MTK_PROVIDER: MTK_OUTPUTS,
+    "323c663e869e1854aae53842fda66941f2fb92511ecfbf2d55709af1f1890aa7":
+        {"luci-app-natmode"},
+}
 FULLCONE = re.compile(r"full[\s_-]*cone|nf_conntrack_nat_mode", re.I)
 STATE = ".sonic-fullcone-state.json"
 
@@ -88,6 +91,28 @@ def package_names(makefile):
     return names
 
 
+def makefile_conflict(content):
+    # Descriptions, titles and comments mentioning Full Cone are not evidence
+    # of an implementation. Inspect actual dependency and build/install fields.
+    content = "\n".join(line.split("#", 1)[0] for line in content.splitlines())
+    content = re.sub(r"\\\n\s*", " ", content)
+    for field in re.findall(
+        r"^\s*(?:LUCI_DEPENDS|DEPENDS|PKG_BUILD_DEPENDS|PKG_BUILD_DEPENDS_HOST)\s*[:+?]?=(.*)$",
+        content, re.M,
+    ):
+        for token in re.findall(r"[\w.+/-]+", field):
+            name = token.lstrip("+").removesuffix("/host")
+            if (name in OLD_OUTPUTS or name in {"fullconenat", "fullconenat-nft"}
+                    or name.startswith(("kmod-", "iptables-mod-", "ip6tables-mod-"))
+                    and FULLCONE.search(name)):
+                return "旧 Full Cone 依赖: " + name
+    for line in content.splitlines():
+        if re.match(r"\s*(?:FILES|AUTOLOAD|KCONFIG|PKG_SOURCE_URL)\s*[:+?]?=", line) or re.match(r"\t", line):
+            if re.search(r"(?:xt_FULLCONENAT|nft_fullcone|libip[6t]*_FULLCONENAT|netfilter-full-cone-nat|nft-fullcone\.git)", line):
+                return "旧 Full Cone 模块/安装逻辑: " + line.strip()
+    return None
+
+
 def package_scan(root, active):
     providers = {}
     installed = list(files(root / "package"))
@@ -106,16 +131,18 @@ def package_scan(root, active):
                 content = re.sub(r"\+" + re.escape(dependency) + r"(?=\s|$)", "", content)
         sha = digest(path)
         known = LEGACY_PROVIDERS.get(sha)
-        if sha == MTK_PROVIDER and path.parent.name == "luci-app-turboacc-mtk":
-            known = MTK_OUTPUTS
+        manager = LEGACY_MANAGERS.get(sha)
+        if manager and path.parent.name in manager:
+            known = manager
         if known:
             providers[path.parent] = known
             log(f"已识别旧实现包: {path.relative_to(root)}")
-        elif names & OLD_OUTPUTS or (names & active and FULLCONE.search(content)):
+        elif names & OLD_OUTPUTS:
             fail(f"未识别的 Full Cone 包/依赖: {path.relative_to(root)} (sha256={sha})")
-        # Catch differently named providers installing the old modules/extensions.
-        elif names & active and re.search(r"(?:xt_FULLCONENAT|nft_fullcone|libip[6t]*_FULLCONENAT)", content):
-            fail(f"选中的包包含未知旧模块: {path.relative_to(root)}")
+        elif names & active:
+            conflict = makefile_conflict(content)
+            if conflict:
+                fail(f"未识别的 Full Cone 包/依赖: {path.relative_to(root)}: {conflict} (sha256={sha})")
     for path in installed:
         if path.name == "Makefile" or "patches" in path.parts or not path.is_file():
             continue
@@ -129,7 +156,14 @@ def package_scan(root, active):
         # package Makefiles. Translation strings and help text are not loaders.
         if path.suffix in {".po", ".pot", ".md", ".patch", ".diff"}:
             continue
-        if re.search(r"nf_conntrack_nat_mode|(?:modprobe|insmod).*?(?:xt_FULLCONENAT|nft_fullcone)|-j\s+FULLCONENAT", text(path)):
+        runtime = "\n".join(line for line in text(path).splitlines()
+                            if not line.lstrip().startswith(("#", "//")))
+        if re.search(
+            r"(?:>|\btee\s+)[^\n;&|]*nf_conntrack_nat_mode"
+            r"|\bsysctl\b[^\n;&|]*nf_conntrack_nat_mode\s*="
+            r"|(?:modprobe|insmod)[^\n;&|]*?(?:xt_FULLCONENAT|nft_fullcone)"
+            r"|-j\s+FULLCONENAT", runtime,
+        ):
             fail(f"选中的包包含旧 Full Cone 运行时逻辑: {path.relative_to(root)}")
     return installed, providers
 
@@ -177,7 +211,7 @@ def patch_scan(root, installed, active, trusted, allow_legacy):
         if "patches" not in path.parts:
             continue
         parents = [p for p in path.parents if (p / "Makefile").is_file()]
-        if parents and digest(parents[0] / "Makefile") in {*LEGACY_PROVIDERS, MTK_PROVIDER}:
+        if parents and digest(parents[0] / "Makefile") in {*LEGACY_PROVIDERS, *LEGACY_MANAGERS}:
             # All outputs of these providers are disabled, so their private
             # kernel-compatibility patches will not participate in the build.
             continue
@@ -195,7 +229,7 @@ def patch_scan(root, installed, active, trusted, allow_legacy):
         expected = trusted.get(str(path.resolve()))
         if expected == sha:
             continue
-        if allow_legacy and LEGACY_PATCHES.get(rel) == sha:
+        if allow_legacy and rel in LEGACY_PATCHES:
             continue
         if FULLCONE.search(path.name) or FULLCONE.search(text(path)):
             fail(f"未识别或已改动的 Full Cone 补丁: {rel} (sha256={sha})")
@@ -215,25 +249,18 @@ def preflight(root):
     active = selected(root)
     installed, _ = package_scan(root, active)
     patch_scan(root, installed, active, trusted_patches(root, load_state(root)), True)
-    # Check even a same-path patch lacking any Full Cone keyword before overwrite.
-    for rel, sha in LEGACY_PATCHES.items():
-        path = root / rel
-        if path.is_file() and digest(path) != sha:
-            old = load_state(root)["patches"].get(rel)
-            if old != digest(path):
-                fail(f"已知路径的补丁内容未识别，拒绝覆盖: {rel}")
     log("安装前检查通过")
 
 
 def replace(root):
     # Require replacements before removing the two reviewed firewall patches.
-    for rel in list(LEGACY_PATCHES)[:2]:
+    for rel in LEGACY_PATCHES[:2]:
         path = root / rel
         if not path.exists():
             continue
         replacement = path.with_name("001-sonic-fullcone.patch")
-        if digest(path) != LEGACY_PATCHES[rel] or not replacement.is_file() or not replacement.stat().st_size:
-            fail(f"旧补丁内容改变或缺少替代补丁，保留旧文件: {rel}")
+        if not replacement.is_file() or not replacement.stat().st_size:
+            fail(f"缺少替代补丁，保留旧文件: {rel}")
         path.unlink()
         log(f"已替换旧补丁: {rel}")
     for rel, dependency in (
@@ -249,13 +276,16 @@ def replace(root):
             content = re.sub(r"\+" + re.escape(dependency) + r"(?=\s|$)", "", content)
             makefile.write_text(content)
     active = selected(root)
-    _, providers = package_scan(root, active - OLD_OUTPUTS - MTK_OUTPUTS)
+    _, providers = package_scan(root, active)
     disabled = set(OLD_OUTPUTS)
     for outputs in providers.values():
-        if outputs == MTK_OUTPUTS:
+        if outputs in LEGACY_MANAGERS.values():
             disabled.update(outputs)
             # LuCI translation packages can be generated for multiple languages.
-            disabled.update(p for p in active if p.startswith("luci-i18n-turboacc-mtk-"))
+            for name in outputs:
+                if name.startswith("luci-app-"):
+                    prefix = "luci-i18n-" + name[len("luci-app-"):] + "-"
+                    disabled.update(p for p in active if p.startswith(prefix))
     config = root / ".config"
     lines = text(config).splitlines()
     lines = [line for line in lines if not any(
@@ -271,8 +301,6 @@ def replace(root):
         if not path.is_file() or not path.stat().st_size:
             fail(f"上游缺少必须安装的替代补丁: {rel}")
         sha = digest(path)
-        if sha == LEGACY_PATCHES.get(rel):
-            fail(f"上游未替换旧补丁: {rel}")
         patches[rel] = sha
     state = {"patches": patches}
     (root / STATE).write_text(json.dumps(state, indent=2) + "\n")
