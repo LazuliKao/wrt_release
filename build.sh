@@ -587,6 +587,7 @@ if grep -qE "^CONFIG_TARGET_x86_64=y" "$CONFIG_FILE"; then
 fi
 run_build_recipe_phase finalize
 host_accel_run finalize "$PWD"
+bash "$BASE_PATH/modules/build_timing.sh" "$PWD"
 
 if [[ $Build_Mod == "debug" ]]; then
     exit 0
