@@ -60,7 +60,9 @@ class DistfeedsTests(unittest.TestCase):
                         'cat "$DISTFEEDS_TEST_BASE/listing.html"\n')
         curl.chmod(0o755)
         self.env = dict(os.environ, BUILD_DIR=str(self.build), TARGET_INI=str(self.ini),
-                        RECIPE_DIR=str(RECIPE), DISTFEEDS_TEST_BASE=str(self.base),
+                        RECIPE_DIR=str(RECIPE), BASE_PATH=str(ROOT / "wrt_core"),
+                        DISTFEEDS_TEST_BASE=str(self.base),
+                        NETWORK_RETRY_MAX="1",
                         PATH=str(self.bin) + os.pathsep + os.environ["PATH"])
         self.settings(OPKG_DISTFEEDS_CHANNEL="snapshots")
 

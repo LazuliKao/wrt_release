@@ -1257,19 +1257,9 @@ recipe_resolve_latest_release_tag() {
         return 1
     fi
 
-    if [ -n "${GITHUB_TOKEN:-}" ]; then
-        curl_args+=(-H "Authorization: token $GITHUB_TOKEN")
-    fi
-    if declare -F curl_retry >/dev/null 2>&1; then
-        if ! response=$(curl_retry "${curl_args[@]}" "https://api.github.com/repos/$repo_path/releases/latest"); then
-            recipe_die "failed to resolve latest release for $source_label"
-            return 1
-        fi
-    else
-        if ! response=$(curl "${curl_args[@]}" "https://api.github.com/repos/$repo_path/releases/latest"); then
-            recipe_die "failed to resolve latest release for $source_label"
-            return 1
-        fi
+    if ! response=$(curl_retry "${curl_args[@]}" "https://api.github.com/repos/$repo_path/releases/latest"); then
+        recipe_die "failed to resolve latest release for $source_label"
+        return 1
     fi
     if ! tag=$(printf '%s\n' "$response" | jq -er '.tag_name | strings | select(length > 0)'); then
         recipe_die "latest release for $source_label has no tag"

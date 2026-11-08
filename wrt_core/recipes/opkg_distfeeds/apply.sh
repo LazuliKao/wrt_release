@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$BASE_PATH/modules/network.sh"
 source "$RECIPE_DIR/repositories.sh"
 distfeeds_init
 distfeeds_resolve_kmods

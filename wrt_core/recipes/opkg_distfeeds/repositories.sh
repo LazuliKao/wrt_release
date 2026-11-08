@@ -84,9 +84,9 @@ distfeeds_init() {
 
 distfeeds_fetch() {
     if command -v curl >/dev/null 2>&1; then
-        curl --fail --location --silent --show-error --connect-timeout 10 --max-time 30 "$1"
+        curl_retry --fail --location --silent --show-error --connect-timeout 10 --max-time 30 "$1"
     elif command -v wget >/dev/null 2>&1; then
-        wget -T 30 -qO- "$1"
+        wget_retry -T 30 -qO- "$1"
     else
         echo "distfeeds: curl or wget is required to discover kmod repositories" >&2
         return 127

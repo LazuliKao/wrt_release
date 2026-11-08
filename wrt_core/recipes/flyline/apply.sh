@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$BASE_PATH/modules/network.sh"
+
 # 1. Detect target architecture from the .config file
 flyline_arch=""
 if [ -f "$BUILD_DIR/.config" ]; then
@@ -35,7 +37,7 @@ else
     tmp_dir=$(mktemp -d)
     trap 'rm -rf "$tmp_dir"' EXIT
 
-    if curl -fL "$download_url" -o "$tmp_dir/flyline.tar.gz"; then
+    if curl_retry -fL "$download_url" -o "$tmp_dir/flyline.tar.gz"; then
         tar -xzf "$tmp_dir/flyline.tar.gz" -C "$tmp_dir"
         
         # Inside the tar.gz is libflyline.so.1.4.0

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$BASE_PATH/modules/network.sh"
+
 OPENWRT_PACKAGES_REVISION="6b2c2a7ab493dbf1a24914be56a41dbd475aae03"
 
 # 打印执行日志
@@ -15,7 +17,7 @@ _download_upstream_file() {
     local base_url="https://raw.githubusercontent.com/openwrt/packages/${OPENWRT_PACKAGES_REVISION}/utils"
     
     mkdir -p "$(dirname "$dest_dir/$file_rel")"
-    if curl -fsSL "$base_url/$pkg_name/$file_rel" -o "$dest_dir/$file_rel"; then
+    if curl_retry -fsSL "$base_url/$pkg_name/$file_rel" -o "$dest_dir/$file_rel"; then
         echo "docker_upgrade: 已成功同步 $pkg_name -> $file_rel"
     else
         echo "docker_upgrade: 警告! 同步 $pkg_name -> $file_rel 失败" >&2

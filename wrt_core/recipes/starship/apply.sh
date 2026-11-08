@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$BASE_PATH/modules/network.sh"
+
 base_files_path="$BUILD_DIR/package/base-files/files"
 dest_bin="$base_files_path/usr/bin/starship"
 
@@ -27,7 +29,7 @@ else
     tmp_dir=$(mktemp -d)
     trap 'rm -rf "$tmp_dir"' EXIT
 
-    if curl -fL "$download_url" -o "$tmp_dir/starship.tar.gz"; then
+    if curl_retry -fL "$download_url" -o "$tmp_dir/starship.tar.gz"; then
         tar -xzf "$tmp_dir/starship.tar.gz" -C "$tmp_dir"
         if [ -f "$tmp_dir/starship" ]; then
             install -m0755 "$tmp_dir/starship" "$dest_bin"
@@ -51,4 +53,3 @@ else
     fi
 fi
 # 3. passwd shell modification removed (using .profile forwarding instead)
-

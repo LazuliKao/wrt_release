@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$BASE_PATH/modules/network.sh"
+
 BUILD_DIR="${1:-${BUILD_DIR:-}}"
 INSTALL_URL="https://raw.githubusercontent.com/mufeng05/openwrt-sonic-fullcone/master/add_sonic_fullcone.sh"
 
 cd "$BUILD_DIR"
 installer="$(mktemp)"
 trap 'rm -f "$installer"' EXIT
-curl --fail --show-error --silent --location "$INSTALL_URL" --output "$installer"
+curl_retry --fail --show-error --silent --location "$INSTALL_URL" --output "$installer"
 bash "$installer"
 
 # 上游使用新文件名，安装成功后移除仍会参与构建的旧补丁。

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$BASE_PATH/modules/network.sh"
+
 recipe_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 build_dir="${1:-${BUILD_DIR:-.}}"
 
@@ -48,9 +50,9 @@ if ! verify_patch "$CACHED_PATCH"; then
     echo "Downloading $PATCH_NAME from upstream..."
     rm -f "$CACHED_PATCH"
     if command -v curl >/dev/null 2>&1; then
-        curl -fL --retry 3 --connect-timeout 10 -o "$CACHED_PATCH" "$PATCH_URL"
+        curl_retry -fL --connect-timeout 10 -o "$CACHED_PATCH" "$PATCH_URL"
     elif command -v wget >/dev/null 2>&1; then
-        wget -t 3 -T 10 -O "$CACHED_PATCH" "$PATCH_URL"
+        wget_retry -T 10 -O "$CACHED_PATCH" "$PATCH_URL"
     else
         echo "Error: neither curl nor wget found to download $PATCH_NAME" >&2
         exit 1
@@ -80,11 +82,11 @@ fi
     echo 'G98 local kernel packaging requires armsr/armv8 Linux 6.12.' >&2; exit 1;
 }
 dts="$DL_DIR/rk3588-bdy-g98-c2d18bda.dts"
-curl -fL --retry 3 -o "$dts" 'https://raw.githubusercontent.com/coolsnowwolf/lede/c2d18bda9688e571fe2d5124a86c04ab57f33977/target/linux/rockchip/files/arch/arm64/boot/dts/rockchip/rk3588-bdy-g98.dts'
+curl_retry -fL -o "$dts" 'https://raw.githubusercontent.com/coolsnowwolf/lede/c2d18bda9688e571fe2d5124a86c04ab57f33977/target/linux/rockchip/files/arch/arm64/boot/dts/rockchip/rk3588-bdy-g98.dts'
 dest="$build_dir/target/linux/generic/files/arch/arm64/boot/dts/rockchip"
 mkdir -p "$dest"
 python3 "$recipe_dir/prepare_dts.py" "$dts" "$dest/rk3588-bdy-g98.dts"
-curl -fL --retry 3 -o "$dest/rk3588-rk806-single.dtsi" 'https://raw.githubusercontent.com/coolsnowwolf/lede/c2d18bda9688e571fe2d5124a86c04ab57f33977/target/linux/rockchip/files/arch/arm64/boot/dts/rockchip/rk3588-rk806-single.dtsi'
+curl_retry -fL -o "$dest/rk3588-rk806-single.dtsi" 'https://raw.githubusercontent.com/coolsnowwolf/lede/c2d18bda9688e571fe2d5124a86c04ab57f33977/target/linux/rockchip/files/arch/arm64/boot/dts/rockchip/rk3588-rk806-single.dtsi'
 # Mainline RK806 matches lowercase, hyphenated regulator node names.
 # Preserve labels and properties so CPU and ADC supplies retain their constraints.
 sed -i -E 's/(DCDC|PLDO|NLDO)_REG([0-9]+)([[:space:]]*\{)/\L\1\E-reg\2\3/g' "$dest/rk3588-rk806-single.dtsi"

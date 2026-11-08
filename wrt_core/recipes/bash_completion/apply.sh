@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$BASE_PATH/modules/network.sh"
+
 base_files_path="$BUILD_DIR/package/base-files/files"
 dest_dir="$base_files_path/usr/share/bash-completion"
 
@@ -16,7 +18,7 @@ trap 'rm -rf "$tmp_dir"' EXIT
 ver="2.18.0"
 download_url="https://github.com/scop/bash-completion/releases/download/${ver}/bash-completion-${ver}.tar.xz"
 
-if curl -fL "$download_url" -o "$tmp_dir/bash-completion.tar.xz"; then
+if curl_retry -fL "$download_url" -o "$tmp_dir/bash-completion.tar.xz"; then
     echo "bash-completion: extracting..."
     tar -xf "$tmp_dir/bash-completion.tar.xz" -C "$tmp_dir"
     

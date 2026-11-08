@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$BASE_PATH/modules/network.sh"
+
 dest_dir="$BUILD_DIR/upx"
 dest_bin="$dest_dir/upx"
 
@@ -49,7 +51,7 @@ case "$arch" in
         ;;
 esac
 
-upx_tag=$(curl -fsSL https://api.github.com/repos/upx/upx/releases/latest | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p' | head -n 1)
+upx_tag=$(curl_retry -fsSL https://api.github.com/repos/upx/upx/releases/latest | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p' | head -n 1)
 if [ -z "$upx_tag" ]; then
     echo "upx: failed to detect latest UPX release" >&2
     exit 1
@@ -61,7 +63,7 @@ download_url="https://github.com/upx/upx/releases/download/${upx_tag}/${archive_
 tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT
 
-curl -fL "$download_url" -o "$tmp_dir/upx.tar.xz"
+curl_retry -fL "$download_url" -o "$tmp_dir/upx.tar.xz"
 tar -xf "$tmp_dir/upx.tar.xz" -C "$tmp_dir"
 
 src_bin=$(find "$tmp_dir" -type f -name upx | head -n 1)
