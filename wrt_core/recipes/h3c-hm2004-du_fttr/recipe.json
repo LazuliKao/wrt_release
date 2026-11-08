@@ -28,6 +28,10 @@
       "openwrt-fttr": {
         "gitUrl": "https://github.com/LazuliKao/openwrt-fttr.git",
         "branch": "main"
+      },
+      "luci-app-fttr": {
+        "gitUrl": "https://github.com/LazuliKao/luci-app-fttr.git",
+        "branch": "package"
       }
     },
     "importPackages": [
@@ -47,8 +51,8 @@
         "packageName": "h3c-fttr-tools"
       },
       {
-        "source": "openwrt-fttr",
-        "path": "luci-app-fttr",
+        "source": "luci-app-fttr",
+        "path": ".",
         "packageName": "luci-app-fttr"
       }
     ],
