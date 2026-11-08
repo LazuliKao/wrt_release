@@ -1,114 +1,38 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-read_target_ini() {
-    local key="$1"
-    if [ -f "${TARGET_INI:-}" ]; then
-        awk -F= -v key="$key" '$1 == key { sub(/^[^=]*=/, ""); print; exit }' "$TARGET_INI"
-    fi
-}
+source "$RECIPE_DIR/repositories.sh"
+distfeeds_init
+distfeeds_resolve_kmods
+distfeeds_fix_kernel_magic
 
-# 1. 检测包管理器并确定默认版本
-use_apk=0
-if [ -f "$BUILD_DIR/.config" ] && grep -q '^CONFIG_USE_APK=y' "$BUILD_DIR/.config"; then
-    use_apk=1
-fi
-
-DEFAULT_MIRROR="https://mirror.nju.edu.cn/immortalwrt"
-if [ "$use_apk" -eq 1 ]; then
-    DEFAULT_VERSION="25.12.2"
-else
-    DEFAULT_VERSION="24.10.6"
-fi
-DEFAULT_ARCH="aarch64_cortex-a53"
-
-# 2. 读取配置
-mirror=$(read_target_ini OPKG_DISTFEEDS_MIRROR)
-[ -z "$mirror" ] && mirror="$DEFAULT_MIRROR"
-
-version=$(read_target_ini OPKG_DISTFEEDS_VERSION)
-if [ -z "$version" ]; then
-    branch=$(read_target_ini REPO_BRANCH)
-    if [ -n "$branch" ]; then
-        if [ "$branch" = "openwrt-24.10-6.6" ]; then
-            version="24.10.6"
-        elif [[ "$branch" =~ ^v[0-9] ]]; then
-            version="${branch#v}"
-        elif [[ "$branch" =~ ^openwrt-[0-9] ]]; then
-            version="${branch#openwrt-}"
-        elif [[ "$branch" =~ ^[0-9] ]]; then
-            version="$branch"
-        else
-            version="$DEFAULT_VERSION"
-        fi
-    else
-        version="$DEFAULT_VERSION"
-    fi
-fi
-
-arch=$(read_target_ini OPKG_DISTFEEDS_ARCH)
-if [ -z "$arch" ]; then
-    if [ -f "$BUILD_DIR/.config" ]; then
-        config_arch=$(grep '^CONFIG_TARGET_ARCH_PACKAGES=' "$BUILD_DIR/.config" | cut -d'"' -f2)
-        if [ -n "$config_arch" ]; then
-            arch="$config_arch"
-        fi
-    fi
-fi
-[ -z "$arch" ] && arch="$DEFAULT_ARCH"
-
-custom_feeds=$(read_target_ini OPKG_DISTFEEDS)
-
-# 3. 模版解析函数
+# 模板解析
 render_template() {
     local template_file="$1"
-    sed -e "s/{VERSION}/$version/g" -e "s/{ARCH}/$arch/g" -e "s|{MIRROR}|$mirror|g" "$template_file"
+    sed -e "s/{VERSION}/$version/g" -e "s/{ARCH}/$arch/g" \
+        -e "s|{MIRROR}|$mirror|g" -e "s|{REPO_PATH}|$repo_path|g" "$template_file"
 }
 
-fetch_url() {
-    local url="$1"
-
-    if command -v curl >/dev/null 2>&1; then
-        curl --fail --location --silent --show-error "$url"
-    elif command -v wget >/dev/null 2>&1; then
-        wget -qO- "$url"
-    else
-        echo "opkg_distfeeds warning: neither curl nor wget is available to discover kmod repositories" >&2
-        return 127
-    fi
-}
-
-# 4. 定位 default-settings 软件包目录
+# 定位 default-settings 软件包目录
 emortal_def_dir="$BUILD_DIR/package/emortal/default-settings"
 if [ ! -d "$emortal_def_dir" ]; then
     echo "opkg_distfeeds warning: default-settings package directory not found at $emortal_def_dir"
     mkdir -p "$emortal_def_dir/files"
 fi
 
-# 5. 获取软件源渲染后的源内容
-rendered_content=""
-if [ -n "$custom_feeds" ]; then
-    # 判断是否是预设名称 (nju / ustc / official)
-    if [ -f "$RECIPE_DIR/presets/${custom_feeds}.conf" ]; then
-        echo "opkg_distfeeds: Using preset '${custom_feeds}'"
-        rendered_content=$(render_template "$RECIPE_DIR/presets/${custom_feeds}.conf")
-    else
-        # 如果既不是预设文件，又没有空格/src字符，说明输入可能是有误的预设名称，进行回退
-        if [[ ! "$custom_feeds" =~ [[:space:]] ]] && [[ ! "$custom_feeds" =~ ^src/ ]]; then
-            echo "opkg_distfeeds warning: preset '${custom_feeds}' not found, falling back to 'nju' preset"
-            rendered_content=$(render_template "$RECIPE_DIR/presets/nju.conf")
-        else
-            echo "opkg_distfeeds: Using raw custom feeds from INI"
-            rendered_content=$(echo "$custom_feeds" | tr ',' '\n')
-        fi
-    fi
+# 获取软件源内容
+if [[ "$custom_feeds" =~ [[:space:]] || "$custom_feeds" =~ ^src/ || "$custom_feeds" =~ ^https?:// ]]; then
+    echo "opkg_distfeeds: Using raw custom feeds from INI"
+    rendered_content=$(printf '%s\n' "$custom_feeds" | tr ',' '\n')
 else
-    # 默认使用南京大学预设
-    echo "opkg_distfeeds: Using default 'nju' preset"
-    rendered_content=$(render_template "$RECIPE_DIR/presets/nju.conf")
+    case "$custom_feeds" in
+        ''|nju|ustc|official) ;;
+        *) echo "opkg_distfeeds warning: unknown preset '$custom_feeds'; using default mirror" ;;
+    esac
+    rendered_content=$(render_template "$RECIPE_DIR/presets/default.conf")
 fi
 
-# 6. 根据包管理器格式输出并进行补丁
+# 根据包管理器格式输出并进行补丁
 if [ "$use_apk" -eq 1 ]; then
     echo "opkg_distfeeds: Target uses APK package manager, converting feeds to APK repository indexes"
     # APK repositories must name the package index explicitly; a bare feed URL
@@ -125,47 +49,14 @@ if [ "$use_apk" -eq 1 ]; then
         }
     ')
 
-    target_board=""
-    target_subtarget=""
-    if [ -f "$BUILD_DIR/.config" ]; then
-        target_board=$(awk -F= '
-            $1 ~ /^CONFIG_TARGET_[[:alnum:]]+$/ && $2 == "y" {
-                sub(/^CONFIG_TARGET_/, "", $1)
-                print $1
-                exit
-            }
-        ' "$BUILD_DIR/.config")
-        if [ -n "$target_board" ]; then
-            target_subtarget=$(awk -F= -v board="$target_board" '
-                $2 == "y" && index($1, "CONFIG_TARGET_" board "_") == 1 && $1 !~ /_DEVICE_/ {
-                    sub("^CONFIG_TARGET_" board "_", "", $1)
-                    print $1
-                    exit
-                }
-            ' "$BUILD_DIR/.config")
-        fi
-    fi
-
     target_apk_content=""
-    if [ -n "$target_board" ] && [ -n "$target_subtarget" ]; then
-        target_repo="$mirror/releases/$version/targets/$target_board/$target_subtarget"
+    if [ -n "$target_repo" ]; then
         target_apk_content="$target_repo/packages/packages.adb"
-
-        kmods_url="$target_repo/kmods/"
-        if kmods_listing=$(fetch_url "$kmods_url" 2>/dev/null); then
-            kmods_directory=$(printf '%s\n' "$kmods_listing" | sed -n 's|.*href="\([0-9][0-9.]*-[0-9][0-9]*-[0-9a-f][0-9a-f]*\)/".*|\1|p' | sed -n '1p')
-            if [ -n "$kmods_directory" ]; then
-                kmod_vermagic="${kmods_directory##*-}"
-                echo "opkg_distfeeds: Using published KERNEL_VERMAGIC '$kmod_vermagic'"
-                target_apk_content="$target_apk_content\n$target_repo/kmods/$kmods_directory/packages.adb"
-            else
-                echo "opkg_distfeeds warning: no published kmod ABI was found at $kmods_url"
-            fi
-        else
-            echo "opkg_distfeeds warning: unable to fetch published kmod ABIs from $kmods_url"
-        fi
     else
-        echo "opkg_distfeeds warning: unable to determine target board and subtarget; omitting target and kmod repositories"
+        echo "opkg_distfeeds warning: unable to determine target board and subtarget; omitting target repository"
+    fi
+    if [ -n "$kernel_modules" ]; then
+        target_apk_content="${target_apk_content:+$target_apk_content\n}$kernel_modules/packages.adb"
     fi
 
     if [ -n "$target_apk_content" ]; then
@@ -202,6 +93,10 @@ if [ "$use_apk" -eq 1 ]; then
     fi
 else
     echo "opkg_distfeeds: Target uses OPKG package manager"
+    if [ -n "$kernel_modules" ]; then
+        rendered_content="$rendered_content
+src/gz kmod $kernel_modules"
+    fi
     distfeeds_conf="$emortal_def_dir/files/99-distfeeds.conf"
     mkdir -p "$(dirname "$distfeeds_conf")"
     echo "$rendered_content" > "$distfeeds_conf"

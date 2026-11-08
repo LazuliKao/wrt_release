@@ -1,12 +1,10 @@
 {
   "$schema": "../recipe.schema.json",
   "name": "opkg_distfeeds",
-  "description": "Configure opkg distfeeds with custom mirror and version from ini",
+  "description": "Configure OPKG/APK repositories and match kernel vermagic to the published kmod ABI",
   "enabled": false,
   "phase": "post_defconfig",
-  "depends": [
-    "fix_kernel_magic"
-  ],
+  "depends": [],
   "conflicts": [],
   "tags": [
     "opkg",

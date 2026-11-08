@@ -92,7 +92,7 @@ KERNEL_MODULES=
 - `RECIPES`：显式启用的 recipe 名列表，逗号分隔
 - `DISABLE_RECIPES`：显式禁用的 recipe 名列表，逗号分隔
 - `TARGET_TAGS`：目标标签列表，逗号分隔，供 `when.tags` 过滤使用
-- `KERNEL_VERMAGIC` / `KERNEL_MODULES`：由 `fix_kernel_magic` 等 recipe 消费的目标参数
+- `KERNEL_VERMAGIC` / `KERNEL_MODULES`：由 `opkg_distfeeds` 消费的内核 ABI / kmod 源覆盖参数
 
 最小示例：
 
@@ -104,7 +104,7 @@ BUILD_DIR=immortalwrt
 BASE_CONFIG=deconfig/x64_immwrt.config
 CONFIG_FRAGMENTS=deconfig/compile_base.config,deconfig/proxy.config
 
-RECIPES=fix_kernel_magic,awg,tailscale_awg
+RECIPES=opkg_distfeeds,awg,tailscale_awg
 DISABLE_RECIPES=
 TARGET_TAGS=x86_64,immortalwrt,master
 ```
@@ -497,7 +497,7 @@ the GitHub API and clones its `tag_name`. It cannot be combined with `branch`,
 
 当前仓库中已有这些 recipe：
 
-- `fix_kernel_magic`
+- `opkg_distfeeds`（同时修正内核 vermagic 和 OPKG/APK 软件源）
 - `awg`
 - `upx`
 - `tailscale_awg`

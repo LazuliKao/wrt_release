@@ -5,7 +5,6 @@
   "recipes": [
     "default_theme_fluent",
     "luci_theme_fluent",
-    "fix_kernel_magic",
     "opkg_distfeeds",
     "zram",
     "cli_enhancements",
