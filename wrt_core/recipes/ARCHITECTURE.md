@@ -502,7 +502,7 @@ the GitHub API and clones its `tag_name`. It cannot be combined with `branch`,
 - `upx`
 - `tailscale_awg`
 - `ohmyzsh`
-- `luci_app_daed`
+- `luci_app_honk`
 - `luci_theme_argon`
 - `default_theme_argon`
 - `luci_theme_fluent`

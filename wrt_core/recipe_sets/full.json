@@ -16,7 +16,7 @@
     "homeproxy",
     "hiddify_core",
     "sing_box_extended",
-    "luci_app_daed",
+    "luci_app_honk",
     "luci_app_unishare",
     "luci_app_shadowrt",
     "lxc",

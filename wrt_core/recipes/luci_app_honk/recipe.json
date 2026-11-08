@@ -1,7 +1,7 @@
 {
   "$schema": "../recipe.schema.json",
-  "name": "luci_app_daed",
-  "description": "导入 QiuSimons 的 daed 守护进程与 luci-app-daed 控制面板（kix 分支）",
+  "name": "luci_app_honk",
+  "description": "导入 QiuSimons 的 honk eBPF 透明代理与 luci-app-honk 控制面板",
   "enabled": false,
   "phase": "pre_defconfig",
   "depends": [],
@@ -9,7 +9,7 @@
   "tags": [
     "proxy",
     "luci",
-    "daed"
+    "honk"
   ],
   "when": {
     "targets": [],
@@ -21,9 +21,9 @@
     "addFeeds": [],
     "removeFeeds": [],
     "importPackagesRegistry": {
-      "luci-app-daed-kix": {
-        "gitUrl": "https://github.com/QiuSimons/luci-app-daed.git",
-        "branch": "kix",
+      "luci-app-honk": {
+        "gitUrl": "https://github.com/QiuSimons/luci-app-honk.git",
+        "branch": "master",
         "sparseRoot": null
       },
       "vmlinux-btf": {
@@ -34,12 +34,12 @@
     },
     "importPackages": [
       {
-        "source": "luci-app-daed-kix",
-        "path": "daed"
+        "source": "luci-app-honk",
+        "path": "honk"
       },
       {
-        "source": "luci-app-daed-kix",
-        "path": "luci-app-daed"
+        "source": "luci-app-honk",
+        "path": "luci-app-honk"
       },
       {
         "source": "vmlinux-btf",
@@ -49,15 +49,6 @@
     ],
     "removePackageDirs": [],
     "patches": [
-      {
-        "source": "patches/001-fail-fast-web-assets.patch",
-        "target": "custom_feed/daed",
-        "strip": 1,
-        "forward": true,
-        "backup": false,
-        "rejectFile": false,
-        "fuzz": 0
-      },
       {
         "source": "patches/002-vmlinux-btf-host-pkg-config.patch",
         "target": "custom_feed/vmlinux-btf",
@@ -70,7 +61,7 @@
     ],
     "files": [],
     "configs": [
-      "configs/luci_app_daed.config"
+      "configs/luci_app_honk.config"
     ],
     "script": null
   }

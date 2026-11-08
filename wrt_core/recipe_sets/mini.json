@@ -30,7 +30,8 @@
     "use_apk",
     "vm_images",
     "portweaver_lite",
-    "openssh_sftp_server"
+    "openssh_sftp_server",
+    "luci_app_honk"
   ],
   "disable_recipes": [
     "default_theme_argon"
