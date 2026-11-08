@@ -35,7 +35,8 @@
     "importPackages": [
       {
         "source": "luci-app-honk",
-        "path": "honk"
+        "path": "honk",
+        "script": "prepare_honk.sh"
       },
       {
         "source": "luci-app-honk",
