@@ -21,12 +21,6 @@ BUILD_SCRIPT="$PACKAGE_DIR/build_honk_core.sh"
 [ -f "$TOOLCHAIN_HELPER" ] || die "Honk toolchain helper is missing"
 [ -f "$BUILD_SCRIPT" ] || die "Honk build script is missing"
 
-ARCH=$(sed -n 's/^CONFIG_ARCH="\([^"]*\)"/\1/p' "$BUILD_DIR/.config" | head -n 1)
-case "$ARCH" in
-    aarch64|x86_64) ;;
-    *) die "unsupported or missing CONFIG_ARCH in $BUILD_DIR/.config: ${ARCH:-<empty>}" ;;
-esac
-
 TOOLCHAIN_ROOT="$BUILD_DIR/staging_dir/host/honk-toolchain"
 TOOL_BIN="$TOOLCHAIN_ROOT/bin"
 mkdir -p "$TOOL_BIN"
@@ -36,7 +30,7 @@ eval "$(bash "$TOOLCHAIN_HELPER" "$MAKEFILE")"
 printf 'luci_app_honk: Honk %s requires Zig %s and bpf-linker %s\n' \
     "$HONK_SRC_VERSION" "$ZIG_VERSION" "$BPF_LINKER_VERSION"
 
-if ! command -v zig >/dev/null 2>&1 || [ "$(zig version 2>/dev/null || true)" != "$ZIG_VERSION" ]; then
+if [ ! -x "$TOOL_BIN/zig" ] || [ "$("$TOOL_BIN/zig" version 2>/dev/null || true)" != "$ZIG_VERSION" ]; then
     ZIG_ARCHIVE="$TOOLCHAIN_ROOT/zig-${ZIG_VERSION}-x86_64-linux.tar.xz"
     ZIG_URL="https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz"
     curl -fsSL --retry 3 "$ZIG_URL" -o "$ZIG_ARCHIVE" || die "failed to download Zig $ZIG_VERSION"
@@ -97,6 +91,13 @@ for command in cargo rustup; do
     command -v "$command" >/dev/null 2>&1 || die "required Rust command not found: $command"
 done
 
-bash "$BUILD_SCRIPT" "$ARCH" "$PACKAGE_DIR/files/honk-core.bin"
+# pre_defconfig runs before OpenWrt's make defconfig, so ARCH is not yet
+# available here. Inject the toolchain PATH into the package's Build/Compile
+# command; there, OpenWrt supplies the resolved architecture to the upstream
+# build script.
+if ! grep -Fq 'PATH="$(STAGING_DIR_HOST)/honk-toolchain/bin:$(PATH)"' "$MAKEFILE"; then
+    grep -Fq '"$(CURDIR)/build_honk_core.sh"' "$MAKEFILE" || die "unexpected Honk Build/Compile command in $MAKEFILE"
+    sed -i 's|"$(CURDIR)/build_honk_core.sh"|PATH="$(STAGING_DIR_HOST)/honk-toolchain/bin:$(PATH)" "$(CURDIR)/build_honk_core.sh"|' "$MAKEFILE"
+fi
 
-echo "luci_app_honk: prepared Honk core for $ARCH"
+echo "luci_app_honk: prepared pinned Honk toolchain; core will build with OpenWrt ARCH"
