@@ -62,13 +62,9 @@ if [ -d "$DTS_DIR" ]; then
     # 需要补齐 NPU 内存引用的 DTS/DTSI 列表
     TARGET_DTS_FILES=(
         "an7581-fiberhome-hg5585f-common.dtsi"
-        "an7581-fiberhome-hg5382a.dts"
-        "an7581-znxt-zn50xg-d-common.dtsi"
+        "an7581-znxt-zn515xg-d.dts"
         "an7581-h3c-hm2004-du.dts"
         "an7581-gemtek-xg2010g.dts"
-        "an7581-unionman-ung00a.dts"
-        "an7581-nokia_xg-040g-md-common.dtsi"
-        "an7581-nokia_xg-040g-tf-common.dtsi"
     )
 
     if [ "$ENABLE_WIFI_NPU" = 1 ]; then
