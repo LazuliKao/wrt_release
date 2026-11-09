@@ -47,7 +47,7 @@
       },
       {
         "source": "openwrt-fttr",
-        "path": "fttr-tools",
+        "path": "fttr",
         "packageName": "openwrt-fttr"
       },
       {
