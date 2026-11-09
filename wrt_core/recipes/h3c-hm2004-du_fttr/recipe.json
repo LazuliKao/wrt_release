@@ -47,8 +47,8 @@
       },
       {
         "source": "openwrt-fttr",
-        "path": "h3c-fttr-tools",
-        "packageName": "h3c-fttr-tools"
+        "path": "fttr-tools",
+        "packageName": "openwrt-fttr"
       },
       {
         "source": "luci-app-fttr",
