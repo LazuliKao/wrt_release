@@ -75,6 +75,26 @@ if [ "${#missing[@]}" -gt 0 ]; then
     "${APT[@]}" install -y clang llvm cmake pkg-config zstd file libclang-dev libbpf-dev
 fi
 
+# boring-sys requires CMake 3.22+, while the Debian build container can ship
+# an older system CMake. Keep a verified, self-contained CMake beside Zig so
+# the imported package Makefile can use it through the injected toolchain PATH.
+CMAKE_VERSION=3.31.8
+CMAKE_SHA256=630615d8e98ac33eba7fbe472626dff5c899c85af3c024585ae109166a6909d0
+CMAKE_DIR="$TOOLCHAIN_ROOT/cmake-$CMAKE_VERSION-linux-x86_64"
+if [ ! -x "$TOOL_BIN/cmake" ] || [ "$("$TOOL_BIN/cmake" --version 2>/dev/null | awk 'NR == 1 { print $3 }')" != "$CMAKE_VERSION" ]; then
+    CMAKE_ARCHIVE="$TOOLCHAIN_ROOT/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz"
+    curl -fsSL --retry 3 \
+        "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz" \
+        -o "$CMAKE_ARCHIVE" || die "failed to download CMake $CMAKE_VERSION"
+    echo "$CMAKE_SHA256  $CMAKE_ARCHIVE" | sha256sum -c - || die "CMake checksum verification failed"
+    rm -rf "$CMAKE_DIR"
+    mkdir -p "$CMAKE_DIR"
+    tar -xzf "$CMAKE_ARCHIVE" -C "$CMAKE_DIR" --strip-components=1
+    ln -sfn "$CMAKE_DIR/bin/cmake" "$TOOL_BIN/cmake"
+fi
+"$TOOL_BIN/cmake" --version | awk -v expected="$CMAKE_VERSION" 'NR == 1 && $3 == expected { found = 1 } END { exit !found }' \
+    || die "CMake $CMAKE_VERSION is not available from $TOOL_BIN"
+
 if [ ! -f "$TOOL_BIN/.bpf-linker-${BPF_LINKER_VERSION}.installed" ]; then
     BPF_ARCHIVE="$TOOLCHAIN_ROOT/bpf-linker-${BPF_LINKER_VERSION}.tar.zst"
     curl -fsSL --retry 3 \
@@ -95,9 +115,13 @@ done
 # available here. Inject the toolchain PATH into the package's Build/Compile
 # command; there, OpenWrt supplies the resolved architecture to the upstream
 # build script.
-if ! grep -Fq 'PATH="$(STAGING_DIR_HOST)/honk-toolchain/bin:$(PATH)"' "$MAKEFILE"; then
-    grep -Fq '"$(CURDIR)/build_honk_core.sh"' "$MAKEFILE" || die "unexpected Honk Build/Compile command in $MAKEFILE"
-    sed -i 's|"$(CURDIR)/build_honk_core.sh"|PATH="$(STAGING_DIR_HOST)/honk-toolchain/bin:$(PATH)" "$(CURDIR)/build_honk_core.sh"|' "$MAKEFILE"
+if ! grep -Fq 'CMAKE="$(STAGING_DIR_HOST)/honk-toolchain/bin/cmake"' "$MAKEFILE"; then
+    if grep -Fq 'PATH="$(STAGING_DIR_HOST)/honk-toolchain/bin:$(PATH)"' "$MAKEFILE"; then
+        sed -i 's|PATH="$(STAGING_DIR_HOST)/honk-toolchain/bin:$(PATH)"|CMAKE="$(STAGING_DIR_HOST)/honk-toolchain/bin/cmake" PATH="$(STAGING_DIR_HOST)/honk-toolchain/bin:$(PATH)"|' "$MAKEFILE"
+    else
+        grep -Fq '"$(CURDIR)/build_honk_core.sh"' "$MAKEFILE" || die "unexpected Honk Build/Compile command in $MAKEFILE"
+        sed -i 's|"$(CURDIR)/build_honk_core.sh"|CMAKE="$(STAGING_DIR_HOST)/honk-toolchain/bin/cmake" PATH="$(STAGING_DIR_HOST)/honk-toolchain/bin:$(PATH)" "$(CURDIR)/build_honk_core.sh"|' "$MAKEFILE"
+    fi
 fi
 
 echo "luci_app_honk: prepared pinned Honk toolchain; core will build with OpenWrt ARCH"
