@@ -26,7 +26,9 @@
     "removePackageDirs": [],
     "patches": [],
     "files": [],
-    "configs": [],
+    "configs": [
+      "configs/airoha_an7581.config"
+    ],
     "script": "apply.sh"
   }
 }

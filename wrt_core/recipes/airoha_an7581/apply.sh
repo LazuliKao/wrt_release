@@ -102,4 +102,62 @@ EOF
     fi
 fi
 
+# ------------------------------------------------------------------------------
+# 3. 注入 AN7581 内核软 AES / EIP-93 / AF_ALG 配置
+# AN7581 无 ARMv8 CE 指令，需开启 NEON 位切片软 AES 与 EIP-93 硬件引擎及 AF_ALG 接口
+# ------------------------------------------------------------------------------
+echo ">>> 正在配置 AN7581 内核加密与 EIP-93 / AF_ALG 支持..."
+shopt -s nullglob
+kconfs=(target/linux/airoha/an7581/config-*)
+shopt -u nullglob
+
+for kconf in "${kconfs[@]}"; do
+    if [ -f "$kconf" ]; then
+        echo "正在注入内核配置: $kconf"
+        for key in \
+            CRYPTO_AES \
+            CRYPTO_AES_ARM64 \
+            CRYPTO_AES_ARM64_BS \
+            CRYPTO_AES_ARM64_NEON_BLK \
+            CRYPTO_SIMD \
+            CRYPTO_CBC \
+            CRYPTO_CTR \
+            CRYPTO_XTS \
+            CRYPTO_GHASH \
+            CRYPTO_GCM \
+            CRYPTO_HW \
+            CRYPTO_DEV_EIP93 \
+            CRYPTO_AUTHENC \
+            CRYPTO_DEV_EIP93_AES_128_SW_MAX_LEN \
+            CRYPTO_DEV_EIP93_GENERIC_SW_MAX_LEN \
+            CRYPTO_USER_API_AEAD \
+            CRYPTO_USER_API_HASH \
+            CRYPTO_USER_API_SKCIPHER; do
+            sed -i -e "/^CONFIG_${key}=/d" -e "/^# CONFIG_${key} is not set$/d" "$kconf"
+        done
+
+        cat >> "$kconf" <<'EOF'
+CONFIG_CRYPTO_AES=y
+CONFIG_CRYPTO_AES_ARM64=y
+CONFIG_CRYPTO_AES_ARM64_BS=y
+CONFIG_CRYPTO_AES_ARM64_NEON_BLK=y
+CONFIG_CRYPTO_SIMD=y
+CONFIG_CRYPTO_CBC=y
+CONFIG_CRYPTO_CTR=y
+CONFIG_CRYPTO_XTS=y
+CONFIG_CRYPTO_GHASH=y
+CONFIG_CRYPTO_GCM=y
+CONFIG_CRYPTO_HW=y
+CONFIG_CRYPTO_DEV_EIP93=m
+CONFIG_CRYPTO_AUTHENC=y
+CONFIG_CRYPTO_DEV_EIP93_AES_128_SW_MAX_LEN=512
+CONFIG_CRYPTO_DEV_EIP93_GENERIC_SW_MAX_LEN=256
+CONFIG_CRYPTO_USER_API_AEAD=y
+CONFIG_CRYPTO_USER_API_HASH=y
+CONFIG_CRYPTO_USER_API_SKCIPHER=y
+EOF
+        echo "✅ $kconf EIP-93 / AF_ALG 软硬件混合加密配置写入完成"
+    fi
+done
+
 echo "=== [airoha_an7581] 平台适配执行完成 ==="
