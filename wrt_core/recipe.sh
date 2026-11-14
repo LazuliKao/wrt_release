@@ -3,6 +3,10 @@
 # Recipe planner/runner for wrt_core.
 # Recipe metadata is JSON-only and parsed with jq. Target compile configs remain INI.
 
+# Recipes use curl_retry for remote source resolution.
+RECIPE_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+source "${BASE_PATH:-$RECIPE_SCRIPT_DIR}/modules/network.sh"
+
 RECIPE_PHASES=(
     pre_clone
     post_clone
