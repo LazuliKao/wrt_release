@@ -9,6 +9,7 @@
     "awg",
     "zram",
     "core_enhancements",
+    "network_kmods",
     "net_optimize",
     "starship_mini",
     "qosmate",

@@ -8,6 +8,7 @@
     "opkg_distfeeds",
     "cli_enhancements",
     "core_enhancements",
+    "network_kmods",
     "net_optimize",
     "upx",
     "use_apk",

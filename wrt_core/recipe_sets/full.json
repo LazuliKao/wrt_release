@@ -10,6 +10,7 @@
     "zram",
     "cli_enhancements",
     "core_enhancements",
+    "network_kmods",
     "cloudflared",
     "dockerman",
     "docker_compose",

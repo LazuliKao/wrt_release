@@ -9,6 +9,7 @@
     "zram",
     "cli_enhancements",
     "core_enhancements",
+    "network_kmods",
     "dockerman",
     "docker_compose",
     "docker_upgrade",

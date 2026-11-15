@@ -1,0 +1,32 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "network_kmods",
+  "description": "预装网络代理所需的 TUN 和透明代理内核模块",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "network",
+    "kernel",
+    "proxy"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/network_kmods.config"
+    ],
+    "script": null
+  }
+}
