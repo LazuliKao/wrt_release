@@ -36,7 +36,9 @@
     ],
     "removePackageDirs": [
       "feeds/luci/themes/luci-theme-argon",
-      "package/feeds/luci/luci-theme-argon"
+      "package/feeds/luci/luci-theme-argon",
+      "feeds/luci/applications/luci-app-argon-config",
+      "package/feeds/luci/luci-app-argon-config"
     ],
     "patches": [],
     "files": [
