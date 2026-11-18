@@ -1,0 +1,30 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "pon_userspace_onu_feed",
+  "description": "将 pon_userspace feed 源从 pbs05/openwrt-pon-userspace 替换为 naoki66/OpenWrt_ONU_CONFIG（由 pon_userspace_onu 自动拉起）",
+  "enabled": false,
+  "phase": "pre_feeds",
+  "depends": [],
+  "conflicts": [],
+  "tags": [
+    "pon",
+    "airoha",
+    "feed"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}

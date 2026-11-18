@@ -1,0 +1,34 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "pon_userspace_onu",
+  "description": "启用 naoki66/OpenWrt_ONU_CONFIG 用户态 PON 栈与 ONU LuCI 插件（airoha-pond、airoha-ponctl、airoha-pon-debug、luci-app-onu、luci-app-pon-status）及 firewall4 flowtable 补丁",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [
+    "pon_userspace_onu_feed"
+  ],
+  "conflicts": [],
+  "tags": [
+    "pon",
+    "airoha",
+    "luci"
+  ],
+  "when": {
+    "targets": [],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/pon_userspace_onu.config"
+    ],
+    "script": "apply.sh"
+  }
+}
