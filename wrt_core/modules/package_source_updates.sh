@@ -238,6 +238,37 @@ add_quickfile() {
 }
 
 
+extract_mk_var() {
+    local var_name="$1"
+    local mk_file="$2"
+    sed -n "s/^${var_name}:=[[:space:]]*//p" "$mk_file" | head -n1 | tr -d '\r' | sed 's/[[:space:]]*$//'
+}
+
+expand_mk_vars() {
+    local val="$1"
+    val=${val//\$\(PKG_GIT_URL\)/$PKG_GIT_URL}
+    val=${val//\$\(PKG_GIT_REF\)/$PKG_GIT_REF}
+    val=${val//\$\(PKG_NAME\)/$PKG_NAME}
+    val=${val//\$\(PKG_VERSION\)/$PKG_VER}
+    val=${val//\$\{PKG_VERSION\}/$PKG_VER}
+    val=${val//\$\(PKG_SOURCE_VERSION\)/$PKG_SOURCE_VERSION}
+    val=${val//\$\{PKG_SOURCE_VERSION\}/$PKG_SOURCE_VERSION}
+
+    local patsubst_re='\$\(patsubst[[:space:]]+([^,%]+)%,([^,]*)%,([^)]+)\)'
+    while [[ "$val" =~ $patsubst_re ]]; do
+        local full_match="${BASH_REMATCH[0]}"
+        local prefix="${BASH_REMATCH[1]}"
+        local repl="${BASH_REMATCH[2]}"
+        local text="${BASH_REMATCH[3]}"
+        local out="$text"
+        if [[ "$text" == "$prefix"* ]]; then
+            out="${repl}${text#"$prefix"}"
+        fi
+        val="${val//"$full_match"/$out}"
+    done
+    printf '%s' "$val"
+}
+
 update_package() {
     # 根据上游版本信息刷新包版本与哈希。
     local dir=$(find "$BUILD_DIR/package" \( -type d -o -type l \) -name "$1")
@@ -263,6 +294,7 @@ update_package() {
         if [ -n "${3:-}" ]; then
             PKG_VER="$3"
         fi
+        local PKG_RAW_VER="$PKG_VER"
         local PKG_VER_CLEAN
         PKG_VER_CLEAN=$(echo "$PKG_VER" | sed 's/^v//')
         if grep -q "^PKG_GIT_SHORT_COMMIT:=" "$mk_path"; then
@@ -303,20 +335,27 @@ update_package() {
             SHORT_COMMIT=$(echo "$COMMIT_SHA" | cut -c1-7)
             sed -i "s/^PKG_GIT_SHORT_COMMIT:=.*/PKG_GIT_SHORT_COMMIT:=$SHORT_COMMIT/g" "$mk_path"
         fi
-        PKG_VER=$(echo "$PKG_VER" | sed 's/^v//')
+        PKG_VER="$PKG_VER_CLEAN"
 
-        local PKG_NAME=$(awk -F"=" '/PKG_NAME:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
-        local PKG_SOURCE=$(awk -F"=" '/PKG_SOURCE:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
-        local PKG_SOURCE_URL=$(awk -F"=" '/PKG_SOURCE_URL:=/ {print $NF}' "$mk_path" | grep -oE "[-_:/\$\(\)\{\}\?\.a-zA-Z0-9]{1,}")
-        local PKG_GIT_URL=$(awk -F"=" '/PKG_GIT_URL:=/ {print $NF}' "$mk_path")
-        local PKG_GIT_REF=$(awk -F"=" '/PKG_GIT_REF:=/ {print $NF}' "$mk_path")
+        local PKG_NAME
+        PKG_NAME=$(extract_mk_var "PKG_NAME" "$mk_path")
+        local PKG_SOURCE
+        PKG_SOURCE=$(extract_mk_var "PKG_SOURCE" "$mk_path")
+        local PKG_SOURCE_URL
+        PKG_SOURCE_URL=$(extract_mk_var "PKG_SOURCE_URL" "$mk_path")
+        local PKG_GIT_URL
+        PKG_GIT_URL=$(extract_mk_var "PKG_GIT_URL" "$mk_path")
+        local PKG_GIT_REF
+        PKG_GIT_REF=$(extract_mk_var "PKG_GIT_REF" "$mk_path")
+        local PKG_SOURCE_VERSION=""
+        local has_pkg_source_version=0
+        if grep -q "^PKG_SOURCE_VERSION:=" "$mk_path"; then
+            has_pkg_source_version=1
+            PKG_SOURCE_VERSION="$PKG_RAW_VER"
+        fi
 
-        PKG_SOURCE_URL=${PKG_SOURCE_URL//\$\(PKG_GIT_URL\)/$PKG_GIT_URL}
-        PKG_SOURCE_URL=${PKG_SOURCE_URL//\$\(PKG_GIT_REF\)/$PKG_GIT_REF}
-        PKG_SOURCE_URL=${PKG_SOURCE_URL//\$\(PKG_NAME\)/$PKG_NAME}
-        PKG_SOURCE_URL=$(echo "$PKG_SOURCE_URL" | sed "s/\${PKG_VERSION}/$PKG_VER/g; s/\$(PKG_VERSION)/$PKG_VER/g")
-        PKG_SOURCE=${PKG_SOURCE//\$\(PKG_NAME\)/$PKG_NAME}
-        PKG_SOURCE=${PKG_SOURCE//\$\(PKG_VERSION\)/$PKG_VER}
+        PKG_SOURCE_URL=$(expand_mk_vars "$PKG_SOURCE_URL")
+        PKG_SOURCE=$(expand_mk_vars "$PKG_SOURCE")
 
         local PKG_HASH
         if ! PKG_HASH=$(curl_retry -fsSL "$PKG_SOURCE_URL""$PKG_SOURCE" | sha256sum | cut -b -64); then
@@ -325,6 +364,9 @@ update_package() {
         fi
 
         sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:='$PKG_VER'/g' "$mk_path"
+        if [ "$has_pkg_source_version" -eq 1 ]; then
+            sed -i 's/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:='$PKG_SOURCE_VERSION'/g' "$mk_path"
+        fi
         sed -i 's/^PKG_HASH:=.*/PKG_HASH:='$PKG_HASH'/g' "$mk_path"
 
         # 若上游版本包含连字符修订后缀 (如 1.102.5-r1)，直接用于 apk mkpkg 会生成非法版本号 (如 -r1-r1)。
