@@ -1,0 +1,37 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "luci_theme_vantage",
+  "description": "导入 Vantage LuCI 主题及 dashboard，并迁移失效的 Bootstrap 主题配置",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [],
+  "conflicts": [],
+  "tags": ["theme", "luci", "vantage"],
+  "when": {"targets": [], "repo": [], "branch": [], "tags": []},
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "vantage": {
+        "gitUrl": "https://github.com/anothaDev/luci-theme-vantage.git",
+        "depth": 1
+      }
+    },
+    "importPackages": [
+      {"source": "vantage", "path": "luci-theme-vantage"},
+      {"source": "vantage", "path": "luci-app-vantage"}
+    ],
+    "removePackageDirs": [
+      "feeds/luci/themes/luci-theme-vantage",
+      "package/feeds/luci/luci-theme-vantage",
+      "feeds/luci/applications/luci-app-vantage",
+      "package/feeds/luci/luci-app-vantage"
+    ],
+    "patches": [
+      {"source": "patches/luci-theme-vantage-bootstrap-migration.patch", "target": "package/base-files/files", "strip": 1}
+    ],
+    "files": [],
+    "configs": ["configs/luci_theme_vantage.config"],
+    "script": null
+  }
+}

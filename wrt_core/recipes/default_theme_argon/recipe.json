@@ -8,7 +8,8 @@
     "luci_theme_argon"
   ],
   "conflicts": [
-    "default_theme_fluent"
+    "default_theme_fluent",
+    "default_theme_vantage"
   ],
   "tags": [
     "theme",

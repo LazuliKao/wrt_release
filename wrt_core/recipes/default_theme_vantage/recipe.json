@@ -1,0 +1,21 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "default_theme_vantage",
+  "description": "将 LuCI 默认主题依赖切换为 Vantage",
+  "enabled": false,
+  "phase": "post_feeds_update",
+  "depends": ["luci_theme_vantage"],
+  "conflicts": ["default_theme_argon", "default_theme_fluent"],
+  "tags": ["theme", "luci", "vantage", "default"],
+  "when": {"targets": [], "repo": [], "branch": [], "tags": []},
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackages": [],
+    "removePackageDirs": [],
+    "patches": [],
+    "files": [],
+    "configs": [],
+    "script": "apply.sh"
+  }
+}
