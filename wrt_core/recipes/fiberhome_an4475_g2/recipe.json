@@ -33,7 +33,7 @@
       },
       "openwrt-fttr": {
         "gitUrl": "https://github.com/LazuliKao/openwrt-fttr.git",
-        "branch": "fiberhome-olt"
+        "branch": "feat/fiberhome-olt"
       },
       "luci-app-fttr": {
         "gitUrl": "https://github.com/LazuliKao/luci-app-fttr.git",
