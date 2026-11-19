@@ -1,0 +1,75 @@
+{
+  "$schema": "../recipe.schema.json",
+  "name": "fiberhome_an4475_g2",
+  "description": "烽火 AN4475-G2 设备驱动、固件与面板 LED 管理",
+  "enabled": false,
+  "phase": "pre_defconfig",
+  "depends": [
+    "airoha_an7581",
+    "pon_userspace_onu"
+  ],
+  "conflicts": [],
+  "tags": [
+    "fiberhome",
+    "an4475-g2",
+    "an7581"
+  ],
+  "when": {
+    "targets": [
+      "lk_fiberhome_an4475_g2"
+    ],
+    "repo": [],
+    "branch": [],
+    "tags": []
+  },
+  "actions": {
+    "addFeeds": [],
+    "removeFeeds": [],
+    "importPackagesRegistry": {
+      "qwe-qaq-luci-app": {
+        "gitUrl": "https://github.com/qwe-qaq/luci-app.git",
+        "branch": "main",
+        "depth": 1
+      },
+      "openwrt-fttr": {
+        "gitUrl": "https://github.com/LazuliKao/openwrt-fttr.git",
+        "branch": "fiberhome-olt"
+      },
+      "luci-app-fttr": {
+        "gitUrl": "https://github.com/LazuliKao/luci-app-fttr.git",
+        "branch": "package"
+      }
+    },
+    "importPackages": [
+      {
+        "source": "qwe-qaq-luci-app",
+        "path": "luci-app-ledpanel"
+      },
+      {
+        "source": "openwrt-fttr",
+        "path": "fiberhome-fsl",
+        "packageName": "fiberhome-fsl"
+      },
+      {
+        "source": "openwrt-fttr",
+        "path": "fttr",
+        "packageName": "openwrt-fttr"
+      },
+      {
+        "source": "luci-app-fttr",
+        "path": ".",
+        "packageName": "luci-app-fttr"
+      }
+    ],
+    "removePackageDirs": [
+      "package/custom/luci-app-ledpanel"
+    ],
+    "patches": [],
+    "files": [],
+    "configs": [
+      "configs/fiberhome_an4475_g2.config",
+      "configs/fiberhome_an4475_fttr.config"
+    ],
+    "script": null
+  }
+}
