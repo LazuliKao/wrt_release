@@ -41,6 +41,7 @@ source "$SCRIPT_DIR/modules/network.sh"
 source "$SCRIPT_DIR/modules/repo.sh"
 source "$SCRIPT_DIR/modules/feeds.sh"
 source "$SCRIPT_DIR/modules/custom_feed.sh"
+source "$SCRIPT_DIR/modules/passwall_fixes.sh"
 source "$SCRIPT_DIR/modules/verify.sh"
 source "$SCRIPT_DIR/modules/docker.sh"
 source "$SCRIPT_DIR/recipe.sh"
@@ -111,7 +112,7 @@ stage_pre_install_source_fixes() {
     update_tcping
     add_ax6600_led
     set_custom_task
-    apply_passwall_tweaks
+    apply_passwall_fixes
     update_nss_pbuf_performance
     set_build_signature
     update_nss_diag
@@ -121,6 +122,8 @@ stage_pre_install_source_fixes() {
     add_backup_info_to_sysupgrade
     update_mosdns_deconfig
     fix_quickstart
+    fix_netwiz_permissions
+    update_oaf_deconfig
     add_timecontrol
     add_quickfile
     update_lucky

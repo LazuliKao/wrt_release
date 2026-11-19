@@ -123,7 +123,7 @@ update_lucky() {
     fi
 
     echo "正在更新 lucky Makefile..."
-    local patch_line="\\t[ -f \$(TOPDIR)/../wrt_core/patches/lucky_${version}_Linux_\$(LUCKY_ARCH)_wanji.tar.gz ] && install -Dm644 \$(TOPDIR)/../wrt_core/patches/lucky_${version}_Linux_\$(LUCKY_ARCH)_wanji.tar.gz \$(PKG_BUILD_DIR)/\$(PKG_NAME)_\$(PKG_VERSION)_Linux_\$(LUCKY_ARCH).tar.gz"
+    local patch_line="\\t[ -f \$(TOPDIR)/../wrt_core/patches/lucky_${version}_Linux_\$(LUCKY_ARCH)_wanji.tar.gz ] && install -Dm644 \$(TOPDIR)/../wrt_core/patches/lucky_${version}_Linux_\$(LUCKY_ARCH)_wanji.tar.gz \$(DL_DIR)/\$(PKG_SOURCE)"
 
     if grep -q "Build/Prepare" "$makefile_path"; then
         sed -i "/Build\\/Prepare/a\\$patch_line" "$makefile_path"
@@ -160,11 +160,11 @@ fix_mkpkg_format_invalid() {
             sed -i 's/PKG_RELEASE:=beta/PKG_RELEASE:=1/g' "$custom_feed_worktree_dir/luci-app-openclash/Makefile"
         fi
         if [ -f "$custom_feed_worktree_dir/luci-app-quickstart/Makefile" ]; then
-            sed -i 's/PKG_VERSION:=0\.8\.16-1/PKG_VERSION:=0\.8\.16/g' "$custom_feed_worktree_dir/luci-app-quickstart/Makefile"
+            sed -i 's/PKG_VERSION:=0\.8\.16-1/PKG_VERSION:=0.8.16/g' "$custom_feed_worktree_dir/luci-app-quickstart/Makefile"
             sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=1/g' "$custom_feed_worktree_dir/luci-app-quickstart/Makefile"
         fi
         if [ -f "$custom_feed_worktree_dir/luci-app-store/Makefile" ]; then
-            sed -i 's/PKG_VERSION:=0\.1\.27-1/PKG_VERSION:=0\.1\.27/g' "$custom_feed_worktree_dir/luci-app-store/Makefile"
+            sed -i 's/PKG_VERSION:=0\.1\.27-1/PKG_VERSION:=0.1.27/g' "$custom_feed_worktree_dir/luci-app-store/Makefile"
             sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=1/g' "$custom_feed_worktree_dir/luci-app-store/Makefile"
         fi
     fi
@@ -181,20 +181,6 @@ update_tcping() {
             echo "错误：从 $url 下载 tcping Makefile 失败" >&2
             exit 1
         fi
-    fi
-}
-
-
-apply_passwall_tweaks() {
-    local chnlist_path="$(get_custom_feed_worktree_dir)/luci-app-passwall/root/usr/share/passwall/rules/chnlist"
-    if [ -f "$chnlist_path" ]; then
-        >"$chnlist_path"
-    fi
-
-    local xray_util_path="$(get_custom_feed_worktree_dir)/luci-app-passwall/luasrc/passwall/util_xray.lua"
-    if [ -f "$xray_util_path" ]; then
-        sed -i 's/maxRTT = "1s"/maxRTT = "2s"/g' "$xray_util_path"
-        sed -i 's/sampling = 3/sampling = 5/g' "$xray_util_path"
     fi
 }
 
@@ -219,44 +205,57 @@ fix_quickstart() {
             exit 1
         fi
     fi
-
     if [ -f "$makefile_path" ]; then
-        echo "正在移除 quickstart 非必要存储依赖..."
         sed -i \
             -e '/^[[:space:]]*DEPENDS:=/,/^[[:space:]]*URL:=/ s/[[:space:]]*+smartmontools-drivedb//g' \
             -e '/^[[:space:]]*DEPENDS:=/,/^[[:space:]]*URL:=/ s/[[:space:]]*+smartmontools//g' \
             -e '/^[[:space:]]*DEPENDS:=/,/^[[:space:]]*URL:=/ s/[[:space:]]*+mdadm//g' \
             -e '/^[[:space:]]*DEPENDS:=/,/^[[:space:]]*URL:=/ s/[[:space:]]*+parted//g' \
-            -e '/^[[:space:]]*DEPENDS:=/,/^[[:space:]]*URL:=/ s/[[:space:]]*+e2fsprogs//g' \
-            "$makefile_path"
+            -e '/^[[:space:]]*DEPENDS:=/,/^[[:space:]]*URL:=/ s/[[:space:]]*+e2fsprogs//g' "$makefile_path"
     fi
+}
+
+fix_netwiz_permissions() {
+    local package_dir="$(get_custom_feed_worktree_dir)/luci-app-netwiz"
+    local relative_path
+    local executable_files=(
+        root/usr/libexec/rpcd/netwiz root/usr/libexec/rpcd/netwiz_dev
+        root/usr/libexec/netwiz-autodetect.sh root/usr/libexec/netwiz-monitor-loop.sh
+        root/etc/init.d/netwiz-monitor root/etc/init.d/netwiz-recovery
+        root/etc/init.d/netwiz-watchdog root/etc/hotplug.d/dhcp/99-netwiz-guard
+    )
+
+    for relative_path in "${executable_files[@]}"; do
+        if [ ! -f "$package_dir/$relative_path" ]; then
+            echo "错误：luci-app-netwiz 执行文件不存在：$package_dir/$relative_path" >&2
+            return 1
+        fi
+        if ! chmod 755 "$package_dir/$relative_path"; then
+            echo "错误：无法设置 luci-app-netwiz 执行权限：$package_dir/$relative_path" >&2
+            return 1
+        fi
+    done
 }
 
 
 update_oaf_deconfig() {
-    local conf_path="$(get_custom_feed_worktree_dir)/open-app-filter/files/appfilter.config"
-    local uci_def="$(get_custom_feed_worktree_dir)/luci-app-oaf/root/etc/uci-defaults/94_feature_3.0"
-    local disable_path="$(get_custom_feed_worktree_dir)/luci-app-oaf/root/etc/uci-defaults/99_disable_oaf"
+    local init_path="$(get_custom_feed_worktree_dir)/open-app-filter/files/appfilter.init"
 
-    if [ -d "${conf_path%/*}" ] && [ -f "$conf_path" ]; then
+    if [ -f "$init_path" ]; then
         sed -i \
-            -e "s/record_enable '1'/record_enable '0'/g" \
-            -e "s/disable_hnat '1'/disable_hnat '0'/g" \
-            -e "s/auto_load_engine '1'/auto_load_engine '0'/g" \
-            "$conf_path"
-    fi
+            -e '/config appfilter appfilter/,/config macfilter macfilter/ s/option enable 1/option enable 0/' \
+            -e '/config macfilter macfilter/,/config record / s/option enable 1/option enable 0/' \
+            -e "/config record 'record'/,/config network network/ s/option enable '1'/option enable '0'/" \
+            "$init_path"
 
-    if [ -d "${uci_def%/*}" ] && [ -f "$uci_def" ]; then
-        sed -i '/\(disable_hnat\|auto_load_engine\)/d' "$uci_def"
-
-        cat >"$disable_path" <<-EOF
-#!/bin/sh
-[ "\$(uci get appfilter.global.enable 2>/dev/null)" = "0" ] && {
-    /etc/init.d/appfilter disable
-    /etc/init.d/appfilter stop
-}
-EOF
-        chmod +x "$disable_path"
+        sed -i \
+            -e '/^[[:space:]]*ensure_default_configs$/a\
+\tif [ "$(uci -q get fwx.appfilter.enable)" != "1" ] && [ "$(uci -q get fwx.macfilter.enable)" != "1" ] && [ "$(uci -q get fwx.record.enable)" != "1" ]; then' \
+            -e '/^[[:space:]]*ensure_default_configs$/a\
+\t\treturn 0' \
+            -e '/^[[:space:]]*ensure_default_configs$/a\
+\tfi' \
+            "$init_path"
     fi
 }
 

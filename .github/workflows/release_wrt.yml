@@ -8,29 +8,31 @@ on:
         required: true
         description: Device Model
         type: choice
-        default: jdcloud_ipq60xx_immwrt
+        default: jdcloud_ipq60xx_libwrt
         options:
           - aliyun_ap8220_immwrt
           - aliyun_ap8220_libwrt
           - cmcc_rax3000m_immwrt
           - ct3003_6.6
           - ct3003
+          - cudy_tr3000_immwrt
           - gemtek_w1701k_immwrt
           - jdcloud_ax6000_immwrt
           - jdcloud_ipq60xx_immwrt
           - jdcloud_ipq60xx_libwrt
           - link_nn6000v2_immwrt
-          - linksys_mx4x00_immwrt
+          - linksys_mx4x00_libwrt
           - n1_immwrt
           - qihoo_360v6_immwrt
           - redmi_ax5_immwrt
           - redmi_ax6_immwrt
           - redmi_ax6_libwrt
-          - redmi_ax6000_immwrt21
           - zn_m2_immwrt
           - zn_m2_libwrt
           - x64_immwrt
           - lk_h3c_hm2004_du
+          - supergateway_s20m_immwrt
+          - nokia_040g_immwrt
       add_fragments:
         required: false
         description: Add config fragments, comma separated
@@ -111,19 +113,6 @@ jobs:
           sudo -E apt-get clean || true
           df -hT
 
-      - name: Build System Setup
-        run: |
-          sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
-          sudo -E apt -yqq install dos2unix
-          sudo -E apt -yqq install dwarves
-          sudo -E apt -yqq install libfuse-dev
-          sudo -E apt -yqq install cpio u-boot-tools kmod
-          sudo -E apt -yqq install clang-18 llvm-18 || echo "WARNING: optional host LLVM unavailable; keeping upstream BPF toolchain"
-          sudo -E apt -yqq autoremove --purge
-          sudo -E apt -yqq autoclean
-          sudo -E apt -yqq clean
-          sudo -E systemctl daemon-reload
-
       - name: Checkout
         uses: actions/checkout@v7
 
@@ -146,6 +135,9 @@ jobs:
           install -m 700 wrt_core/git_askpass.sh "$RUNNER_TEMP/git-askpass"
           echo "GIT_ASKPASS=$RUNNER_TEMP/git-askpass" >> "$GITHUB_ENV"
           echo "GIT_TERMINAL_PROMPT=0" >> "$GITHUB_ENV"
+
+      - name: Build System Setup
+        run: sudo bash wrt_core/setup_ci_environment.sh
 
       - name: Set Build Date and Timezone
         id: set-vars

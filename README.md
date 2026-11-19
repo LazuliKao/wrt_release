@@ -88,18 +88,20 @@ GitHub Actions 的手动构建也提供 `add_fragments` 与 `remove_fragments` �
 | 京东云 | 百里 / AX6000 | `jdcloud_ax6000_immwrt` |
 | 阿里云 | AP8220 | `aliyun_ap8220_immwrt` |
 | 阿里云 | AP8220 - LiBwrt | `aliyun_ap8220_libwrt` |
-| Linksys | MX4200v1、MX4200v2、MX4300 | `linksys_mx4x00_immwrt` |
+| Linksys | MX4200v1、MX4200v2、MX4300 | `linksys_mx4x00_libwrt` |
 | Link | NN6000v2 | `link_nn6000v2_immwrt` |
 | 奇虎 | 360v6 | `qihoo_360v6_immwrt` |
 | 红米 | AX5 | `redmi_ax5_immwrt` |
 | 红米 | AX6 | `redmi_ax6_immwrt` |
 | 红米 | AX6 - LiBwrt | `redmi_ax6_libwrt` |
-| 红米 | AX6000 | `redmi_ax6000_immwrt21` |
 | CMCC（中国移动） | RAX3000M | `cmcc_rax3000m_immwrt` |
+| Cudy | TR3000 | `cudy_tr3000_immwrt` |
 | 斐讯 | N1 | `n1_immwrt` |
 | 兆能 | M2 | `zn_m2_immwrt` |
 | 兆能 | M2 - LiBwrt | `zn_m2_libwrt` |
 | Gemtek | W1701K | `gemtek_w1701k_immwrt` |
+| SuperGateway | S20M | `supergateway_s20m_immwrt` |
+| Nokia | XG-040G-MD UBI | `nokia_040g_immwrt` |
 | x86 | X64 | `x64_immwrt` |
 
 示例：
@@ -158,8 +160,16 @@ https://github.com/kenzok8/small-package.git
 
 ## 9. OAF（应用过滤）功能使用说明
 
-使用 OAF（应用过滤）功能前，需先完成以下操作：
+当前固件默认禁用 OAF（应用过滤）功能，目的是规避 OAF 驱动可能对网络栈产生的影响。需要使用 OAF 的用户，请确认能够接受启用后的潜在影响。
 
-1. 打开系统设置 → 启动项 → 定位到「appfilter」
-2. 将「appfilter」当前状态从已禁用更改为已启用
-3. 完成配置后，点击启动按钮激活服务
+新版本更新后，首次启用 OAF 需要进入命令行模式（SSH 或串口）执行：
+
+```sh
+cd /etc/init.d/
+./appfilter start
+uci set fwx.record.enable=1
+uci commit fwx
+./appfilter start
+```
+
+命令执行完成后，OAF 即完成首次初始化并启动。
