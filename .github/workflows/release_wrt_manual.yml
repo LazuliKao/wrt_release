@@ -52,6 +52,7 @@ on:
           - ophub_bdy_g98_immwrt
           - lk_an7581_ponwrt_mini
           - lk_h3c_hm2004_du
+          - lk_fiberhome_an4475_g2
       ophub_boards:
         description: 'Ophub board, platform, or underscore-separated boards'
         required: false
