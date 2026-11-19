@@ -153,6 +153,11 @@ touch "$ROOT/staging_dir/hostpkg/stamp/.rust_installed"
 run rust
 [[ "$before" == "$(hash "$ROOT/feeds/packages/lang/rust/Makefile")" && -L "$ROOT/staging_dir/host/bin/rustc" ]] || fail 'Rust repeat removed installed tools'
 [[ -f "$ROOT/staging_dir/hostpkg/stamp/.rust_installed" ]] || fail 'Rust repeat invalidated identical toolchain'
+rm "$ROOT/staging_dir/host/bin/rustc"
+run rust
+[[ ! -f "$ROOT/staging_dir/hostpkg/stamp/.rust_installed" ]] || fail 'Missing cached Rust link retained installed stamp'
+rust_make all
+touch "$ROOT/staging_dir/hostpkg/stamp/.rust_installed"
 WRT_TEST_LINK_FAIL=1 rust_make all
 grep -qx source-compile "$ROOT/source-used" || fail 'Link failure did not restore source compile'
 [[ ! -L "$ROOT/staging_dir/host/bin/rustc" && ! -f "$ROOT/staging_dir/hostpkg/stamp/.rust_installed" ]] || fail 'Link failure retained prebuilt links/stamps'

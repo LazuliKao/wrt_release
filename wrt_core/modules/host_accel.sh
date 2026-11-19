@@ -256,6 +256,21 @@ ha_rust_cleanup_links() {
     rm -f "$HA_STATE/rust-root"
 }
 
+ha_rust_installed_links_valid() {
+    local root="$1" dir tool valid
+    for dir in "$HA_ROOT"/staging_dir/host{,pkg}/bin "$HA_ROOT"/staging_dir/target*/host/bin; do
+        valid=1
+        for tool in cargo rustc rustdoc; do
+            if [[ ! -L "$dir/$tool" || $(readlink "$dir/$tool") != "$root/bin/$tool" || ! -x "$dir/$tool" ]]; then
+                valid=0
+                break
+            fi
+        done
+        [[ "$valid" == 0 ]] || return 0
+    done
+    return 1
+}
+
 ha_rust() {
     local path="$HA_ROOT/feeds/packages/lang/rust/Makefile" release rustup root target flags identity=source template
     local -a values
@@ -304,6 +319,12 @@ ha_rust() {
                     identity="$release:$target:$root:$(cat "$HA_TMP/rust.mk" "$HA_SCRIPT" "$HA_TMP/rust-values" | sha256sum | cut -d' ' -f1)"
                     if [[ -f "$HA_STATE/rust-root" && $(cat "$HA_STATE/rust-root") != "$root" ]]; then ha_rust_cleanup_links; fi
                     printf '%s\n' "$root" > "$HA_STATE/rust-root"
+                    if [[ -f "$HA_STATE/identity-rust" && $(cat "$HA_STATE/identity-rust") == "$identity" ]] && \
+                        compgen -G "$HA_ROOT/staging_dir/host*/stamp/.rust_installed*" >/dev/null && \
+                        ! ha_rust_installed_links_valid "$root"; then
+                        ha_log '已缓存的 Rust 安装标记缺少有效工具链接，将重新安装'
+                        ha_invalidate rust source
+                    fi
                     ha_log "准备预编译 Rust $release, target=$target；host 构建时完整链接验证，失败自动使用原规则"
                 else
                     ha_log '无法识别 Rust HostBuild 边界或路径不受支持，保留源码规则'

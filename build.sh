@@ -408,6 +408,7 @@ prepare_container_image() {
     local image_name=$2
     local container_tmp_Dockerfile
     local container_default_user
+    local container_home
 
     container_tmp_Dockerfile=$(mktemp Dockerfile.XXXXXX)
 
@@ -419,6 +420,11 @@ prepare_container_image() {
 
     docker pull "$base_image"
     container_default_user=$(docker run --rm "$base_image" whoami)
+    container_home=$(docker run --rm "$base_image" sh -c 'printf %s "$HOME"')
+    if [[ "$container_home" != /* || "$container_home" == / || "$container_home" == *[[:space:]:]* ]]; then
+        echo "Invalid container HOME: $container_home" >&2
+        return 1
+    fi
     cat > "$container_tmp_Dockerfile" <<EOF
 FROM $base_image
 USER root
@@ -436,15 +442,16 @@ RUN apt-get update && apt-get install -y sudo git jq build-essential cmake g++ b
     ln -sf opt-18 /usr/bin/opt && \
     ln -sf llvm-strip-18 /usr/bin/llvm-strip
 RUN apt-get install -y clang-18 llvm-18 || echo 'WARNING: optional host LLVM unavailable; using upstream BPF toolchain'
-ENV CARGO_HOME=/opt/wrt-cargo
-RUN mkdir -p /opt/wrt-cargo && chown $container_default_user /opt/wrt-cargo
 USER $container_default_user
+ENV HOME=$container_home
+ENV CARGO_HOME=$container_home/.cargo
+ENV RUSTUP_HOME=$container_home/.rustup
 RUN if command -v curl >/dev/null 2>&1 && \
        curl --proto '=https' --tlsv1.2 --connect-timeout 15 --max-time 120 -fsSL https://sh.rustup.rs -o /tmp/wrt-rustup-init.sh && \
        timeout 180 sh /tmp/wrt-rustup-init.sh -y --no-modify-path --default-toolchain none; then \
       echo 'Optional rustup manager installed'; \
     else echo 'WARNING: rustup unavailable; using source Rust'; fi; rm -f /tmp/wrt-rustup-init.sh
-ENV PATH=/opt/wrt-cargo/bin:\$PATH
+ENV PATH=$container_home/.cargo/bin:\$PATH
 RUN git config --global pull.rebase false
 RUN git config --global advice.detachedHead false
 CMD ["bash", "wrt_core/build_container.sh", "$image_name"]
@@ -456,6 +463,7 @@ run_container_build() {
     local container_build_mod=$1
     local build_target_sdk
     local container_name
+    local container_home
 
     build_target_sdk=$(read_ini_by_key "BUILD_TARGET_SDK")
 
@@ -467,12 +475,19 @@ run_container_build() {
     container_name="$(echo "$Dev" | tr '[:upper:]' '[:lower:]' | tr '/:' '-_')-build-container"
 
     prepare_container_image "$build_target_sdk" "$container_name"
+    container_home=$(docker image inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$container_name" | sed -n 's/^HOME=//p')
+    if [[ "$container_home" != /* || "$container_home" == / || "$container_home" == *[[:space:]:]* ]]; then
+        echo "Invalid container HOME: $container_home" >&2
+        return 1
+    fi
+    mkdir -p "$REPO_ROOT/.wrt-host-tools/rustup"
     local docker_opts="-i"
     if is_interactive_terminal; then
         docker_opts="-it"
     fi
     docker run --rm $docker_opts \
         -v "$REPO_ROOT":/build \
+        -v "$REPO_ROOT/.wrt-host-tools/rustup:$container_home/.rustup" \
         -w /build \
         -e ADD_CONFIG_FRAGMENTS \
         -e REMOVE_CONFIG_FRAGMENTS \
@@ -482,7 +497,6 @@ run_container_build() {
         -e WRT_HOST_ACCEL_RUST \
         -e WRT_HOST_ACCEL_PYTHON \
         -e WRT_HOST_LLVM_ROOT \
-        -e RUSTUP_HOME=/build/.wrt-host-tools/rustup \
         --shm-size=8g \
         --ipc=shareable \
         --ulimit nofile=65535:65535 \

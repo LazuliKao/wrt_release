@@ -83,6 +83,14 @@ jobs:
       build_date: ${{ steps.set-vars.outputs.BUILD_DATE }}
 
     steps:
+      - name: Replace slow Ubuntu mirror
+        run: |
+          for file in /etc/apt/apt-mirrors.txt /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+            if [ -f "$file" ]; then
+              sudo sed -i 's|us-east-2\.ec2\.archive\.ubuntu\.com|azure.archive.ubuntu.com|g' "$file"
+            fi
+          done
+
       - name: Free Disk Space
         run: |
           sudo rm -rf /usr/local/lib/android || true
